@@ -25,11 +25,29 @@
     </div>
 
     <div id="input-form-area" class="form-card hidden">
-        <h3 class="form-card-title">✏️ 新しいルールを登録</h3>
+        <h3 class="form-card-title" id="form-title">✏️ 新しいルールを登録</h3>
+        
         <input type="text" id="rule-title" class="form-input" placeholder="タイトル (例: 狂気の発作)">
-        <input type="text" id="rule-category" class="form-input" placeholder="カテゴリ (例: 狂気, 技能, 戦闘)">
+        <input type="text" id="rule-tags" class="form-input" placeholder="タグをカンマ区切りで入力 (例: 狂気, 戦闘, ルール)">
+        
+        <div class="form-row">
+            <input type="text" id="rule-book" class="form-input" placeholder="ルルブ/サプリ名 (例: 基本, マレモン)">
+            <input type="text" id="rule-page" class="form-input" placeholder="ページ数 (例: p.123)">
+        </div>
+
         <textarea id="rule-content" class="form-textarea" placeholder="ルールの詳細内容を手打ち..."></textarea>
-        <button id="save-btn" class="save-btn">💾 保存する</button>
+        
+        <div class="table-input-area">
+            <p style="margin-top:0; font-size:13px; font-weight:bold; color:#555;">📋 表データの追加 (ダイス表など)</p>
+            <div id="table-rows-container">
+                </div>
+            <button id="add-table-row-btn" class="add-row-btn">＋ 表の行を追加</button>
+        </div>
+
+        <div class="form-row">
+            <button id="save-btn" class="save-btn">💾 保存する</button>
+            <button id="cancel-edit-btn" class="save-btn" style="background:#999; display:none;">❌ キャンセル</button>
+        </div>
     </div>
 
     <div class="input-group">

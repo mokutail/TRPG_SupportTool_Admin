@@ -172,3 +172,146 @@
 .delete-btn:hover {
     background: #ffcdd2;
 }
+
+/* =========================================
+   追加UI：タグ、ルルブ参照、表、編集ボタン
+========================================= */
+
+/* 入力フォームの横並び */
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+.form-row .form-input {
+    margin-bottom: 0;
+}
+
+/* タグデザイン */
+.tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.rule-tag {
+    background: #eef2f3;
+    color: #455a64;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    border: 1px solid #cfd8dc;
+}
+.rule-source {
+    font-size: 12px;
+    color: #795548;
+    background: #efebe9;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+/* アクションボタン群（右上） */
+.card-actions {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 8px;
+}
+.edit-btn {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.edit-btn:hover { background: #bbdefb; }
+.delete-btn {
+    position: static; /* 既存の絶対配置を解除 */
+}
+
+/* 表（テーブル）のUI */
+.table-input-area {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px dashed #ccc;
+}
+.table-row-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.add-row-btn {
+    background: #fff;
+    border: 1px solid #76ADAF;
+    color: #76ADAF;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+}
+.rule-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 13px;
+}
+.rule-table th, .rule-table td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+}
+.rule-table th {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+/* =========================================
+   追加UI：非公開設定（シークレット機能）
+========================================= */
+
+/* 非公開バッジ（管理者画面のみ表示） */
+.secret-badge {
+    background: #ffebee;
+    color: #c62828;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    border: 1px solid #ffcdd2;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 非公開用チェックボックス */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #d32f2f;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 15px;
+    background: #fff5f5;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px dashed #ffcdd2;
+}
+.checkbox-label input {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
