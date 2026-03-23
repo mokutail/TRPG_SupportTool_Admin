@@ -2,12 +2,12 @@
 // ★ Firebaseの初期設定
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyD67HN29lVqUoRAczK-FYFdqlkQq7PyfTU",
-  authDomain: "trpg-supporttool.firebaseapp.com",
-  projectId: "trpg-supporttool",
-  storageBucket: "trpg-supporttool.firebasestorage.app",
-  messagingSenderId: "163289928352",
-  appId: "1:163289928352:web:a75c5bb1827b47d0eb2fc5"
+    apiKey: "AIzaSyD67HN29lVqUoRAczK-FYFdqlkQq7PyfTU",
+    authDomain: "trpg-supporttool.firebaseapp.com",
+    projectId: "trpg-supporttool",
+    storageBucket: "trpg-supporttool.firebasestorage.app",
+    messagingSenderId: "163289928352",
+    appId: "1:163289928352:web:a75c5bb1827b47d0eb2fc5"
 };
 
 // Firebaseの起動
@@ -16,7 +16,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser = null;
-let currentLicense = "none"; // ユーザーの権限（admin, pro, trial）
+let currentLicense = "none"; // ユーザーの権限（admin, pro, trial, friend）
 
 document.addEventListener('DOMContentLoaded', () => {
     const authBtn = document.getElementById('authBtn');
@@ -44,6 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     const usedPass = userData.usedPassword || "";
                     const verifiedAt = userData.verifiedAt ? userData.verifiedAt.toDate() : null;
 
+                    // ★ ここが抜けていました！データベースから「role」を取得する処理
+                    let role = "";
+                    try {
+                        const passDoc = await db.collection("valid_passwords").doc(usedPass).get();
+                        if (passDoc.exists) {
+                            role = passDoc.data().role || ""; // ここで "friend" などを取得！
+                        }
+                    } catch (err) {
+                        console.error("権限データの取得エラー:", err);
+                    }
+
                     // 👑 1. 管理者の判定
                     if (role === "admin") {
                         currentLicense = "admin";
@@ -61,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         startMenuSync();
                         return;
                     }
-
 
                     // ⏳ 3. お試し版 (30日) の判定：期限付き
                     const now = new Date();
@@ -226,12 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentMenu.forEach((item, index) => {
 
-            // ★ ツール制限を撤廃しました！全員が全てのボタンを見られます。
-
             if (!isEditMode && item.isHidden) return;
             
-            // ↓ この3行を追加！ (requireAdminが設定されているボタンは、admin以外には見せない)
-            if (item.requireAdmin && currentLicense !== 'admin') {
+            // admin（管理者）か friend（特別閲覧者）以外には見せない
+            if (item.requireAdmin && currentLicense !== 'admin' && currentLicense !== 'friend') {
                 return; 
             }
 
