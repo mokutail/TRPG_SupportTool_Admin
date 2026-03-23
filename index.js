@@ -44,23 +44,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     const usedPass = userData.usedPassword || "";
                     const verifiedAt = userData.verifiedAt ? userData.verifiedAt.toDate() : null;
 
-                    // 👑 1. 管理者 (admin2003) の判定：無期限
-                    if (usedPass === "admin2003" || usedPass.includes("admin")) {
+                    // 👑 1. 管理者の判定
+                    if (role === "admin") {
                         currentLicense = "admin";
-                        if(licenseDisplay) licenseDisplay.innerText = "現在の状態：管理者 (無期限)";
+                        if(licenseDisplay) licenseDisplay.innerText = "現在の状態：管理者";
                         document.getElementById('passwordModal').style.display = 'none';
                         startMenuSync();
                         return;
                     }
 
-                    // 💎 2. プロ版 (買い切り) の判定：無期限
-                    if (usedPass.includes("pro") || usedPass.includes("tail_pro")) {
-                        currentLicense = "pro";
-                        if(licenseDisplay) licenseDisplay.innerText = "現在の状態：プロ版 (無期限)";
+                    // 🤝 2. 身内ゲストの判定
+                    if (role === "friend") {
+                        currentLicense = "friend";
+                        if(licenseDisplay) licenseDisplay.innerText = "現在の状態：特別閲覧者";
                         document.getElementById('passwordModal').style.display = 'none';
                         startMenuSync();
                         return;
                     }
+
 
                     // ⏳ 3. お試し版 (30日) の判定：期限付き
                     const now = new Date();
