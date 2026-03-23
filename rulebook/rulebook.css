@@ -2,6 +2,11 @@
    CoCルールブック専用 モダンUIスタイル
 ========================================= */
 
+/* ★バグ修正：どの要素でも確実に隠せる最強のクラス */
+.hidden {
+    display: none !important;
+}
+
 /* 検索バー */
 .search-container {
     position: relative;
@@ -32,7 +37,7 @@
     color: #999;
 }
 
-/* 編集モードトグルボタン */
+/* モードトグルボタン */
 .header-actions {
     display: flex;
     justify-content: flex-end;
@@ -63,9 +68,6 @@
     margin-bottom: 30px;
     border-top: 5px solid #76ADAF;
     transition: all 0.3s ease;
-}
-.form-card.hidden {
-    display: none;
 }
 .form-card-title {
     margin-top: 0;
@@ -112,72 +114,7 @@
     opacity: 0.85;
 }
 
-/* ルール表示カード */
-.rule-card {
-    background: #fff;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    border: 1px solid #eee;
-    transition: transform 0.2s;
-    position: relative;
-}
-.rule-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-}
-.rule-category {
-    display: inline-block;
-    background: #e0f2f1;
-    color: #00796b;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-.rule-title {
-    font-size: 18px;
-    font-weight: bold;
-    color: #2c3e50;
-    margin-top: 0;
-    margin-bottom: 12px;
-    line-height: 1.4;
-    border-bottom: 1px solid #f5f5f5;
-    padding-bottom: 8px;
-}
-.rule-content {
-    font-size: 14px;
-    color: #555;
-    line-height: 1.7;
-    white-space: pre-wrap; /* 改行を反映 */
-}
-
-/* 削除ボタン */
-.delete-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: #ffebee;
-    color: #d32f2f;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.delete-btn:hover {
-    background: #ffcdd2;
-}
-
-/* =========================================
-   追加UI：タグ、ルルブ参照、表、編集ボタン
-========================================= */
-
-/* 入力フォームの横並び */
+/* フォーム横並び等 */
 .form-row {
     display: flex;
     gap: 15px;
@@ -187,7 +124,40 @@
     margin-bottom: 0;
 }
 
-/* タグデザイン */
+/* ルール表示カード（一覧用） */
+.rule-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #eee;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+/* 詳細画面(cursor:default)の時はホバーで浮かないようにする */
+.rule-card:not([style*="cursor: default"]):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+}
+.rule-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+.rule-summary {
+    font-size: 14px;
+    color: #777;
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* タグと出典 */
 .tag-container {
     display: flex;
     flex-wrap: wrap;
@@ -202,6 +172,14 @@
     font-size: 11px;
     font-weight: bold;
     border: 1px solid #cfd8dc;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.rule-tag:hover {
+    background: #76ADAF;
+    color: white;
+    border-color: #76ADAF;
+    transform: scale(1.05);
 }
 .rule-source {
     font-size: 12px;
@@ -214,17 +192,14 @@
     font-weight: bold;
 }
 
-/* アクションボタン群（右上） */
+/* アクションボタン群 */
 .card-actions {
-    position: absolute;
-    top: 15px;
-    right: 15px;
     display: flex;
     gap: 8px;
+    justify-content: flex-end;
+    margin-bottom: 10px;
 }
-.edit-btn {
-    background: #e3f2fd;
-    color: #1976d2;
+.edit-btn, .delete-btn {
     border: none;
     padding: 6px 12px;
     border-radius: 6px;
@@ -233,12 +208,22 @@
     cursor: pointer;
     transition: background 0.2s;
 }
-.edit-btn:hover { background: #bbdefb; }
-.delete-btn {
-    position: static; /* 既存の絶対配置を解除 */
+.edit-btn { 
+    background: #e3f2fd; 
+    color: #1976d2; 
+}
+.edit-btn:hover { 
+    background: #bbdefb; 
+}
+.delete-btn { 
+    background: #ffebee; 
+    color: #d32f2f; 
+}
+.delete-btn:hover { 
+    background: #ffcdd2; 
 }
 
-/* 表（テーブル）のUI */
+/* 表のUI */
 .table-input-area {
     background: #f8f9fa;
     padding: 15px;
@@ -277,11 +262,7 @@
     color: #333;
 }
 
-/* =========================================
-   追加UI：非公開設定（シークレット機能）
-========================================= */
-
-/* 非公開バッジ（管理者画面のみ表示） */
+/* 非公開関連 */
 .secret-badge {
     background: #ffebee;
     color: #c62828;
@@ -294,8 +275,6 @@
     align-items: center;
     gap: 4px;
 }
-
-/* 非公開用チェックボックス */
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -310,26 +289,13 @@
     border-radius: 8px;
     border: 1px dashed #ffcdd2;
 }
-.checkbox-label input {
-    cursor: pointer;
-    width: 18px;
-    height: 18px;
-}
-/* =========================================
-   追加UI：タグフィルター ＆ アコーディオン詳細
-========================================= */
-
-/* タグをホバーした時のクリックできる感 */
-.rule-tag {
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-}
-.rule-tag:hover {
-    background: #cfd8dc;
-    transform: scale(1.05);
+.checkbox-label input { 
+    cursor: pointer; 
+    width: 18px; 
+    height: 18px; 
 }
 
-/* 絞り込み中のバッジ表示 */
+/* 絞り込みバッジ */
 .filter-badge {
     display: inline-flex;
     align-items: center;
@@ -340,7 +306,6 @@
     font-size: 13px;
     font-weight: bold;
     margin-bottom: 20px;
-    box-shadow: 0 4px 10px rgba(118, 173, 175, 0.2);
 }
 .filter-clear {
     margin-left: 10px;
@@ -352,29 +317,4 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    transition: background 0.2s;
-}
-.filter-clear:hover { background: rgba(255,255,255,0.6); }
-
-/* アコーディオン（開閉）用のスタイル */
-.rule-card {
-    cursor: pointer; /* 全体がクリックできることをアピール */
-}
-.toggle-icon {
-    float: right;
-    color: #b0bec5;
-    font-size: 14px;
-    margin-top: 4px;
-    transition: transform 0.3s ease;
-}
-.rule-details {
-    display: none; /* 最初は隠しておく */
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px dashed #eee;
-    animation: fadeIn 0.3s ease;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
 }
