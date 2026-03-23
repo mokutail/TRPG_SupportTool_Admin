@@ -60,21 +60,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleEditBtn = document.getElementById('toggleEditMode');
     const searchInput = document.getElementById('search-input');
 
-    // 編集モード切り替え
-    document.getElementById('toggle-edit-btn').addEventListener('click', (e) => {
+   // 編集モード切り替え
+    const toggleBtn = document.getElementById('toggle-edit-btn');
+    toggleBtn.addEventListener('click', () => {
         isEditMode = !isEditMode;
         if (isEditMode) {
-            inputFormArea.style.display = 'block';
-            e.target.innerText = "🔒 編集モードを終了";
-            e.target.style.backgroundColor = "#95a5a6";
+            inputFormArea.classList.remove('hidden');
+            toggleBtn.classList.add('active');
+            toggleBtn.innerHTML = "🔒 編集を終了";
         } else {
-            inputFormArea.style.display = 'none';
-            e.target.innerText = "🔓 編集モードをロック解除";
-            e.target.style.backgroundColor = "#f57c00";
+            inputFormArea.classList.add('hidden');
+            toggleBtn.classList.remove('active');
+            toggleBtn.innerHTML = "🔓 編集モード";
         }
         displayRules(allRules); // 削除ボタンの表示/非表示を切り替えるため再描画
     });
-
+    
     // データの保存
     document.getElementById('save-btn').addEventListener('click', async () => {
         const title = document.getElementById('rule-title').value.trim();
