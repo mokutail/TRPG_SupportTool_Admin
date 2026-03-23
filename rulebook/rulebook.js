@@ -23,9 +23,7 @@ let userRole = "none";
 let editingRuleId = null; 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ==========================================
     // ログイン＆権限チェック
-    // ==========================================
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             try {
@@ -67,12 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const formTitle = document.getElementById('form-title');
     const tableContainer = document.getElementById('table-rows-container');
     const addTableRowBtn = document.getElementById('add-table-row-btn');
-    const isSecretCheckbox = document.getElementById('rule-is-secret'); 
+    const isSecretCheckbox = document.getElementById('rule-is-secret');
 
     // ==========================================
     // 表（テーブル）のUI制御
     // ==========================================
     function addTableRowUI(col1 = "", col2 = "") {
+        if (!tableContainer) {
+            alert("エラー: 表を追加するHTMLの枠が見つかりません。HTMLファイルを更新してください。");
+            return;
+        }
         const rowDiv = document.createElement('div');
         rowDiv.className = 'table-row-input';
         rowDiv.innerHTML = `
@@ -83,7 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
         tableContainer.appendChild(rowDiv);
     }
 
-    addTableRowBtn.addEventListener('click', () => addTableRowUI());
+    if(addTableRowBtn) {
+        addTableRowBtn.addEventListener('click', () => addTableRowUI());
+    }
 
     // ==========================================
     // 編集モード＆フォーム制御
@@ -118,65 +122,71 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('rule-page').value = '';
         document.getElementById('rule-content').value = '';
         if(isSecretCheckbox) isSecretCheckbox.checked = false;
-        tableContainer.innerHTML = ''; 
+        if(tableContainer) tableContainer.innerHTML = ''; 
     }
 
-    cancelEditBtn.addEventListener('click', resetForm);
+    if(cancelEditBtn) {
+        cancelEditBtn.addEventListener('click', resetForm);
+    }
 
     // ==========================================
     // データの保存 ＆ 更新
     // ==========================================
-    saveBtn.addEventListener('click', async () => {
-        const title = document.getElementById('rule-title').value.trim();
-        const tagsStr = document.getElementById('rule-tags').value.trim();
-        const book = document.getElementById('rule-book').value.trim();
-        const page = document.getElementById('rule-page').value.trim();
-        const content = document.getElementById('rule-content').value.trim();
-        const isSecret = isSecretCheckbox ? isSecretCheckbox.checked : false;
+    if(saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            try {
+                // ここでエラーが起きないよう安全に読み取る
+                const title = document.getElementById('rule-title').value.trim();
+                const tagsStr = document.getElementById('rule-tags').value.trim();
+                const book = document.getElementById('rule-book').value.trim();
+                const page = document.getElementById('rule-page').value.trim();
+                const content = document.getElementById('rule-content').value.trim();
+                const isSecret = isSecretCheckbox ? isSecretCheckbox.checked : false;
 
-        if (!title || !content) {
-            alert('タイトルと内容は必須です！');
-            return;
-        }
+                if (!title || !content) {
+                    alert('タイトルと内容は必須です！');
+                    return;
+                }
 
-        const tagsArray = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t !== "") : [];
+                const tagsArray = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t !== "") : [];
 
-        const tableData = [];
-        const tableRows = tableContainer.querySelectorAll('.table-row-input');
-        tableRows.forEach(row => {
-            const col1 = row.querySelector('.table-col-1').value.trim();
-            const col2 = row.querySelector('.table-col-2').value.trim();
-            if(col1 || col2) {
-                tableData.push({ col1, col2 });
+                const tableData = [];
+                if (tableContainer) {
+                    const tableRows = tableContainer.querySelectorAll('.table-row-input');
+                    tableRows.forEach(row => {
+                        const col1 = row.querySelector('.table-col-1').value.trim();
+                        const col2 = row.querySelector('.table-col-2').value.trim();
+                        if(col1 || col2) tableData.push({ col1, col2 });
+                    });
+                }
+
+                const ruleData = {
+                    title: title,
+                    tags: tagsArray,
+                    book: book,
+                    page: page,
+                    content: content,
+                    table: tableData,
+                    isSecret: isSecret,
+                    updatedAt: Date.now() 
+                };
+
+                if (editingRuleId) {
+                    await db.collection("admin_rules").doc(editingRuleId).update(ruleData);
+                    alert('✅ 修正を保存しました！');
+                } else {
+                    ruleData.createdAt = Date.now();
+                    await db.collection("admin_rules").add(ruleData);
+                    alert('✅ 新しいルールを保存しました！');
+                }
+                resetForm();
+
+            } catch (e) {
+                console.error("保存エラー詳細: ", e);
+                alert('❌ エラーが発生しました。\nHTMLファイルが最新ではない可能性があります。\n詳細: ' + e.message);
             }
         });
-
-        const ruleData = {
-            title: title,
-            tags: tagsArray,
-            book: book,
-            page: page,
-            content: content,
-            table: tableData,
-            isSecret: isSecret,
-            updatedAt: Date.now() 
-        };
-
-        try {
-            if (editingRuleId) {
-                await db.collection("admin_rules").doc(editingRuleId).update(ruleData);
-                alert('修正を保存しました！');
-            } else {
-                ruleData.createdAt = Date.now();
-                await db.collection("admin_rules").add(ruleData);
-                alert('新しいルールを保存しました！');
-            }
-            resetForm();
-        } catch (e) {
-            console.error("保存エラー: ", e);
-            alert('保存に失敗しました');
-        }
-    });
+    }
 
     // ==========================================
     // データの読み込み ＆ 描画
@@ -196,9 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rulesList.innerHTML = '';
         
         const visibleRules = rulesToDisplay.filter(rule => {
-            if (rule.isSecret === true && userRole !== "admin") {
-                return false; 
-            }
+            if (rule.isSecret === true && userRole !== "admin") return false; 
             return true;
         });
 
@@ -296,9 +304,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('rule-content').value = rule.content || "";
         if(isSecretCheckbox) isSecretCheckbox.checked = rule.isSecret || false; 
 
-        tableContainer.innerHTML = '';
-        if (rule.table && rule.table.length > 0) {
-            rule.table.forEach(row => addTableRowUI(row.col1, row.col2));
+        if (tableContainer) {
+            tableContainer.innerHTML = '';
+            if (rule.table && rule.table.length > 0) {
+                rule.table.forEach(row => addTableRowUI(row.col1, row.col2));
+            }
         }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
