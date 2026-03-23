@@ -19,27 +19,46 @@ const db = firebase.firestore();
 let currentUser = null;
 let allRules = [];
 let isEditMode = false;
+let userRole = "none"; // 権限を保持する変数
 
 document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
-    // ★ ログインチェックと【管理者権限】の確認
+    // ★ ログインチェックと【権限(role)】の確認
     // ==========================================
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             try {
-                // ユーザーの権限データを取得
                 const userDoc = await db.collection("users").doc(user.uid).get();
                 const userData = userDoc.exists ? userDoc.data() : {};
                 const usedPass = userData.usedPassword || "";
 
-                // ★ "admin2003" でログインしているかチェック！
-                if (usedPass === "admin2003" || usedPass.includes("admin")) {
+                // ★ データベースから権限(role)を取得
+                const passDoc = await db.collection("valid_passwords").doc(usedPass).get();
+                if (passDoc.exists) {
+                    userRole = passDoc.data().role || "";
+                }
+
+                // ★ データベースの role に基づいて画面を制御！
+                if (userRole === "admin") {
+                    // ① 管理者の場合（全機能OK）
                     currentUser = user;
                     document.getElementById('rulebook-view').style.display = 'block';
-                    loadRules(); // データを読み込む
+                    loadRules();
+                    
+                } else if (userRole === "friend") {
+                    // ② 特別閲覧者の場合（中身を見せるが、編集は隠す）
+                    currentUser = user;
+                    document.getElementById('rulebook-view').style.display = 'block';
+                    
+                    // ゲストには「編集モード」のボタンごと隠して物理的に触れなくする
+                    const toggleBtn = document.getElementById('toggle-edit-btn');
+                    if(toggleBtn) toggleBtn.style.display = 'none';
+                    
+                    loadRules();
+                    
                 } else {
-                    // admin以外は弾き返す
-                    alert("⚠️ このツールは管理者専用です。");
+                    // それ以外は弾き返す（さっきのエラーアラートはここです）
+                    alert("⚠️ このツールへのアクセス権がありません。");
                     window.location.href = '../index.html';
                 }
             } catch (error) {
@@ -57,54 +76,57 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     const inputFormArea = document.getElementById('input-form-area');
     const rulesList = document.getElementById('rules-list');
-    const toggleEditBtn = document.getElementById('toggleEditMode');
     const searchInput = document.getElementById('search-input');
-
-   // 編集モード切り替え
     const toggleBtn = document.getElementById('toggle-edit-btn');
-    toggleBtn.addEventListener('click', () => {
-        isEditMode = !isEditMode;
-        if (isEditMode) {
-            inputFormArea.classList.remove('hidden');
-            toggleBtn.classList.add('active');
-            toggleBtn.innerHTML = "🔒 編集を終了";
-        } else {
-            inputFormArea.classList.add('hidden');
-            toggleBtn.classList.remove('active');
-            toggleBtn.innerHTML = "🔓 編集モード";
-        }
-        displayRules(allRules); // 削除ボタンの表示/非表示を切り替えるため再描画
-    });
-    
+
+    // 編集モード切り替え
+    if(toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            isEditMode = !isEditMode;
+            if (isEditMode) {
+                inputFormArea.classList.remove('hidden');
+                toggleBtn.classList.add('active');
+                toggleBtn.innerHTML = "🔒 編集を終了";
+            } else {
+                inputFormArea.classList.add('hidden');
+                toggleBtn.classList.remove('active');
+                toggleBtn.innerHTML = "🔓 編集モード";
+            }
+            displayRules(allRules); // 削除ボタンの表示/非表示を切り替えるため再描画
+        });
+    }
+
     // データの保存
-    document.getElementById('save-btn').addEventListener('click', async () => {
-        const title = document.getElementById('rule-title').value.trim();
-        const category = document.getElementById('rule-category').value.trim();
-        const content = document.getElementById('rule-content').value.trim();
+    const saveBtn = document.getElementById('save-btn');
+    if(saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            const title = document.getElementById('rule-title').value.trim();
+            const category = document.getElementById('rule-category').value.trim();
+            const content = document.getElementById('rule-content').value.trim();
 
-        if (!title || !content) {
-            alert('タイトルと内容は必須です！');
-            return;
-        }
+            if (!title || !content) {
+                alert('タイトルと内容は必須です！');
+                return;
+            }
 
-        try {
-            // 管理者専用のコレクション "admin_rules" に保存
-            await db.collection("admin_rules").add({
-                title: title,
-                category: category,
-                content: content,
-                createdAt: Date.now()
-            });
-            alert('保存しました！');
-            document.getElementById('rule-title').value = '';
-            document.getElementById('rule-category').value = '';
-            document.getElementById('rule-content').value = '';
-            loadRules();
-        } catch (e) {
-            console.error("保存エラー: ", e);
-            alert('保存に失敗しました');
-        }
-    });
+            try {
+                await db.collection("admin_rules").add({
+                    title: title,
+                    category: category,
+                    content: content,
+                    createdAt: Date.now()
+                });
+                alert('保存しました！');
+                document.getElementById('rule-title').value = '';
+                document.getElementById('rule-category').value = '';
+                document.getElementById('rule-content').value = '';
+                loadRules();
+            } catch (e) {
+                console.error("保存エラー: ", e);
+                alert('保存に失敗しました');
+            }
+        });
+    }
 
     // データの読み込み
     function loadRules() {
@@ -131,7 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'rule-card';
             
             const formattedContent = rule.content.replace(/\n/g, '<br>');
-            const deleteBtnHtml = isEditMode ? `<button class="delete-btn" onclick="deleteRule('${rule.id}')">削除</button>` : '';
+            
+            // ★ 管理者(admin) かつ 編集モードの時だけ「削除ボタン」を出す
+            const deleteBtnHtml = (userRole === "admin" && isEditMode) 
+                ? `<button class="delete-btn" onclick="deleteRule('${rule.id}')">削除</button>` 
+                : '';
 
             card.innerHTML = `
                 ${deleteBtnHtml}
@@ -144,18 +170,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 検索機能
-    searchInput.addEventListener('input', (e) => {
-        const keyword = e.target.value.toLowerCase();
-        const filteredRules = allRules.filter(rule => {
-            return rule.title.toLowerCase().includes(keyword) || 
-                   rule.content.toLowerCase().includes(keyword) ||
-                   (rule.category && rule.category.toLowerCase().includes(keyword));
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase();
+            const filteredRules = allRules.filter(rule => {
+                return rule.title.toLowerCase().includes(keyword) || 
+                       rule.content.toLowerCase().includes(keyword) ||
+                       (rule.category && rule.category.toLowerCase().includes(keyword));
+            });
+            displayRules(filteredRules);
         });
-        displayRules(filteredRules);
-    });
+    }
 
     // 削除機能
     window.deleteRule = async (id) => {
+        if (userRole !== "admin") return; // 念のため、裏側でも管理者以外は弾く
         if (confirm('このルールを削除しますか？')) {
             try {
                 await db.collection("admin_rules").doc(id).delete();
