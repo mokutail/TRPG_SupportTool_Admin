@@ -21,6 +21,7 @@ let allRules = [];
 let isEditMode = false;
 let userRole = "none";
 let editingRuleId = null; 
+let activeTagFilter = null; // ★追加：現在絞り込んでいるタグを記憶
 
 document.addEventListener('DOMContentLoaded', () => {
     // ログイン＆権限チェック
@@ -54,9 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ==========================================
-    // UI要素の取得
-    // ==========================================
     const inputFormArea = document.getElementById('input-form-area');
     const rulesList = document.getElementById('rules-list');
     const toggleBtn = document.getElementById('toggle-edit-btn');
@@ -67,14 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const addTableRowBtn = document.getElementById('add-table-row-btn');
     const isSecretCheckbox = document.getElementById('rule-is-secret');
 
-    // ==========================================
-    // 表（テーブル）のUI制御
-    // ==========================================
     function addTableRowUI(col1 = "", col2 = "") {
-        if (!tableContainer) {
-            alert("エラー: 表を追加するHTMLの枠が見つかりません。HTMLファイルを更新してください。");
-            return;
-        }
+        if (!tableContainer) return;
         const rowDiv = document.createElement('div');
         rowDiv.className = 'table-row-input';
         rowDiv.innerHTML = `
@@ -89,9 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         addTableRowBtn.addEventListener('click', () => addTableRowUI());
     }
 
-    // ==========================================
-    // 編集モード＆フォーム制御
-    // ==========================================
     if(toggleBtn) {
         toggleBtn.addEventListener('click', () => {
             isEditMode = !isEditMode;
@@ -125,17 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if(tableContainer) tableContainer.innerHTML = ''; 
     }
 
-    if(cancelEditBtn) {
-        cancelEditBtn.addEventListener('click', resetForm);
-    }
+    if(cancelEditBtn) cancelEditBtn.addEventListener('click', resetForm);
 
-    // ==========================================
-    // データの保存 ＆ 更新
-    // ==========================================
     if(saveBtn) {
         saveBtn.addEventListener('click', async () => {
             try {
-                // ここでエラーが起きないよう安全に読み取る
                 const title = document.getElementById('rule-title').value.trim();
                 const tagsStr = document.getElementById('rule-tags').value.trim();
                 const book = document.getElementById('rule-book').value.trim();
@@ -148,7 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                const tagsArray = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t !== "") : [];
+                // ★追加：「,」だけでなく、全角の「、」や「，」でも分割できるように正規表現を使用
+                const tagsArray = tagsStr ? tagsStr.split(/[,、，]/).map(t => t.trim()).filter(t => t !== "") : [];
 
                 const tableData = [];
                 if (tableContainer) {
@@ -183,14 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (e) {
                 console.error("保存エラー詳細: ", e);
-                alert('❌ エラーが発生しました。\nHTMLファイルが最新ではない可能性があります。\n詳細: ' + e.message);
+                alert('❌ エラーが発生しました。\n詳細: ' + e.message);
             }
         });
     }
 
-    // ==========================================
-    // データの読み込み ＆ 描画
-    // ==========================================
     function loadRules() {
         rulesList.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">読み込み中...</div>';
         db.collection("admin_rules").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
@@ -198,17 +179,42 @@ document.addEventListener('DOMContentLoaded', () => {
             snapshot.forEach((doc) => {
                 allRules.push({ id: doc.id, ...doc.data() });
             });
-            displayRules(allRules);
+            displayRules(allRules); // Firebaseからデータが来るたびに描画
         });
     }
 
-    function displayRules(rulesToDisplay) {
-        rulesList.innerHTML = '';
+    // ★タグフィルターのUI更新関数
+    function updateFilterUI() {
+        const filterContainer = document.getElementById('active-filter-container');
+        if (!filterContainer) return;
         
-        const visibleRules = rulesToDisplay.filter(rule => {
+        if (activeTagFilter) {
+            filterContainer.innerHTML = `
+                <div class="filter-badge">
+                    🏷️ #${activeTagFilter} で絞り込み中
+                    <span class="filter-clear" onclick="clearTagFilter()">×</span>
+                </div>
+            `;
+        } else {
+            filterContainer.innerHTML = '';
+        }
+    }
+
+    // ★一覧描画関数
+    window.displayRules = function(rulesToDisplay) {
+        rulesList.innerHTML = '';
+        updateFilterUI();
+        
+        // 1. 権限による除外（KP非公開設定）
+        let visibleRules = rulesToDisplay.filter(rule => {
             if (rule.isSecret === true && userRole !== "admin") return false; 
             return true;
         });
+
+        // 2. タグによる絞り込み
+        if (activeTagFilter) {
+            visibleRules = visibleRules.filter(rule => rule.tags && rule.tags.includes(activeTagFilter));
+        }
 
         if (visibleRules.length === 0) {
             rulesList.innerHTML = '<div class="empty-message-box">データがありません</div>';
@@ -218,13 +224,16 @@ document.addEventListener('DOMContentLoaded', () => {
         visibleRules.forEach(rule => {
             const card = document.createElement('div');
             card.className = 'rule-card';
+            // ★カード全体をクリック可能にし、詳細を開くイベントをセット
+            card.setAttribute('onclick', `toggleDetails('${rule.id}')`);
             
             let actionHtml = '';
             if (userRole === "admin" && isEditMode) {
+                // event.stopPropagation() で、ボタンを押した時にカードが開閉してしまうのを防ぐ
                 actionHtml = `
                     <div class="card-actions">
-                        <button class="edit-btn" onclick="editRule('${rule.id}')">✏️ 修正</button>
-                        <button class="delete-btn" onclick="deleteRule('${rule.id}')">🗑️ 削除</button>
+                        <button class="edit-btn" onclick="editRule('${rule.id}'); event.stopPropagation();">✏️ 修正</button>
+                        <button class="delete-btn" onclick="deleteRule('${rule.id}'); event.stopPropagation();">🗑️ 削除</button>
                     </div>
                 `;
             }
@@ -233,7 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let tagsHtml = '';
             if (rule.tags && rule.tags.length > 0) {
-                const tagsList = rule.tags.map(t => `<span class="rule-tag">#${t}</span>`).join('');
+                // タグをクリックした時もカードが開かないように event.stopPropagation() を設定
+                const tagsList = rule.tags.map(t => `<span class="rule-tag" onclick="filterByTag('${t}', event)">#${t}</span>`).join('');
                 tagsHtml = `<div class="tag-container">${secretBadgeHtml}${tagsList}</div>`;
             } else if (rule.isSecret) {
                 tagsHtml = `<div class="tag-container">${secretBadgeHtml}</div>`;
@@ -259,21 +269,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
+            // ★構造変更：最初はタイトルとタグだけ見せて、詳細は「rule-details」の中に隠す
             card.innerHTML = `
                 ${actionHtml}
+                <div class="toggle-icon" id="icon-${rule.id}">▼</div>
                 ${sourceHtml}
                 ${tagsHtml}
                 <div class="rule-title">${rule.title}</div>
-                <div class="rule-content">${formattedContent}</div>
-                ${tableHtml}
+                
+                <div id="details-${rule.id}" class="rule-details">
+                    <div class="rule-content">${formattedContent}</div>
+                    ${tableHtml}
+                </div>
             `;
             rulesList.appendChild(card);
         });
-    }
+    };
 
     // ==========================================
-    // グローバル関数（削除・修正）
+    // グローバル関数（クリックイベント用）
     // ==========================================
+
+    // ★タグで絞り込む関数
+    window.filterByTag = (tag, event) => {
+        if (event) event.stopPropagation(); // カードを開閉させない
+        activeTagFilter = tag;
+        displayRules(allRules);
+    };
+
+    // ★絞り込みを解除する関数
+    window.clearTagFilter = () => {
+        activeTagFilter = null;
+        displayRules(allRules);
+    };
+
+    // ★詳細の開閉（アコーディオン）関数
+    window.toggleDetails = (id) => {
+        const details = document.getElementById(`details-${id}`);
+        const icon = document.getElementById(`icon-${id}`);
+        if (!details || !icon) return;
+
+        if (details.style.display === 'block') {
+            details.style.display = 'none';
+            icon.innerText = '▼';
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            details.style.display = 'block';
+            icon.innerText = '▲';
+        }
+    };
+
     window.deleteRule = async (id) => {
         if (userRole !== "admin") return;
         if (confirm('このルールを本当に削除しますか？')) {
@@ -287,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.editRule = (id) => {
         if (userRole !== "admin") return;
-        
         const rule = allRules.find(r => r.id === id);
         if (!rule) return;
 
@@ -298,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelEditBtn.style.display = "inline-block";
         
         document.getElementById('rule-title').value = rule.title || "";
-        document.getElementById('rule-tags').value = rule.tags ? rule.tags.join(', ') : "";
+        document.getElementById('rule-tags').value = rule.tags ? rule.tags.join(', ') : ""; // 修正時はカンマで表示
         document.getElementById('rule-book').value = rule.book || "";
         document.getElementById('rule-page').value = rule.page || "";
         document.getElementById('rule-content').value = rule.content || "";
@@ -310,7 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 rule.table.forEach(row => addTableRowUI(row.col1, row.col2));
             }
         }
-
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -318,6 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(searchInput) {
         searchInput.addEventListener('input', (e) => {
             const keyword = e.target.value.toLowerCase();
+            // 検索ワードで先に絞り込む
             const filteredRules = allRules.filter(rule => {
                 const searchStr = `
                     ${rule.title} 
@@ -327,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `.toLowerCase();
                 return searchStr.includes(keyword);
             });
+            // その絞り込まれた結果を、さらにタグフィルターにかけて表示
             displayRules(filteredRules);
         });
     }

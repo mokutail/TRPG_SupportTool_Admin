@@ -315,3 +315,66 @@
     width: 18px;
     height: 18px;
 }
+/* =========================================
+   追加UI：タグフィルター ＆ アコーディオン詳細
+========================================= */
+
+/* タグをホバーした時のクリックできる感 */
+.rule-tag {
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+.rule-tag:hover {
+    background: #cfd8dc;
+    transform: scale(1.05);
+}
+
+/* 絞り込み中のバッジ表示 */
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #76ADAF;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(118, 173, 175, 0.2);
+}
+.filter-clear {
+    margin-left: 10px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.2s;
+}
+.filter-clear:hover { background: rgba(255,255,255,0.6); }
+
+/* アコーディオン（開閉）用のスタイル */
+.rule-card {
+    cursor: pointer; /* 全体がクリックできることをアピール */
+}
+.toggle-icon {
+    float: right;
+    color: #b0bec5;
+    font-size: 14px;
+    margin-top: 4px;
+    transition: transform 0.3s ease;
+}
+.rule-details {
+    display: none; /* 最初は隠しておく */
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #eee;
+    animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
