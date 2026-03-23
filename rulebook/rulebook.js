@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formTitle = document.getElementById('form-title');
     const tableContainer = document.getElementById('table-rows-container');
     const addTableRowBtn = document.getElementById('add-table-row-btn');
-    const isSecretCheckbox = document.getElementById('rule-is-secret'); // ★追加
+    const isSecretCheckbox = document.getElementById('rule-is-secret'); 
 
     // ==========================================
     // 表（テーブル）のUI制御
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('rule-book').value = '';
         document.getElementById('rule-page').value = '';
         document.getElementById('rule-content').value = '';
-        isSecretCheckbox.checked = false; // ★追加：チェックを外す
+        if(isSecretCheckbox) isSecretCheckbox.checked = false;
         tableContainer.innerHTML = ''; 
     }
 
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const book = document.getElementById('rule-book').value.trim();
         const page = document.getElementById('rule-page').value.trim();
         const content = document.getElementById('rule-content').value.trim();
-        const isSecret = isSecretCheckbox.checked; // ★追加：チェック状態を取得
+        const isSecret = isSecretCheckbox ? isSecretCheckbox.checked : false;
 
         if (!title || !content) {
             alert('タイトルと内容は必須です！');
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             page: page,
             content: content,
             table: tableData,
-            isSecret: isSecret, // ★追加：データベースに保存
+            isSecret: isSecret,
             updatedAt: Date.now() 
         };
 
@@ -195,7 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayRules(rulesToDisplay) {
         rulesList.innerHTML = '';
         
-        // ★ 核心部分：特別閲覧者（friend）には、isSecretがtrueのものを絶対に除外する
         const visibleRules = rulesToDisplay.filter(rule => {
             if (rule.isSecret === true && userRole !== "admin") {
                 return false; 
@@ -222,15 +221,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
-            let tagsHtml = '';
-            // ★追加：非公開ルールの場合は、管理者の画面にのみ🔒バッジをつける
             let secretBadgeHtml = rule.isSecret ? `<span class="secret-badge">🔒 非公開（KPのみ）</span>` : '';
             
+            let tagsHtml = '';
             if (rule.tags && rule.tags.length > 0) {
                 const tagsList = rule.tags.map(t => `<span class="rule-tag">#${t}</span>`).join('');
                 tagsHtml = `<div class="tag-container">${secretBadgeHtml}${tagsList}</div>`;
             } else if (rule.isSecret) {
-                // タグがなくても非公開バッジだけは出す
                 tagsHtml = `<div class="tag-container">${secretBadgeHtml}</div>`;
             }
 
@@ -297,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('rule-book').value = rule.book || "";
         document.getElementById('rule-page').value = rule.page || "";
         document.getElementById('rule-content').value = rule.content || "";
-        isSecretCheckbox.checked = rule.isSecret || false; // ★追加：チェック状態を復元
+        if(isSecretCheckbox) isSecretCheckbox.checked = rule.isSecret || false; 
 
         tableContainer.innerHTML = '';
         if (rule.table && rule.table.length > 0) {
