@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRPG Support Tool</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="body">
+<div class="top-header">
+    <h1 class="header-title">🎲 TRPGサポートツール</h1>
+
+    <div style="display:flex; gap:8px;">
+        <button id="authBtn" class="setting-btn" style="background-color:#e3f2fd; color:#0277bd;"><span class="btn-icon">👤</span> ログイン</button>
+        <button id="toggleEditMode" class="setting-btn"><span class="btn-icon-only">⚙️</span><span class="btn-text-hide"> 設定</span></button>
+    </div>
+</div>
+
+<div id="userInfoArea" style="display:none; text-align:center; padding: 10px; background: #e8f5e9; color: #2e7d32; font-weight: bold; font-size: 13px; margin-bottom: 15px;">
+    現在ログイン中：<span id="userNameDisplay"></span>
+</div>
+
+<div class="view main-menu">
+    <div id="home-view" class="menu-grid">
+    </div>
+
+    <div id="settings-panel" class="settings-panel" style="display:none;">
+        <label class="group-label">🛠️ メニュー設定</label>
+        <div class="settings-btns">
+            <button class="action-btn-mini" onclick="resetMenuColors()">色をリセット</button>
+            <button class="action-btn-mini" onclick="resetMenuOrder()">並び順をリセット</button>
+        </div>
+
+        <label class="group-label" style="margin-top: 15px;">💾 データ移行・バックアップ</label>
+        <div class="settings-btns">
+            <button class="action-btn-mini" onclick="exportData()">📥 バックアップ</button>
+            <button class="action-btn-mini" onclick="document.getElementById('importFile').click()">📤 復元</button>
+            <input type="file" id="importFile" accept=".json,text/plain" style="display:none;">
+        </div>
+
+        <label class="group-label" style="margin-top: 15px;">🔑 ライセンス</label>
+        <div class="settings-btns" style="flex-direction: column; gap: 10px; align-items: flex-start;">
+            <div id="licenseStatusDisplay" style="font-size: 12px; color: #666; background: #f0f0f0; padding: 8px 12px; border-radius: 8px; width: 100%; box-sizing: border-box; font-weight: bold;">現在の状態：確認中...</div>
+            <button class="action-btn-mini" style="width: 100%; margin: 0; background-color: #f57c00;" onclick="document.getElementById('passwordModal').style.display='flex'">合言葉を入力して切り替え</button>
+        </div>
+    </div>
+</div>
+
+<div id="colorModal" class="color-modal-overlay">
+    <div class="color-modal">
+        <h3 style="margin-top:0; color:#555; text-align:center; font-size:16px;">色を選択</h3>
+        <div style="display:flex; justify-content:center; margin-bottom:15px;">
+            <canvas id="colorWheel" width="220" height="220" style="border-radius:50%; cursor:crosshair;"></canvas>
+        </div>
+        <div class="modal-hex-row">
+            <div class="modal-preview" id="modalPreview"></div>
+            <input type="text" id="modalHexInput" maxlength="7" placeholder="#FFFFFF">
+        </div>
+        <div class="modal-palette-section">
+            <div style="font-size:11px; color:#999; margin-bottom:8px; text-align:center;">長押しでお気に入りに登録</div>
+            <div class="palette-grid" id="paletteGrid"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" id="btnModalCancel">中止</button>
+            <button class="modal-btn-apply" id="btnModalApply">決定</button>
+        </div>
+    </div>
+</div>
+
+<div id="passwordModal" class="color-modal-overlay" style="display:none; background: rgba(0,0,0,0.9);">
+    <div class="color-modal" style="max-width: 350px;">
+        <h3 style="margin-top:0; color:#76ADAF; text-align:center; font-size:18px;">🔐 ツール有効化</h3>
+        <p style="font-size:12px; color:#666; line-height:1.5; margin-bottom:15px;">
+            管理者から伝えられている<b>「合言葉」</b>を入力してください。<br>
+            <span style="color:#d32f2f;">※合言葉は他の人に共有禁止</span>
+        </p>
+        <input type="text" id="orderNumberInput" placeholder="合言葉を入力" style="width:100%; box-sizing:border-box; border:2px solid #eee; border-radius:10px; padding:12px; font-size:16px; font-weight:bold; text-align:center; outline:none; margin-bottom:15px;">
+        <button id="btnVerifyOrder" style="width:100%; padding:15px; background:#76ADAF; border:none; border-radius:12px; font-weight:bold; color:#fff; font-size:15px; cursor:pointer;">認証する</button>
+        <button class="modal-btn-cancel" style="width:100%; margin-top:10px; border:none; background:none; color:#aaa; font-size:13px; cursor:pointer;" onclick="document.getElementById('passwordModal').style.display='none'">閉じる</button>
+    </div>
+</div>
+
+<div id="customConfirmModal" class="color-modal-overlay">
+    <div class="color-modal">
+        <h3 id="confirmMessage" style="margin-top:0; color:#555; text-align:center; font-size:16px; line-height:1.6;"></h3>
+        <div class="modal-actions" style="margin-top: 25px;">
+            <button class="modal-btn-cancel" id="btnConfirmCancel">キャンセル</button>
+            <button class="modal-btn-apply" id="btnConfirmOK">実行する</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+<script src="index.js"></script>
+</body>
+</html>

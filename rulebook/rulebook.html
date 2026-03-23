@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CoCルールブック (管理者専用)</title>
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="rulebook.css">
+</head>
+<body class="body">
+<div class="tool-header">
+    <h2 class="header-title">📖 CoCルールブック</h2>
+    <button class="back-btn" onclick="window.location.href='../index.html'">🏠 戻る</button>
+</div>
+
+<div id="rulebook-view" class="view" style="display: none;">
+    <div class="input-group">
+        <button id="toggle-edit-btn" class="action-btn" style="margin-bottom: 15px; background-color: #f57c00;">🔓 編集モードをロック解除</button>
+        
+        <div class="search-box" style="margin-bottom: 20px;">
+            <input type="text" id="search-input" class="sc-band-input" placeholder="🔍 ルールや技能を検索...">
+        </div>
+
+        <div id="input-form-area" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px;">
+            <label class="group-label">✏️ ルールの追加</label>
+            <input type="text" id="rule-title" class="sc-band-input" placeholder="タイトル (例: 狂気の発作)" style="margin-bottom: 10px;">
+            <input type="text" id="rule-category" class="sc-band-input" placeholder="カテゴリ (例: 狂気, 技能, 戦闘)" style="margin-bottom: 10px;">
+            <textarea id="rule-content" class="sc-band-input" placeholder="ルールの詳細内容を手打ち..." style="height: 150px; resize: vertical; margin-bottom: 15px;"></textarea>
+            <button id="save-btn" class="action-btn" style="background-color: #76ADAF;">💾 保存する</button>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label class="group-label">📋 ルール一覧</label>
+        <div id="rules-list">
+            </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="rulebook.js"></script>
+</body>
+</html>
