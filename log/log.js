@@ -120,13 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (logText.includes('失敗')) type = 'failure';
                 
                 if (type) {
-                    // ★ 正規表現を使って「出目（実際の数字）」を抽出！
                     let rollValue = '?';
-                    const match = logText.match(/＞\s*(\d+)\s*＞/); // (例: ＞ 10 ＞ 成功)
+                    const match = logText.match(/＞\s*(\d+)\s*＞/);
                     if (match) {
                         rollValue = match[1];
                     } else {
-                        const matchEnd = logText.match(/＞\s*(\d+)\s*$/); // 終わりが数字の場合
+                        const matchEnd = logText.match(/＞\s*(\d+)\s*$/);
                         if(matchEnd) rollValue = matchEnd[1];
                     }
 
@@ -149,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderParsedResult(currentParsedData);
     }
 
-    // --- ★ 解析結果の描画（％計算・出目表示） ---
+    // --- ★ 解析結果の描画（アコーディオン化） ---
     function renderParsedResult(dataObj, containerId = 'parsedListContainer') {
         const container = document.getElementById(containerId);
         container.innerHTML = '';
@@ -157,10 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let hasDisplayedAny = false;
 
         for (const charName in dataObj) {
-            const charAllLogs = dataObj[charName]; // そのキャラの全ログ
+            const charAllLogs = dataObj[charName];
             const displayLogs = charAllLogs.filter(log => currentFilter === 'all' || log.type === currentFilter);
             
-            // ★ そのキャラの統計を計算
             const total = charAllLogs.length;
             let cCount = 0, fCount = 0;
             charAllLogs.forEach(l => {
@@ -172,20 +170,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (displayLogs.length > 0) {
                 hasDisplayedAny = true;
-                const charBox = document.createElement('div');
-                charBox.className = 'log-char-box';
                 
-                // ヘッダーに確率（％）と回数を表示
+                // ★ details タグを使って開閉（しまう）機能を追加！
+                const charBox = document.createElement('details');
+                charBox.className = 'log-char-accordion';
+                charBox.open = true; // デフォルトは開いておく
+                
                 charBox.innerHTML = `
-                    <div class="log-char-name">
-                        <div style="margin-bottom:8px;">${charName}</div>
-                        <div style="font-size:12px; color:#666; display:flex; gap:10px; flex-wrap:wrap;">
+                    <summary class="log-char-summary">
+                        <div class="log-char-header-top">
+                            <div class="log-char-title">${charName}</div>
+                            <div class="log-char-toggle-icon">▼</div>
+                        </div>
+                        <div class="log-char-stats">
                             <span style="background:#eee; padding:2px 8px; border-radius:10px;">🎲 ${total}回</span>
                             <span style="color:#0277bd; background:#E1F5FE; padding:2px 8px; border-radius:10px;">✨クリ ${cCount}回 (${cPer}%)</span>
                             <span style="color:#c62828; background:#FFEBEE; padding:2px 8px; border-radius:10px;">💀ファン ${fCount}回 (${fPer}%)</span>
                         </div>
-                    </div>
+                    </summary>
+                    <div class="log-char-content"></div>
                 `;
+                
+                const contentDiv = charBox.querySelector('.log-char-content');
                 
                 displayLogs.forEach(log => {
                     let typeLabel = log.type.toUpperCase();
@@ -197,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const item = document.createElement('div');
                     item.className = `log-item ${log.type}`;
-                    // ★ 右端に「実際の数字（出目）」のバッジを追加！
                     item.innerHTML = `
                         <div class="log-item-content">
                             <span class="log-type-label">${typeLabel}</span>
@@ -205,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="roll-value-badge">${log.val}</div>
                     `;
-                    charBox.appendChild(item);
+                    contentDiv.appendChild(item);
                 });
                 
                 container.appendChild(charBox);
@@ -238,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // ★ 保存済みリストの描画（シナリオ検索・統計表示）
+    // ★ 保存済みリストの描画
     // ==========================================
     function renderSavedLogs() {
         const container = document.getElementById('savedLogList');
@@ -247,7 +252,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const fTitle = document.getElementById('filterLogTitle').value.trim().toLowerCase();
         const fChar = document.getElementById('filterLogChar').value.trim().toLowerCase();
 
-        // ★ フィルター処理
         let filteredLogs = savedLogs.filter(logDoc => {
             if (fTitle && !logDoc.title.toLowerCase().includes(fTitle)) return false;
             
@@ -270,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const dateStr = new Date(logDoc.createdAt).toLocaleDateString('ja-JP');
             
-            // ★ シナリオ全体のクリファン数を計算
             let totalRolls = 0;
             let cCount = 0;
             let fCount = 0;
@@ -297,7 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // タップで詳細（解析結果画面）を開く
             div.addEventListener('click', () => {
                 currentParsedData = logDoc.parsedData;
                 document.getElementById('saveLogTitle').value = logDoc.title;
