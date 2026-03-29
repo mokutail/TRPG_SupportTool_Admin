@@ -18,11 +18,12 @@ const db = firebase.firestore();
 
 let currentUser = null;
 let currentParsedData = {}; 
+let currentMyChar = null; // ★ 自分のキャラの名前を保持する変数
 let savedLogs = []; 
-let currentFilter = 'all';
+let currentMainFilter = 'all';
+let currentDetailFilter = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ★ ログインチェックとリアルタイム同期
     auth.onAuthStateChanged((user) => {
         if (user) {
             currentUser = user;
@@ -54,13 +55,23 @@ document.addEventListener('DOMContentLoaded', () => {
         viewSaved.style.display = 'block'; viewAnalyze.style.display = 'none';
     };
 
-    // --- 詳細画面のフィルターボタン ---
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    // --- フィルターボタン制御 ---
+    document.querySelectorAll('.main-filter').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.main-filter').forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
-            currentFilter = e.target.getAttribute('data-filter');
-            renderParsedResult(currentParsedData);
+            currentMainFilter = e.target.getAttribute('data-filter');
+            renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea', false);
+        });
+    });
+
+    document.querySelectorAll('.detail-filter').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.detail-filter').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentDetailFilter = e.target.getAttribute('data-filter');
+            // 詳細モーダル側を再描画（myChar変更不可モード）
+            renderParsedResult(currentParsedData, currentDetailFilter, 'detailParsedListContainer', 'detailOverallStatsArea', true);
         });
     });
 
@@ -105,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const paragraphs = doc.querySelectorAll('p');
         
         currentParsedData = {};
+        currentMyChar = null; // 新規解析時は自キャラリセット
 
         paragraphs.forEach(p => {
             const spans = p.querySelectorAll('span');
@@ -112,8 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const charName = spans[1].innerText.trim();
                 const logText = spans[2].innerText.trim();
                 
-                // ★ 修正1: 「<=」が含まれていないログ（単なる発言など）は無視する！
-                if (!logText.includes('<=') && !logText.includes('&lt;=')) return;
+                // ★ 修正1: [<=] と [＞] 両方の判定に対応！（HTMLエンティティ化されている場合も考慮）
+                if (!logText.includes('<=') && !logText.includes('&lt;=') && !logText.includes('＞') && !logText.includes('&gt;')) return;
 
                 let type = null;
                 if (logText.includes('決定的成功') || logText.includes('クリティカル')) type = 'critical';
@@ -139,28 +151,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (Object.keys(currentParsedData).length === 0) {
-            alert("抽出できるダイスロール（<=を含む判定）が見つかりませんでした。");
+            alert("抽出できるダイスロールが見つかりませんでした。");
             return;
         }
 
         document.getElementById('analyzeResultArea').style.display = 'block';
-        currentFilter = 'all';
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+        currentMainFilter = 'all';
+        document.querySelectorAll('.main-filter').forEach(b => b.classList.remove('active'));
+        document.querySelector('.main-filter[data-filter="all"]').classList.add('active');
         
-        renderParsedResult(currentParsedData);
+        renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea', false);
     }
 
-    // --- ★ 解析結果の詳細描画 ---
-    function renderParsedResult(dataObj, containerId = 'parsedListContainer') {
+    // ==========================================
+    // ★ 共通の描画・計算関数（新規解析・詳細モーダル両用）
+    // ==========================================
+    window.setMyChar = (charName) => {
+        currentMyChar = currentMyChar === charName ? null : charName;
+        // 新規解析画面のみ再描画
+        renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea', false);
+    };
+
+    function renderParsedResult(dataObj, filterType, containerId, statsAreaId, isReadOnlyMode) {
         const container = document.getElementById(containerId);
+        const statsArea = document.getElementById(statsAreaId);
         container.innerHTML = '';
         
         let hasDisplayedAny = false;
 
+        // --- ★ 全体統計の計算 ---
+        let allTotal = 0, allC = 0, allF = 0, allS = 0, allFail = 0;
+
         for (const charName in dataObj) {
             const charAllLogs = dataObj[charName];
-            const displayLogs = charAllLogs.filter(log => currentFilter === 'all' || log.type === currentFilter);
+            charAllLogs.forEach(l => {
+                allTotal++;
+                if(l.type === 'critical') allC++;
+                if(l.type === 'fumble') allF++;
+                if(l.type === 'success' || l.type === 'special') allS++;
+                if(l.type === 'failure') allFail++;
+            });
+
+            const displayLogs = charAllLogs.filter(log => filterType === 'all' || log.type === filterType);
             
             const total = charAllLogs.length;
             let cCount = 0, fCount = 0;
@@ -176,12 +208,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const charBox = document.createElement('details');
                 charBox.className = 'log-char-accordion';
-                // ★ 修正2: 最初は閉じた状態（たたんである状態）にするため、open = true を削除しました
-                
+                if (charName === currentMyChar) charBox.classList.add('my-char');
+                // 最初は閉じた状態（open属性なし）にする
+
+                // 自キャラ設定ボタン（読み取り専用モード＝詳細モーダル時は出さない）
+                let myCharBtnHtml = '';
+                if (!isReadOnlyMode) {
+                    const isActive = charName === currentMyChar ? 'active' : '';
+                    const btnText = charName === currentMyChar ? '⭐ 自分のキャラ' : '自分のキャラに設定';
+                    myCharBtnHtml = `<button class="btn-my-char ${isActive}" onclick="setMyChar('${charName}'); event.preventDefault();">${btnText}</button>`;
+                }
+
                 charBox.innerHTML = `
                     <summary class="log-char-summary">
                         <div class="log-char-header-top">
-                            <div class="log-char-title">${charName}</div>
+                            <div class="log-char-title">${charName} ${myCharBtnHtml}</div>
                             <div class="log-char-toggle-icon">▼</div>
                         </div>
                         <div class="log-char-stats">
@@ -219,7 +260,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (!hasDisplayedAny) {
+        // --- 全体統計の表示 ---
+        if (hasDisplayedAny && allTotal > 0) {
+            const allCPer = ((allC / allTotal) * 100).toFixed(1);
+            const allFPer = ((allF / allTotal) * 100).toFixed(1);
+            const allSPer = ((allS / allTotal) * 100).toFixed(1);
+            const allFailPer = ((allFail / allTotal) * 100).toFixed(1);
+
+            statsArea.innerHTML = `
+                <div style="font-size:12px; color:#555; font-weight:bold; margin-bottom:8px;">📊 参加者全員の合計ダイス割合 (計 ${allTotal} 回)</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; font-size:13px; font-weight:bold;">
+                    <span style="color:#2e7d32;">✅ 成功: ${allSPer}%</span>
+                    <span style="color:#616161;">❌ 失敗: ${allFailPer}%</span>
+                    <span style="color:#0277bd;">✨ クリ: ${allCPer}%</span>
+                    <span style="color:#c62828;">💀 ファン: ${allFPer}%</span>
+                </div>
+            `;
+            statsArea.style.display = 'block';
+        } else {
+            statsArea.style.display = 'none';
             container.innerHTML = `<div style="text-align:center; color:#999; font-weight:bold; padding:20px;">該当するログがありません</div>`;
         }
     }
@@ -235,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const saveData = {
             title: title,
             parsedData: currentParsedData,
+            myChar: currentMyChar, // ★ 自キャラ情報を保存
             createdAt: Date.now()
         };
 
@@ -245,18 +305,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // ★ 保存済みリストの描画（キャラごとの統計表示版）
+    // ★ 保存済みリストの描画（キャラごとの統計・累計データ表示）
     // ==========================================
     function renderSavedLogs() {
         const container = document.getElementById('savedLogList');
+        const cumulativeArea = document.getElementById('cumulativeStatsArea');
         container.innerHTML = '';
+        cumulativeArea.style.display = 'none';
 
         const fTitle = document.getElementById('filterLogTitle').value.trim().toLowerCase();
         const fChar = document.getElementById('filterLogChar').value.trim().toLowerCase();
 
         let filteredLogs = savedLogs.filter(logDoc => {
             if (fTitle && !logDoc.title.toLowerCase().includes(fTitle)) return false;
-            
             if (fChar) {
                 const chars = Object.keys(logDoc.parsedData);
                 const matchChar = chars.some(c => c.toLowerCase().includes(fChar));
@@ -264,6 +325,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return true;
         });
+
+        // ★ 累計統計の計算（キャラ検索している場合のみ）
+        if (fChar && filteredLogs.length > 0) {
+            let sumTotal = 0, sumC = 0, sumF = 0;
+            let targetCharName = ''; // 代表して表示する名前
+
+            filteredLogs.forEach(logDoc => {
+                for (const charName in logDoc.parsedData) {
+                    if (charName.toLowerCase().includes(fChar)) {
+                        targetCharName = charName; // 見つかった名前を保持
+                        const logs = logDoc.parsedData[charName];
+                        sumTotal += logs.length;
+                        logs.forEach(l => {
+                            if (l.type === 'critical') sumC++;
+                            if (l.type === 'fumble') sumF++;
+                        });
+                    }
+                }
+            });
+
+            if (sumTotal > 0) {
+                const sumCPer = ((sumC / sumTotal) * 100).toFixed(1);
+                const sumFPer = ((sumF / sumTotal) * 100).toFixed(1);
+                cumulativeArea.innerHTML = `
+                    <div style="font-size:12px; color:#f57c00; font-weight:bold; margin-bottom:8px;">📈 「${targetCharName}」の全シナリオ累計データ</div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; font-size:14px; font-weight:bold;">
+                        <span style="color:#555;">🎲 振った回数: ${sumTotal}回</span>
+                        <span style="color:#0277bd;">✨ クリ率: ${sumCPer}%</span>
+                        <span style="color:#c62828;">💀 ファン率: ${sumFPer}%</span>
+                    </div>
+                `;
+                cumulativeArea.style.display = 'block';
+            }
+        }
 
         if (filteredLogs.length === 0) {
             container.innerHTML = '<div class="empty-message-box">該当する保存済みログはありません</div>';
@@ -276,17 +371,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const dateStr = new Date(logDoc.createdAt).toLocaleDateString('ja-JP');
             
-            // ★ 修正3: シナリオごとではなく、キャラクターごとに集計して表示する
             let charsStatsHtml = `<div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">`;
             
             for (const charName in logDoc.parsedData) {
-                // 検索で探索者名が指定されている場合、一致しないキャラのブロックは隠す（見やすくするため）
                 if (fChar && !charName.toLowerCase().includes(fChar)) continue;
 
                 const logs = logDoc.parsedData[charName];
                 const totalRolls = logs.length;
-                let cCount = 0;
-                let fCount = 0;
+                let cCount = 0, fCount = 0;
 
                 logs.forEach(l => {
                     if (l.type === 'critical') cCount++;
@@ -296,9 +388,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cPer = totalRolls > 0 ? ((cCount / totalRolls) * 100).toFixed(1) : 0;
                 const fPer = totalRolls > 0 ? ((fCount / totalRolls) * 100).toFixed(1) : 0;
 
+                // ★ 保存された自キャラなら色を変える
+                const bgStyle = (charName === logDoc.myChar) ? 'background:#fff8e1; border:1px solid #ffb74d;' : 'background:#f8f9fa; border:1px solid #eee;';
+
                 charsStatsHtml += `
-                    <div style="display:flex; flex-direction:column; gap:6px; background:#f8f9fa; padding:10px 14px; border-radius:12px; border:1px solid #eee;">
-                        <span style="font-size:14px; font-weight:bold; color:#444;">${charName}</span>
+                    <div style="display:flex; flex-direction:column; gap:6px; padding:10px 14px; border-radius:12px; ${bgStyle}">
+                        <span style="font-size:14px; font-weight:bold; color:#444;">${charName} ${(charName === logDoc.myChar) ? '⭐' : ''}</span>
                         <div style="display:flex; gap:6px; font-size:11px; font-weight:bold; flex-wrap:wrap;">
                             <span style="color:#555; background:#e0e0e0; padding:4px 8px; border-radius:10px;">🎲 ${totalRolls}回</span>
                             <span style="color:#0277bd; background:#E1F5FE; padding:4px 8px; border-radius:10px;">✨クリ ${cCount}回 (${cPer}%)</span>
@@ -315,22 +410,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div style="font-size:12px; color:#888; font-weight:bold; margin-bottom:6px;">${dateStr}</div>
                 <div style="font-size:18px; font-weight:bold; color:#333; margin-bottom:4px; line-height:1.3; padding-right:60px;">${logDoc.title}</div>
-                
                 ${charsStatsHtml}
             `;
 
-            // タップで詳細（解析結果画面）を開く
+            // ★ タップで専用の「詳細モーダル」を開く！
             div.addEventListener('click', () => {
                 currentParsedData = logDoc.parsedData;
-                document.getElementById('saveLogTitle').value = logDoc.title;
-                document.getElementById('analyzeResultArea').style.display = 'block';
-                document.getElementById('btnSaveLog').style.display = 'none'; 
-                tabAnalyzeBtn.click(); 
+                currentMyChar = logDoc.myChar; // 保存された自キャラを読み込む
+                document.getElementById('detailModalTitle').innerText = logDoc.title;
+                document.getElementById('logDetailModal').style.display = 'flex';
                 
-                currentFilter = 'all';
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
-                renderParsedResult(currentParsedData);
+                currentDetailFilter = 'all';
+                document.querySelectorAll('.detail-filter').forEach(b => b.classList.remove('active'));
+                document.querySelector('.detail-filter[data-filter="all"]').classList.add('active');
+                
+                // モーダル側に描画（第5引数の true は「読み取り専用(自キャラ変更不可)」の意味）
+                renderParsedResult(currentParsedData, currentDetailFilter, 'detailParsedListContainer', 'detailOverallStatsArea', true);
             });
 
             container.appendChild(div);
