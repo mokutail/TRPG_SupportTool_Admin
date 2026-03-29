@@ -112,6 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const charName = spans[1].innerText.trim();
                 const logText = spans[2].innerText.trim();
                 
+                // ★ 修正1: 「<=」が含まれていないログ（単なる発言など）は無視する！
+                if (!logText.includes('<=') && !logText.includes('&lt;=')) return;
+
                 let type = null;
                 if (logText.includes('決定的成功') || logText.includes('クリティカル')) type = 'critical';
                 else if (logText.includes('致命的失敗') || logText.includes('ファンブル')) type = 'fumble';
@@ -136,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (Object.keys(currentParsedData).length === 0) {
-            alert("抽出できるダイスロールが見つかりませんでした。");
+            alert("抽出できるダイスロール（<=を含む判定）が見つかりませんでした。");
             return;
         }
 
@@ -148,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderParsedResult(currentParsedData);
     }
 
-    // --- ★ 解析結果の描画（アコーディオン化） ---
+    // --- ★ 解析結果の詳細描画 ---
     function renderParsedResult(dataObj, containerId = 'parsedListContainer') {
         const container = document.getElementById(containerId);
         container.innerHTML = '';
@@ -171,10 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (displayLogs.length > 0) {
                 hasDisplayedAny = true;
                 
-                // ★ details タグを使って開閉（しまう）機能を追加！
                 const charBox = document.createElement('details');
                 charBox.className = 'log-char-accordion';
-                charBox.open = true; // デフォルトは開いておく
+                // ★ 修正2: 最初は閉じた状態（たたんである状態）にするため、open = true を削除しました
                 
                 charBox.innerHTML = `
                     <summary class="log-char-summary">
@@ -243,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // ★ 保存済みリストの描画
+    // ★ 保存済みリストの描画（キャラごとの統計表示版）
     // ==========================================
     function renderSavedLogs() {
         const container = document.getElementById('savedLogList');
@@ -274,32 +276,50 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const dateStr = new Date(logDoc.createdAt).toLocaleDateString('ja-JP');
             
-            let totalRolls = 0;
-            let cCount = 0;
-            let fCount = 0;
+            // ★ 修正3: シナリオごとではなく、キャラクターごとに集計して表示する
+            let charsStatsHtml = `<div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">`;
+            
+            for (const charName in logDoc.parsedData) {
+                // 検索で探索者名が指定されている場合、一致しないキャラのブロックは隠す（見やすくするため）
+                if (fChar && !charName.toLowerCase().includes(fChar)) continue;
 
-            Object.values(logDoc.parsedData).forEach(logs => {
-                totalRolls += logs.length;
+                const logs = logDoc.parsedData[charName];
+                const totalRolls = logs.length;
+                let cCount = 0;
+                let fCount = 0;
+
                 logs.forEach(l => {
                     if (l.type === 'critical') cCount++;
                     if (l.type === 'fumble') fCount++;
                 });
-            });
+
+                const cPer = totalRolls > 0 ? ((cCount / totalRolls) * 100).toFixed(1) : 0;
+                const fPer = totalRolls > 0 ? ((fCount / totalRolls) * 100).toFixed(1) : 0;
+
+                charsStatsHtml += `
+                    <div style="display:flex; flex-direction:column; gap:6px; background:#f8f9fa; padding:10px 14px; border-radius:12px; border:1px solid #eee;">
+                        <span style="font-size:14px; font-weight:bold; color:#444;">${charName}</span>
+                        <div style="display:flex; gap:6px; font-size:11px; font-weight:bold; flex-wrap:wrap;">
+                            <span style="color:#555; background:#e0e0e0; padding:4px 8px; border-radius:10px;">🎲 ${totalRolls}回</span>
+                            <span style="color:#0277bd; background:#E1F5FE; padding:4px 8px; border-radius:10px;">✨クリ ${cCount}回 (${cPer}%)</span>
+                            <span style="color:#c62828; background:#FFEBEE; padding:4px 8px; border-radius:10px;">💀ファン ${fCount}回 (${fPer}%)</span>
+                        </div>
+                    </div>
+                `;
+            }
+            charsStatsHtml += `</div>`;
 
             div.innerHTML = `
                 <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 6px;">
                     <button class="corner-btn delete" style="background: #ffebee; color: #d32f2f; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer;" onclick="deleteLog('${logDoc.id}', event)">削除</button>
                 </div>
                 <div style="font-size:12px; color:#888; font-weight:bold; margin-bottom:6px;">${dateStr}</div>
-                <div style="font-size:18px; font-weight:bold; color:#333; margin-bottom:12px; line-height:1.3; padding-right:60px;">${logDoc.title}</div>
+                <div style="font-size:18px; font-weight:bold; color:#333; margin-bottom:4px; line-height:1.3; padding-right:60px;">${logDoc.title}</div>
                 
-                <div style="font-size:13px; font-weight:bold; display:flex; gap:10px; flex-wrap:wrap;">
-                    <span style="color:#555; background:#f5f5f5; padding:4px 10px; border-radius:12px;">🎲 ${totalRolls}件</span>
-                    <span style="color:#0277bd; background:#E1F5FE; padding:4px 10px; border-radius:12px;">✨クリ ${cCount}回</span>
-                    <span style="color:#c62828; background:#FFEBEE; padding:4px 10px; border-radius:12px;">💀ファン ${fCount}回</span>
-                </div>
+                ${charsStatsHtml}
             `;
 
+            // タップで詳細（解析結果画面）を開く
             div.addEventListener('click', () => {
                 currentParsedData = logDoc.parsedData;
                 document.getElementById('saveLogTitle').value = logDoc.title;
