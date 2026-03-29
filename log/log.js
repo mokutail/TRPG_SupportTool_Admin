@@ -62,8 +62,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.getElementById('filterLogTitle').addEventListener('input', renderSavedLogs);
-    document.getElementById('filterLogChar').addEventListener('input', renderSavedLogs);
+    // ★ 保存済み一覧の検索を「ボタン押下」と「エンターキー」に変更！
+    document.getElementById('btnSearchTitle').addEventListener('click', renderSavedLogs);
+    document.getElementById('btnSearchChar').addEventListener('click', renderSavedLogs);
+    
+    document.getElementById('filterLogTitle').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') renderSavedLogs();
+    });
+    document.getElementById('filterLogChar').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') renderSavedLogs();
+    });
 
     const logFileInput = document.getElementById('logFileInput');
     const dropZone = document.getElementById('dropZone');
@@ -283,6 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let filteredLogs = savedLogs.filter(logDoc => {
             if (fTitle && !logDoc.title.toLowerCase().includes(fTitle)) return false;
+            
             if (fChar) {
                 const chars = Object.keys(logDoc.parsedData);
                 const matchChar = chars.some(c => c.toLowerCase().includes(fChar));
@@ -376,7 +385,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${charsStatsHtml}
             `;
 
-            // ★ タップで別ページ（log_detail.html）へ遷移！
             div.addEventListener('click', () => {
                 localStorage.setItem('trpg_current_log_id', logDoc.id);
                 window.location.href = 'log_detail.html';

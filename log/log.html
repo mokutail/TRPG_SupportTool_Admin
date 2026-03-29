@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -52,8 +53,16 @@
     <div id="viewSaved" style="display:none;">
         <div style="background:#f8f9fa; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:15px;">
             <label style="font-size:12px; color:#888; font-weight:bold; display:block; margin-bottom:8px;">🔍 保存済みログを検索 / 累計統計</label>
-            <input type="text" id="filterLogTitle" placeholder="シナリオ名で検索" class="sc-band-input" style="margin-bottom:10px;">
-            <input type="text" id="filterLogChar" placeholder="探索者の名前で検索 (累計データ表示)" class="sc-band-input">
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <input type="text" id="filterLogTitle" placeholder="シナリオ名で検索" class="sc-band-input" style="margin-bottom: 0;">
+                <button id="btnSearchTitle" class="action-btn" style="width: 80px; padding: 12px; margin: 0; font-size: 14px; flex-shrink: 0; border-radius: 10px;">検索</button>
+            </div>
+            
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="filterLogChar" placeholder="探索者の名前で検索 (累計表示)" class="sc-band-input" style="margin-bottom: 0;">
+                <button id="btnSearchChar" class="action-btn" style="width: 80px; padding: 12px; margin: 0; font-size: 14px; flex-shrink: 0; border-radius: 10px;">検索</button>
+            </div>
         </div>
         
         <div id="cumulativeStatsArea" style="display:none; margin-bottom:20px; background:#fffaf0; padding:15px; border-radius:12px; border:2px solid #ffb74d; box-shadow:0 2px 5px rgba(0,0,0,0.05);"></div>

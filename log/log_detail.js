@@ -19,7 +19,9 @@ const db = firebase.firestore();
 let currentUser = null;
 let currentParsedData = {}; 
 let currentMyChar = null;
-let currentDetailFilter = 'all';
+
+// ★ フィルターを「配列」にして複数選択できるように変更
+let currentDetailFilters = ['all'];
 const targetId = localStorage.getItem('trpg_current_log_id');
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -60,24 +62,46 @@ document.addEventListener('DOMContentLoaded', () => {
           });
     }
 
-    // フィルターボタンの動作
+    // ★ フィルターボタンの動作（複数選択可能にする魔法！）
     document.querySelectorAll('.detail-filter').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.detail-filter').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            currentDetailFilter = e.target.getAttribute('data-filter');
+            const filter = e.target.getAttribute('data-filter');
+
+            if (filter === 'all') {
+                // ALLが押されたら、他の選択をすべて解除してALLだけにする
+                document.querySelectorAll('.detail-filter').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentDetailFilters = ['all'];
+            } else {
+                // ALL以外のボタンが押された場合
+                const allBtn = document.querySelector('.detail-filter[data-filter="all"]');
+                allBtn.classList.remove('active');
+                currentDetailFilters = currentDetailFilters.filter(f => f !== 'all');
+
+                if (currentDetailFilters.includes(filter)) {
+                    // すでに選択されていれば解除する（トグル）
+                    e.target.classList.remove('active');
+                    currentDetailFilters = currentDetailFilters.filter(f => f !== filter);
+                } else {
+                    // 新しく選択する
+                    e.target.classList.add('active');
+                    currentDetailFilters.push(filter);
+                }
+
+                // もし全部の選択が解除されてしまったら、自動的に ALL に戻す
+                if (currentDetailFilters.length === 0) {
+                    allBtn.classList.add('active');
+                    currentDetailFilters = ['all'];
+                }
+            }
             renderParsedResult();
         });
     });
 
-    // ★ 自キャラ設定機能（変更したらクラウドにも保存）
     window.setMyChar = (charName) => {
         currentMyChar = currentMyChar === charName ? null : charName;
-        
-        // 画面を更新して色付け
         renderParsedResult();
 
-        // データベースの上書き保存
         db.collection("users").doc(currentUser.uid).collection("logs").doc(targetId)
           .update({ myChar: currentMyChar });
     };
@@ -100,7 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(l.type === 'failure') allFail++;
             });
 
-            const displayLogs = charAllLogs.filter(log => currentDetailFilter === 'all' || log.type === currentDetailFilter);
+            // ★ currentDetailFilters（配列）に含まれているタイプだけを抽出する
+            const displayLogs = charAllLogs.filter(log => currentDetailFilters.includes('all') || currentDetailFilters.includes(log.type));
             
             const total = charAllLogs.length;
             let cCount = 0, fCount = 0;
