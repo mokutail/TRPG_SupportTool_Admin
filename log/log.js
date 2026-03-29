@@ -21,7 +21,6 @@ let currentParsedData = {};
 let currentMyChar = null; 
 let savedLogs = []; 
 let currentMainFilter = 'all';
-let currentDetailFilter = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
     auth.onAuthStateChanged((user) => {
@@ -40,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- タブ切り替え ---
     const tabAnalyzeBtn = document.getElementById('tabAnalyzeBtn');
     const tabSavedBtn = document.getElementById('tabSavedBtn');
     const viewAnalyze = document.getElementById('viewAnalyze');
@@ -55,31 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
         viewSaved.style.display = 'block'; viewAnalyze.style.display = 'none';
     };
 
-    // --- フィルターボタン制御 ---
     document.querySelectorAll('.main-filter').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.main-filter').forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
             currentMainFilter = e.target.getAttribute('data-filter');
-            renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea', false);
-        });
-    });
-
-    document.querySelectorAll('.detail-filter').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.detail-filter').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            currentDetailFilter = e.target.getAttribute('data-filter');
-            renderParsedResult(currentParsedData, currentDetailFilter, 'detailParsedListContainer', 'detailOverallStatsArea', true);
+            renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea');
         });
     });
 
     document.getElementById('filterLogTitle').addEventListener('input', renderSavedLogs);
     document.getElementById('filterLogChar').addEventListener('input', renderSavedLogs);
 
-    // ==========================================
-    // ★ ログの読み込みと解析処理
-    // ==========================================
     const logFileInput = document.getElementById('logFileInput');
     const dropZone = document.getElementById('dropZone');
 
@@ -148,25 +133,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (Object.keys(currentParsedData).length === 0) {
-            alert("抽出できるダイスロール（<=を含む判定）が見つかりませんでした。");
+            alert("抽出できるダイスロールが見つかりませんでした。");
             return;
         }
 
         document.getElementById('analyzeResultArea').style.display = 'block';
-        document.getElementById('saveLogSection').style.display = 'block'; // ★ 保存エリアを確実に表示
+        document.getElementById('saveLogSection').style.display = 'block';
         currentMainFilter = 'all';
         document.querySelectorAll('.main-filter').forEach(b => b.classList.remove('active'));
         document.querySelector('.main-filter[data-filter="all"]').classList.add('active');
         
-        renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea', false);
+        renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea');
     }
 
     window.setMyChar = (charName) => {
         currentMyChar = currentMyChar === charName ? null : charName;
-        renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea', false);
+        renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea');
     };
 
-    function renderParsedResult(dataObj, filterType, containerId, statsAreaId, isReadOnlyMode) {
+    function renderParsedResult(dataObj, filterType, containerId, statsAreaId) {
         const container = document.getElementById(containerId);
         const statsArea = document.getElementById(statsAreaId);
         container.innerHTML = '';
@@ -202,12 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 charBox.className = 'log-char-accordion';
                 if (charName === currentMyChar) charBox.classList.add('my-char');
 
-                let myCharBtnHtml = '';
-                if (!isReadOnlyMode) {
-                    const isActive = charName === currentMyChar ? 'active' : '';
-                    const btnText = charName === currentMyChar ? '⭐ 自分のキャラ' : '自分のキャラに設定';
-                    myCharBtnHtml = `<button class="btn-my-char ${isActive}" onclick="setMyChar('${charName}'); event.preventDefault();">${btnText}</button>`;
-                }
+                const isActive = charName === currentMyChar ? 'active' : '';
+                const btnText = charName === currentMyChar ? '⭐ 自分のキャラ' : '自分のキャラに設定';
+                const myCharBtnHtml = `<button class="btn-my-char ${isActive}" onclick="setMyChar('${charName}'); event.preventDefault();">${btnText}</button>`;
 
                 charBox.innerHTML = `
                     <summary class="log-char-summary">
@@ -272,9 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ==========================================
-    // ★ 保存処理
-    // ==========================================
     document.getElementById('btnSaveLog').addEventListener('click', () => {
         if (!currentUser) return;
         const title = document.getElementById('saveLogTitle').value.trim();
@@ -293,9 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ==========================================
-    // ★ 保存済みリストの描画
-    // ==========================================
     function renderSavedLogs() {
         const container = document.getElementById('savedLogList');
         const cumulativeArea = document.getElementById('cumulativeStatsArea');
@@ -307,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let filteredLogs = savedLogs.filter(logDoc => {
             if (fTitle && !logDoc.title.toLowerCase().includes(fTitle)) return false;
-            
             if (fChar) {
                 const chars = Object.keys(logDoc.parsedData);
                 const matchChar = chars.some(c => c.toLowerCase().includes(fChar));
@@ -401,17 +376,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${charsStatsHtml}
             `;
 
-            // ★ タップで専用の「詳細モーダル」を開く！
+            // ★ タップで別ページ（log_detail.html）へ遷移！
             div.addEventListener('click', () => {
-                document.getElementById('detailModalTitle').innerText = logDoc.title;
-                document.getElementById('logDetailModal').style.display = 'flex';
-                
-                currentDetailFilter = 'all';
-                document.querySelectorAll('.detail-filter').forEach(b => b.classList.remove('active'));
-                document.querySelector('.detail-filter[data-filter="all"]').classList.add('active');
-                
-                currentMyChar = logDoc.myChar; // 保存された自キャラを反映させる
-                renderParsedResult(logDoc.parsedData, currentDetailFilter, 'detailParsedListContainer', 'detailOverallStatsArea', true);
+                localStorage.setItem('trpg_current_log_id', logDoc.id);
+                window.location.href = 'log_detail.html';
             });
 
             container.appendChild(div);
