@@ -18,7 +18,7 @@ const db = firebase.firestore();
 
 let currentUser = null;
 let currentParsedData = {}; 
-let currentMyChar = null; // ★ 自分のキャラの名前を保持する変数
+let currentMyChar = null; 
 let savedLogs = []; 
 let currentMainFilter = 'all';
 let currentDetailFilter = 'all';
@@ -70,12 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.detail-filter').forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
             currentDetailFilter = e.target.getAttribute('data-filter');
-            // 詳細モーダル側を再描画（myChar変更不可モード）
             renderParsedResult(currentParsedData, currentDetailFilter, 'detailParsedListContainer', 'detailOverallStatsArea', true);
         });
     });
 
-    // --- 保存済み一覧の検索フィルター ---
     document.getElementById('filterLogTitle').addEventListener('input', renderSavedLogs);
     document.getElementById('filterLogChar').addEventListener('input', renderSavedLogs);
 
@@ -116,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const paragraphs = doc.querySelectorAll('p');
         
         currentParsedData = {};
-        currentMyChar = null; // 新規解析時は自キャラリセット
+        currentMyChar = null; 
 
         paragraphs.forEach(p => {
             const spans = p.querySelectorAll('span');
@@ -124,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const charName = spans[1].innerText.trim();
                 const logText = spans[2].innerText.trim();
                 
-                // ★ 修正1: [<=] と [＞] 両方の判定に対応！（HTMLエンティティ化されている場合も考慮）
                 if (!logText.includes('<=') && !logText.includes('&lt;=') && !logText.includes('＞') && !logText.includes('&gt;')) return;
 
                 let type = null;
@@ -151,11 +148,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (Object.keys(currentParsedData).length === 0) {
-            alert("抽出できるダイスロールが見つかりませんでした。");
+            alert("抽出できるダイスロール（<=を含む判定）が見つかりませんでした。");
             return;
         }
 
         document.getElementById('analyzeResultArea').style.display = 'block';
+        document.getElementById('saveLogSection').style.display = 'block'; // ★ 保存エリアを確実に表示
         currentMainFilter = 'all';
         document.querySelectorAll('.main-filter').forEach(b => b.classList.remove('active'));
         document.querySelector('.main-filter[data-filter="all"]').classList.add('active');
@@ -163,12 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea', false);
     }
 
-    // ==========================================
-    // ★ 共通の描画・計算関数（新規解析・詳細モーダル両用）
-    // ==========================================
     window.setMyChar = (charName) => {
         currentMyChar = currentMyChar === charName ? null : charName;
-        // 新規解析画面のみ再描画
         renderParsedResult(currentParsedData, currentMainFilter, 'parsedListContainer', 'overallStatsArea', false);
     };
 
@@ -178,8 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
         
         let hasDisplayedAny = false;
-
-        // --- ★ 全体統計の計算 ---
         let allTotal = 0, allC = 0, allF = 0, allS = 0, allFail = 0;
 
         for (const charName in dataObj) {
@@ -209,9 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const charBox = document.createElement('details');
                 charBox.className = 'log-char-accordion';
                 if (charName === currentMyChar) charBox.classList.add('my-char');
-                // 最初は閉じた状態（open属性なし）にする
 
-                // 自キャラ設定ボタン（読み取り専用モード＝詳細モーダル時は出さない）
                 let myCharBtnHtml = '';
                 if (!isReadOnlyMode) {
                     const isActive = charName === currentMyChar ? 'active' : '';
@@ -260,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // --- 全体統計の表示 ---
         if (hasDisplayedAny && allTotal > 0) {
             const allCPer = ((allC / allTotal) * 100).toFixed(1);
             const allFPer = ((allF / allTotal) * 100).toFixed(1);
@@ -294,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const saveData = {
             title: title,
             parsedData: currentParsedData,
-            myChar: currentMyChar, // ★ 自キャラ情報を保存
+            myChar: currentMyChar,
             createdAt: Date.now()
         };
 
@@ -305,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // ★ 保存済みリストの描画（キャラごとの統計・累計データ表示）
+    // ★ 保存済みリストの描画
     // ==========================================
     function renderSavedLogs() {
         const container = document.getElementById('savedLogList');
@@ -318,6 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let filteredLogs = savedLogs.filter(logDoc => {
             if (fTitle && !logDoc.title.toLowerCase().includes(fTitle)) return false;
+            
             if (fChar) {
                 const chars = Object.keys(logDoc.parsedData);
                 const matchChar = chars.some(c => c.toLowerCase().includes(fChar));
@@ -326,15 +316,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         });
 
-        // ★ 累計統計の計算（キャラ検索している場合のみ）
         if (fChar && filteredLogs.length > 0) {
             let sumTotal = 0, sumC = 0, sumF = 0;
-            let targetCharName = ''; // 代表して表示する名前
+            let targetCharName = '';
 
             filteredLogs.forEach(logDoc => {
                 for (const charName in logDoc.parsedData) {
                     if (charName.toLowerCase().includes(fChar)) {
-                        targetCharName = charName; // 見つかった名前を保持
+                        targetCharName = charName;
                         const logs = logDoc.parsedData[charName];
                         sumTotal += logs.length;
                         logs.forEach(l => {
@@ -388,7 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cPer = totalRolls > 0 ? ((cCount / totalRolls) * 100).toFixed(1) : 0;
                 const fPer = totalRolls > 0 ? ((fCount / totalRolls) * 100).toFixed(1) : 0;
 
-                // ★ 保存された自キャラなら色を変える
                 const bgStyle = (charName === logDoc.myChar) ? 'background:#fff8e1; border:1px solid #ffb74d;' : 'background:#f8f9fa; border:1px solid #eee;';
 
                 charsStatsHtml += `
@@ -415,8 +403,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // ★ タップで専用の「詳細モーダル」を開く！
             div.addEventListener('click', () => {
-                currentParsedData = logDoc.parsedData;
-                currentMyChar = logDoc.myChar; // 保存された自キャラを読み込む
                 document.getElementById('detailModalTitle').innerText = logDoc.title;
                 document.getElementById('logDetailModal').style.display = 'flex';
                 
@@ -424,8 +410,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.detail-filter').forEach(b => b.classList.remove('active'));
                 document.querySelector('.detail-filter[data-filter="all"]').classList.add('active');
                 
-                // モーダル側に描画（第5引数の true は「読み取り専用(自キャラ変更不可)」の意味）
-                renderParsedResult(currentParsedData, currentDetailFilter, 'detailParsedListContainer', 'detailOverallStatsArea', true);
+                currentMyChar = logDoc.myChar; // 保存された自キャラを反映させる
+                renderParsedResult(logDoc.parsedData, currentDetailFilter, 'detailParsedListContainer', 'detailOverallStatsArea', true);
             });
 
             container.appendChild(div);
