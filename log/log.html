@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -7,6 +6,54 @@
     <title>ログ解析ツール</title>
     <link rel="stylesheet" href="../common.css">
     <link rel="stylesheet" href="log.css">
+    <style>
+        /* ★ 可愛い検索バー用の専用スタイル */
+        .search-bar-wrapper {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            overflow: hidden; /* 子要素がはみ出ないようにする */
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            margin-bottom: 12px;
+        }
+        .search-bar-wrapper:focus-within {
+            border-color: #76ADAF;
+            box-shadow: 0 4px 10px rgba(118, 173, 175, 0.15);
+            background-color: #f0f7f7;
+        }
+        .search-bar-input {
+            flex: 1;
+            border: none;
+            padding: 14px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #333;
+            background: transparent;
+            outline: none;
+            min-width: 0; /* flexbox内での縮小を許可 */
+        }
+        .search-bar-btn {
+            background: #76ADAF;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            height: 100%;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-bar-btn:active {
+            background: #00695c;
+        }
+    </style>
 </head>
 <body class="body">
 <h2 class="tool-header">
@@ -54,14 +101,14 @@
         <div style="background:#f8f9fa; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:15px;">
             <label style="font-size:12px; color:#888; font-weight:bold; display:block; margin-bottom:8px;">🔍 保存済みログを検索 / 累計統計</label>
             
-            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <input type="text" id="filterLogTitle" placeholder="シナリオ名で検索" class="sc-band-input" style="margin-bottom: 0;">
-                <button id="btnSearchTitle" class="action-btn" style="width: 80px; padding: 12px; margin: 0; font-size: 14px; flex-shrink: 0; border-radius: 10px;">検索</button>
+            <div class="search-bar-wrapper">
+                <input type="text" id="filterLogTitle" placeholder="シナリオ名で検索" class="search-bar-input">
+                <button id="btnSearchTitle" class="search-bar-btn">検索</button>
             </div>
             
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="filterLogChar" placeholder="探索者の名前で検索 (累計表示)" class="sc-band-input" style="margin-bottom: 0;">
-                <button id="btnSearchChar" class="action-btn" style="width: 80px; padding: 12px; margin: 0; font-size: 14px; flex-shrink: 0; border-radius: 10px;">検索</button>
+            <div class="search-bar-wrapper" style="margin-bottom: 0;">
+                <input type="text" id="filterLogChar" placeholder="探索者の名前で検索 (累計表示)" class="search-bar-input">
+                <button id="btnSearchChar" class="search-bar-btn">検索</button>
             </div>
         </div>
         
