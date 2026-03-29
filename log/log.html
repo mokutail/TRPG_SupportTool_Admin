@@ -7,51 +7,59 @@
     <link rel="stylesheet" href="../common.css">
     <link rel="stylesheet" href="log.css">
     <style>
-        /* ★ 可愛い検索バー用の専用スタイル */
+        /* ★ 可愛い検索バー（ぽってりピル型）のスタイル */
         .search-bar-wrapper {
             display: flex;
             align-items: center;
             background: #fff;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            overflow: hidden; /* 子要素がはみ出ないようにする */
-            transition: all 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            border: 2px solid #e0e0e0; /* 枠線を少し濃くして見やすく */
+            border-radius: 30px; /* 全体をぽってり丸く */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.04); /* ほんのり影をつける */
             margin-bottom: 12px;
+            padding: 5px; /* 内側に余白を持たせてボタンを独立させる */
         }
         .search-bar-wrapper:focus-within {
             border-color: #76ADAF;
-            box-shadow: 0 4px 10px rgba(118, 173, 175, 0.15);
-            background-color: #f0f7f7;
+            box-shadow: 0 6px 15px rgba(118, 173, 175, 0.2);
+            transform: translateY(-2px); /* 入力時にフワッと浮き上がる！ */
+        }
+        .search-icon {
+            padding-left: 12px;
+            color: #aaa;
+            font-size: 16px;
         }
         .search-bar-input {
             flex: 1;
             border: none;
-            padding: 14px 16px;
+            padding: 12px 10px;
             font-size: 15px;
             font-weight: bold;
             color: #333;
             background: transparent;
             outline: none;
-            min-width: 0; /* flexbox内での縮小を許可 */
+            min-width: 0;
+        }
+        .search-bar-input::placeholder {
+            color: #bbb;
+            font-weight: normal; /* プレースホルダーは少し控えめに */
         }
         .search-bar-btn {
             background: #76ADAF;
             color: white;
             border: none;
-            padding: 0 20px;
-            height: 100%;
+            padding: 10px 22px;
+            border-radius: 25px; /* 内側のボタンも丸く！ */
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
             -webkit-tap-highlight-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            box-shadow: 0 2px 5px rgba(118, 173, 175, 0.3);
         }
         .search-bar-btn:active {
             background: #00695c;
+            transform: scale(0.95);
         }
     </style>
 </head>
@@ -102,12 +110,14 @@
             <label style="font-size:12px; color:#888; font-weight:bold; display:block; margin-bottom:8px;">🔍 保存済みログを検索 / 累計統計</label>
             
             <div class="search-bar-wrapper">
+                <span class="search-icon">🔍</span>
                 <input type="text" id="filterLogTitle" placeholder="シナリオ名で検索" class="search-bar-input">
                 <button id="btnSearchTitle" class="search-bar-btn">検索</button>
             </div>
             
             <div class="search-bar-wrapper" style="margin-bottom: 0;">
-                <input type="text" id="filterLogChar" placeholder="探索者の名前で検索 (累計表示)" class="search-bar-input">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="filterLogChar" placeholder="探索者名で検索 (累計表示)" class="search-bar-input">
                 <button id="btnSearchChar" class="search-bar-btn">検索</button>
             </div>
         </div>
