@@ -1,0 +1,268 @@
+
+/* 他のCSSの干渉をすべてリセット */
+.ability-table, .table-row, .cell, .derived-status-panel, .status-panel-row, .panel-item {
+    box-sizing: border-box !important;
+    display: flex !important;
+}
+
+body {
+    background-color: #141419 !important;
+    color: #ffffff !important;
+    font-family: 'Segoe UI', Arial, sans-serif !important;
+    margin: 0 !important;
+    padding: 30px !important;
+}
+
+.editor-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    margin-bottom: 25px !important;
+    border-bottom: 1px solid #2d2d38 !important;
+    padding-bottom: 15px !important;
+}
+
+.back-link {
+    color: #bb86fc !important;
+    text-decoration: none !important;
+    font-size: 15px !important;
+    margin-bottom: 8px !important;
+}
+
+.editor-title {
+    font-size: 28px !important;
+    margin: 0 !important;
+    color: #ffffff !important;
+}
+
+.char-name {
+    width: 300px !important;
+    padding: 12px !important;
+    background-color: #1c1c24 !important;
+    border: 1px solid #3e444c !important;
+    color: #fff !important;
+    border-radius: 4px !important;
+    margin-bottom: 25px !important;
+    font-size: 16px !important;
+    display: block !important;
+}
+
+.ability-table {
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 1300px !important;
+    background-color: #272b30 !important;
+    border: 1px solid #3e444c !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+}
+
+.table-row {
+    flex-direction: row !important;
+    width: 100% !important;
+    align-items: center !important;
+    border-bottom: 1px solid #3e444c !important;
+}
+.table-row:last-child {
+    border-bottom: none !important;
+}
+
+.cell {
+    flex-grow: 1 !important;
+    flex-shrink: 1 !important;
+    flex-basis: 0% !important;
+    width: 0 !important;
+    text-align: center !important;
+    padding: 14px 2px !important;
+    font-size: 16px !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.row-header .cell[data-popup] {
+    transition: color 0.15s;
+    cursor: pointer !important;
+}
+.row-header .cell[data-popup]:hover {
+    color: #bb86fc !important;
+}
+
+.header-cell {
+    flex-direction: column !important;
+    gap: 6px !important;
+    padding: 12px 2px !important;
+}
+
+.btn-dice {
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-size: 22px !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    opacity: 0.8 !important;
+    transition: transform 0.1s;
+}
+.btn-dice:hover {
+    transform: scale(1.25);
+    opacity: 1 !important;
+}
+
+.label-cell {
+    flex-grow: 1.3 !important;
+    flex-shrink: 1 !important;
+    flex-basis: 0% !important;
+    background-color: #3a3f44 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    font-size: 15px !important;
+}
+
+.row-header {
+    background-color: #303539 !important;
+    font-weight: bold !important;
+}
+.row-header .cell:nth-child(even) {
+    background-color: #25292c !important;
+}
+
+.cell select {
+    width: 100% !important;
+    max-width: 52px !important;
+    background-color: #1c1e22 !important;
+    border: 1px solid #4e555b !important;
+    color: #fff !important;
+    text-align: center !important;
+    padding: 6px 0 !important;
+    border-radius: 4px !important;
+}
+
+.cell input[type="number"] {
+    width: 100% !important;
+    max-width: 52px !important;
+    background-color: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    text-align: center !important;
+    outline: none !important;
+}
+
+/* ★能力値テーブル内のスピンボタン消去 */
+.cell input::-webkit-outer-spin-button,
+.cell input::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+.cell input[type="number"] {
+    appearance: textfield !important;
+}
+
+.row-current {
+    background-color: #17191c !important;
+}
+.row-current .cell:not(.label-cell) {
+    color: #00bc8c !important;
+    font-weight: bold !important;
+    font-size: 17px !important;
+}
+
+.auto-calc {
+    color: #aaa !important;
+    font-size: 15px !important;
+}
+
+.derived-status-panel {
+    margin-top: 25px !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    max-width: 1300px !important;
+    width: 100% !important;
+}
+
+.status-panel-row {
+    flex-direction: row !important;
+    gap: 16px !important;
+    width: 100% !important;
+}
+
+.panel-item {
+    flex-direction: row !important;
+    align-items: center !important;
+    background-color: #1c1e22 !important;
+    border-radius: 4px !important;
+    border: 1px solid #2d3035 !important;
+}
+.item-san { flex: 2 1 0% !important; }
+.item-insanity, .item-db { flex: 1 1 0% !important; }
+
+.panel-label {
+    padding: 12px 18px !important;
+    font-weight: bold !important;
+    min-width: 90px !important;
+}
+
+.panel-value-box {
+    flex-grow: 1 !important;
+    background-color: #2b303b !important;
+    padding: 12px 18px !important;
+    font-weight: bold !important;
+    justify-content: flex-end !important;
+    align-items: center;
+}
+
+/* ★修正：SAN値入力欄のスピンボタンをあらゆるブラウザで完全破壊 */
+.panel-value-box input[type="number"]#san-input {
+    background-color: transparent !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    text-align: right !important;
+    width: 45px !important; /* 入力しやすいよう幅を最適化 */
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    appearance: textfield !important; /* Firefox用 */
+    -webkit-appearance: textfield !important; /* Safari, Chrome用の旧互換 */
+}
+
+/* Chrome, Safari, Edge の矢印パーツ自体を完全に消去 */
+.panel-value-box input[type="number"]#san-input::-webkit-outer-spin-button,
+.panel-value-box input[type="number"]#san-input::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    margin: 0 !important;
+    display: none !important;
+}
+
+.san-max {
+    margin-left: 6px !important;
+    color: #ffffff !important;
+}
+
+.item-db .panel-value-box {
+    justify-content: flex-start !important;
+}
+
+.custom-tooltip {
+    display: none;
+    position: absolute;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 1px solid #4e555b !important;
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+    font-size: 13px !important;
+    white-space: nowrap !important;
+    z-index: 99999 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6) !important;
+    pointer-events: none !important;
+}
+
+.ability-control-bar { margin-top: 15px; margin-bottom: 25px; display: flex !important; }
+.btn-random-all { background: #007bff !important; border: 1px solid #0069d9 !important; color: white !important; padding: 14px 28px !important; border-radius: 4px !important; cursor: pointer !important; font-weight: bold !important; font-size: 15px !important; }
+.btn-random-all:hover { background: #0069d9 !important; }
+
+.control-footer { margin-top: 30px; display: flex !important; gap: 15px !important; }
+.btn-submit { background: #4e555b !important; border: 1px solid #6c757d !important; color: white !important; padding: 14px 28px !important; border-radius: 4px !important; cursor: pointer !important; font-weight: bold !important; font-size: 15px !important; }
+.btn-submit:hover { background-color: #6c757d !important; }

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="basic_information/basic_information.css">
+    <link rel="stylesheet" href="ability_value/ability_value.css">
+    <link rel="stylesheet" href="skill_value/skill_value.css">
+    <title>キャラクター作成 - CoC 6th</title>
+</head>
+<body>
+    <header class="editor-header">
+        <a href="../index.html" class="back-link">← 玄関に戻る</a>
+        <h1 class="editor-title">キャラクター作成</h1>
+    </header>
+
+    <main class="editor-main">
+        <form id="char-editor">
+            
+            <div id="component-info-value"></div>
+
+            <div id="component-ability-value"></div>
+
+            <div class="ability-control-bar">
+                <button type="button" class="btn-random-all" onclick="rollAll()">一斉ランダム</button>
+            </div>
+
+            <div id="component-skills-list"></div>
+
+            <div id="js-tooltip" class="custom-tooltip"></div>
+
+            <div class="control-footer">
+                <button type="button" class="btn-submit" onclick="saveCharacter()">保存して玄関に戻る</button>
+            </div>
+        </form>
+    </main>
+
+    <script src="basic_information/basic_information.js"></script>
+    <script src="skill_value/skill_value.js"></script>
+    <script src="ability_value/ability_value.js"></script>
+
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const editIndex = localStorage.getItem('editingIndex');
+    
+    if (editIndex !== null) {
+        const chars = JSON.parse(localStorage.getItem('characters') || '[]');
+        const char = chars[editIndex];
+        
+        // データをフォームにセットする処理
+        if (char) {
+            document.getElementById("char-name-new").value = char.name || "";
+            // 他の項目も同様にセットするロジックをここに書きます
+            // 例: document.getElementById("char-job").value = char.job || "";
+        }
+        
+        // 編集が終わったらインデックスを削除
+        localStorage.removeItem('editingIndex');
+    }
+});
+</script>
+</body>
+</html>
