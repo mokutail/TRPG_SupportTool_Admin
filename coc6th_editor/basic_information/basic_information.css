@@ -133,3 +133,27 @@
 .btn-color-palette { background-color: #9b51e0 !important; }
 .btn-add-custom-field { background-color: #007bff !important; }
 .btn-color-palette:hover, .btn-add-custom-field:hover { transform: scale(1.08); }
+
+/* --- 画像管理モーダル --- */
+.image-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; }
+.image-modal-content { background: #2f3136; width: 500px; max-height: 80vh; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+.image-modal-header { background: #202225; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #4f545c; }
+.image-modal-header h3 { margin: 0; color: #fff; font-size: 18px; }
+.btn-close { background: none; border: none; color: #b9bbbe; font-size: 20px; cursor: pointer; }
+.btn-close:hover { color: #fff; }
+
+#image-rows-container { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.image-row { display: flex; align-items: center; gap: 10px; background: #202225; padding: 10px; border-radius: 6px; border: 1px solid #4f545c; }
+.img-preview-mini { width: 60px; height: 60px; background: #000; border-radius: 4px; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+.img-preview-mini img { width: 100%; height: 100%; object-fit: contain; }
+.img-desc-input { flex: 1; background: #40444b; border: none; padding: 10px; color: #fff; border-radius: 4px; outline: none; }
+.btn-change-file { background: #43b581; color: white; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+.btn-change-file:hover { background: #3ca374; }
+.btn-delete-img { background: #f04747; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+.btn-delete-img:hover { background: #d84040; }
+
+.btn-add-img-row { margin: 0 20px 20px; background: #7289da; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.btn-add-img-row:hover { background: #677bc4; }
+.image-modal-footer { background: #202225; padding: 15px 20px; display: flex; justify-content: flex-start; border-top: 1px solid #4f545c; }
+.btn-done { background: #007bff; color: white; border: none; padding: 10px 30px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+.btn-done:hover { background: #0056b3; }

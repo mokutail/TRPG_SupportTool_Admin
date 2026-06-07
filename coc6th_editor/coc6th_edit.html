@@ -49,6 +49,9 @@
                 const char = chars[parseInt(editIndex, 10)];
                 
                 if (char) {
+                    window.charImages = char.images || [];
+                    if(typeof updateMainPreview === 'function') updateMainPreview(); // ロード時にプレビューを表示
+
                     // 画面内のすべての input(テキストや数値) と select(プルダウン) を取得
                     const elements = document.querySelectorAll("#char-editor input, #char-editor select");
                     
@@ -85,6 +88,7 @@
             
             const newData = {}; // 空の箱を用意
             
+            newData.images = window.charImages || [];
             // 画面内のすべての input と select を取得
             const elements = document.querySelectorAll("#char-editor input, #char-editor select");
             

@@ -123,26 +123,27 @@ function parseCCfolia(str) {
     } catch(e) { return null; }
 }
 
-// ★いあきゃらテキスト解析（改行バグ修正 ＆ 表形式の技能読み込み）
+// ★script.js の parseIachara 関数を以下に丸ごと入れ替えてください★
 function parseIachara(str) {
     if (!str.includes("名前:")) return null; 
     const char = {};
 
-    // ★修正：改行をまたがないように [ \t]* を使用して抽出
     function extractVal(label) {
         const regex = new RegExp(`${label}:[ \\t]*([^/\\r\\n]*)`);
         const match = str.match(regex);
         return match ? match[1].trim() : "";
     }
-    // script.js の parseIachara 内に追記する場合の例：
-    const iconMatch = str.match(/【アイコン】[\s\n]*:(https?:\/\/[^\s\n]+)/);
-    if(iconMatch) char.iconUrl = iconMatch[1];
 
     const rawName = extractVal("名前") || "無名の探索者";
-    const nameData = parseNameAndFurigana(rawName);
-    char.name = nameData.name;
-    char["char-name-new"] = nameData.name;
-    char["char-furigana"] = nameData.furigana;
+    const nameMatch = rawName.match(/^(.*?)\s*[（(](.*?)[）)]\s*$/);
+    if (nameMatch) {
+        char.name = nameMatch[1].trim();
+        char["char-name-new"] = nameMatch[1].trim();
+        char["char-furigana"] = nameMatch[2].trim();
+    } else {
+        char.name = rawName.trim();
+        char["char-name-new"] = rawName.trim();
+    }
 
     char["char-job"] = extractVal("職業");
     char["char-tag"] = extractVal("タグ");
@@ -154,29 +155,31 @@ function parseIachara(str) {
     char["char-hair"] = extractVal("髪の色");
     char["char-eyes"] = extractVal("瞳の色");
     char["char-skin"] = extractVal("肌の色");
+    char["char-birthday"] = extractVal("誕生日");
 
-    // 能力値抽出
+    // ★追加：複数画像の取得ロジック
+    const iconMatch = str.match(/【アイコン】([\s\S]*?)【能力値】/);
+    if (iconMatch) {
+        const urls = iconMatch[1].match(/https?:\/\/[^\s\n]+/g);
+        if (urls && urls.length > 0) {
+            char.images = urls.map(u => ({ url: u, desc: "" }));
+        }
+    }
+
     const stats = ['STR','CON','POW','DEX','APP','SIZ','INT','EDU'];
     stats.forEach(st => {
-        const reg = new RegExp(`${st}\\s+\\d+\\s+(\\d+)`);
-        const match = str.match(reg);
+        const match = str.match(new RegExp(`${st}\\s+\\d+\\s+(\\d+)`));
         if(match) char['base-'+st] = match[1];
     });
 
-    // ★修正：表形式（テーブル）になっている技能値を直接解析
-    // 形式: 技能名 合計 初期値 職業P 興味P 成長分 その他
     const skillRegex = /^(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)$/gm;
     let match;
     while ((match = skillRegex.exec(str)) !== null) {
         let rawSkillName = match[1].trim();
-        // 見出し行をスキップ
         if (rawSkillName === "技能名" || rawSkillName.includes("ポイント")) continue;
         
         let skillName = rawSkillName.replace(/（.*?）|\(.*?\)/g, "").trim();
-        let jobP = parseInt(match[4], 10);
-        let intP = parseInt(match[5], 10);
-        let groP = parseInt(match[6], 10);
-        let othP = parseInt(match[7], 10);
+        let jobP = parseInt(match[4], 10), intP = parseInt(match[5], 10), groP = parseInt(match[6], 10), othP = parseInt(match[7], 10);
 
         if (skillName === 'クトゥルフ神話') {
             if (groP > 0 || othP > 0) char['skill-mythos'] = groP + othP;
@@ -187,7 +190,6 @@ function parseIachara(str) {
             if (othP > 0) char[`sk-oth-${skillName}`] = othP;
         }
     }
-
     return char;
 }
 

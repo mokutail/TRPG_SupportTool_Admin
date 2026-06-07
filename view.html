@@ -4,31 +4,39 @@
     <meta charset="UTF-8">
     <title>キャラクター閲覧 - Cthulhu Architect</title>
     <style>
-        /* 閲覧モード専用のダークテーマCSS */
         body { background-color: #36393f; color: #dcddde; margin: 0; padding: 20px 40px; font-family: 'Segoe UI', sans-serif; }
         .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #202225; padding-bottom: 15px; }
         .header-bar h2 { margin: 0; color: #fff; }
-        .btn-new { background: #4f545c; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; text-decoration: none; font-weight: bold; }
-        .btn-new:hover { background: #686d73; }
+        .header-actions { display: flex; gap: 10px; }
+        .btn-new, .btn-action { background: #4f545c; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; text-decoration: none; font-weight: bold; }
+        .btn-new:hover, .btn-action:hover { background: #686d73; }
+        .btn-action.export { background: #007bff; } .btn-action.export:hover { background: #0056b3; }
+        .btn-action.edit { background: #28a745; } .btn-action.edit:hover { background: #218838; }
 
-        /* 全体のレイアウト */
         .view-container { display: flex; gap: 30px; max-width: 1200px; margin: 0 auto; background: #2f3136; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .left-col { flex: 0 0 280px; display: flex; flex-direction: column; gap: 15px; }
-        .char-image { width: 100%; height: 400px; background: #202225; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #72767d; object-fit: cover; overflow: hidden; border: 1px solid #4f545c; }
-        .char-image img { width: 100%; height: 100%; object-fit: cover; }
-        .right-col { flex: 1; display: flex; flex-direction: column; gap: 25px; }
+        .left-col { flex: 0 0 320px; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* 画像エリア（見切れないように contain に変更、スライダー対応） */
+        .image-carousel { position: relative; width: 100%; height: 450px; background: #202225; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #4f545c; overflow: hidden; }
+        .image-carousel img { width: 100%; height: 100%; object-fit: contain; }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; font-size: 20px; width: 40px; height: 40px; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .nav-btn:hover { background: rgba(0,0,0,0.9); }
+        .nav-btn.left { left: 10px; } .nav-btn.right { right: 10px; }
+        .img-desc { font-size: 14px; color: #b9bbbe; text-align: center; font-weight: bold; }
+        .tag-area { font-size: 14px; color: #fff; background: #202225; padding: 10px 15px; border-radius: 4px; border: 1px solid #4f545c; text-align: center; }
 
-        /* 名前とプロフィール */
+        .right-col { flex: 1; display: flex; flex-direction: column; gap: 25px; }
         .name-section { text-align: center; border-bottom: 2px solid #4f545c; padding-bottom: 15px; }
         .furigana { font-size: 14px; color: #b9bbbe; letter-spacing: 2px; }
         .name { font-size: 36px; font-weight: bold; color: #fff; margin: 5px 0; letter-spacing: 2px; }
-        .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; border-bottom: 2px solid #4f545c; padding-bottom: 15px; }
-        .profile-item { display: flex; justify-content: space-between; padding: 0 15px; border-right: 1px solid #4f545c; }
-        .profile-item:nth-child(3n) { border-right: none; }
-        .profile-label { color: #b9bbbe; font-size: 13px; font-weight: bold; }
-        .profile-value { color: #fff; font-weight: bold; font-size: 16px; }
+        
+        /* プロフィールを綺麗に並べる */
+        .profile-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; border-bottom: 2px solid #4f545c; padding-bottom: 15px; }
+        .profile-item { display: flex; flex-direction: column; padding: 0 10px; border-right: 1px solid #4f545c; }
+        .profile-item:nth-child(4n) { border-right: none; }
+        .profile-label { color: #b9bbbe; font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+        .profile-value { color: #fff; font-weight: bold; font-size: 15px; }
 
-        /* 能力値・ステータス */
         .stats-row { display: flex; justify-content: space-between; text-align: center; border-bottom: 2px solid #4f545c; padding-bottom: 15px; }
         .stat-box { flex: 1; }
         .stat-label { font-size: 13px; color: #b9bbbe; font-weight: bold; margin-bottom: 5px; }
@@ -37,208 +45,141 @@
         .derived-stats { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         .derived-box { border: 1px solid #b9bbbe; padding: 6px 20px; border-radius: 4px; font-weight: bold; font-size: 14px; background: #202225; }
         .derived-box.san-box { border-color: #fff; }
-        .san-insane { color: #ff7597; }
-
-        /* 下部（技能とメモ） */
-        .bottom-section { display: flex; gap: 30px; }
-        .skills-area { flex: 1.2; }
-        .memo-area { flex: 1; display: flex; flex-direction: column; gap: 15px; }
 
         .skill-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: center; background: #202225; border-radius: 8px; overflow: hidden; }
         .skill-table th { background: #18191c; padding: 10px; border-bottom: 2px solid #4f545c; color: #b9bbbe; }
         .skill-table td { padding: 8px 10px; border-bottom: 1px solid #36393f; color: #dcddde; }
         .skill-name { text-align: left; font-weight: bold; color: #fff; }
         .skill-total { font-weight: bold; color: #5ce1e6; background: #2f3136; }
-
-        .memo-box { background: #202225; border: 1px solid #4f545c; border-radius: 4px; overflow: hidden; }
-        .memo-title { background: #18191c; padding: 10px 15px; font-weight: bold; color: #fff; border-bottom: 1px solid #4f545c; }
-        .memo-content { padding: 15px; font-size: 14px; white-space: pre-wrap; line-height: 1.6; }
     </style>
 </head>
 <body>
     <div class="header-bar">
-        <h2>閲覧モード</h2>
-        <a href="index.html" class="btn-new">玄関に戻る</a>
-    </div>
-    
-    <div id="view-content">
+        <h2>キャラクター閲覧</h2>
+        <div class="header-actions">
+            <button class="btn-action edit" onclick="goToEdit()">🖊 編集</button>
+            <button class="btn-action export" onclick="exportJSON()">📤 出力(JSON)</button>
+            <a href="index.html" class="btn-new">玄関に戻る</a>
         </div>
+    </div>
+    <div id="view-content"></div>
 
     <script>
         const index = localStorage.getItem('viewingIndex');
         const chars = JSON.parse(localStorage.getItem('characters') || '[]');
         const char = chars[index];
 
+        let currentImageIndex = 0;
+        let viewImages = char?.images || [];
+        // 古いデータで iconUrl しかない場合の互換性
+        if (char?.iconUrl && viewImages.length === 0) viewImages.push({url: char.iconUrl, desc: ''});
+
         if (!char) {
             document.getElementById('view-content').innerHTML = '<p style="text-align:center;">データが見つかりません。</p>';
         } else {
-            renderView(char);
+            renderView();
         }
 
-        function getVal(key, defaultVal = '') { return char[key] ? char[key] : defaultVal; }
+        function getVal(key) { return char[key] || ''; } // 未設定なら空欄
         function getNum(key) { return parseInt(char[key]) || 0; }
-
-        function calcDB(str, siz) {
-            let sum = str + siz;
-            if(sum < 2) return "なし";
-            if(sum <= 12) return "-1D6";
-            if(sum <= 16) return "-1D4";
-            if(sum <= 24) return "0";
-            if(sum <= 32) return "+1D4";
-            if(sum <= 40) return "+1D6";
-            return "+2D6";
+        
+        function goToEdit() {
+            localStorage.setItem('editingIndex', index);
+            window.location.href = 'coc6th_editor/coc6th_edit.html';
+        }
+        function exportJSON() {
+            navigator.clipboard.writeText(JSON.stringify(char, null, 2));
+            alert("JSON形式でコピーしました！");
+        }
+        function changeImage(dir) {
+            currentImageIndex = (currentImageIndex + dir + viewImages.length) % viewImages.length;
+            renderView(); // 再描画
         }
 
-        function renderView(char) {
-            // 能力値の計算（ベース＋ボーナス＋一時的）
-            const str = getNum('base-STR') + getNum('bonus-STR') + getNum('temp-STR');
-            const con = getNum('base-CON') + getNum('bonus-CON') + getNum('temp-CON');
-            const pow = getNum('base-POW') + getNum('bonus-POW') + getNum('temp-POW');
-            const dex = getNum('base-DEX') + getNum('bonus-DEX') + getNum('temp-DEX');
-            const app = getNum('base-APP') + getNum('bonus-APP') + getNum('temp-APP');
-            const siz = getNum('base-SIZ') + getNum('bonus-SIZ') + getNum('temp-SIZ');
-            const int = getNum('base-INT') + getNum('bonus-INT') + getNum('temp-INT');
-            const edu = getNum('base-EDU') + getNum('bonus-EDU') + getNum('temp-EDU');
-
-            // 派生ステータス
-            const hp = (con > 0 && siz > 0) ? Math.ceil((con + siz) / 2) : 0;
-            const mp = pow;
-            const san = getNum('san-input') || (pow * 5);
-            const mythos = getNum('skill-mythos') + getNum('sk-oth-神話');
-            const maxSan = 99 - mythos;
-            const idea = int * 5;
-            const luck = pow * 5;
-            const know = edu * 5;
-            const db = calcDB(str, siz);
-
-            // --- 画像の表示ロジック ---
-            // ※ いあきゃらやココフォリアのデータに「iconUrl」があれば表示、なければプレースホルダー
-            let imgHTML = '<div class="char-image">No Image</div>';
-            if (char.iconUrl) {
-                imgHTML = `<div class="char-image"><img src="${char.iconUrl}" alt="キャラクター画像"></div>`;
+        function renderView() {
+            // 画像スライダーのHTML
+            let imgHTML = '<div class="image-carousel"><span style="color:#72767d;">No Image</span></div>';
+            let descHTML = '';
+            if (viewImages.length > 0) {
+                const img = viewImages[currentImageIndex];
+                const prevBtn = viewImages.length > 1 ? '<button class="nav-btn left" onclick="changeImage(-1)">❮</button>' : '';
+                const nextBtn = viewImages.length > 1 ? '<button class="nav-btn right" onclick="changeImage(1)">❯</button>' : '';
+                imgHTML = `<div class="image-carousel">${prevBtn}<img src="${img.url}">${nextBtn}</div>`;
+                if(img.desc) descHTML = `<div class="img-desc">${img.desc}</div>`;
             }
 
-            // --- 技能の抽出と表作成 ---
-            // 基礎値の辞書
-            const initVals = {
-                "回避": dex*2, "母国語": edu*5, "キック": 25, "組み付き": 25, "こぶし": 50, "頭突き": 10, "投擲": 25, "マーシャルアーツ": 1, "拳銃": 20, "サブマシンガン": 15, "ショットガン": 30, "マシンガン": 15, "ライフル": 25,
-                "応急手当": 30, "鍵開け": 1, "隠す": 15, "隠れる": 10, "聞き耳": 25, "忍び歩き": 10, "写真術": 10, "精神分析": 1, "追跡": 10, "登攀": 40, "図書館": 25, "目星": 25,
-                "運転": 20, "機械修理": 20, "重機械操作": 1, "乗馬": 5, "水泳": 25, "製作": 5, "操縦": 1, "跳躍": 25, "電気修理": 10, "ナビゲート": 10, "変装": 1,
-                "言いくるめ": 5, "信用": 15, "説得": 25, "値切り": 5,
-                "医学": 5, "オカルト": 5, "化学": 1, "芸術": 5, "経理": 10, "考古学": 1, "コンピューター": 1, "心理学": 5, "人類学": 1, "生物学": 1, "地質学": 1, "電子工学": 1, "天文学": 1, "博物学": 10, "物理学": 1, "法律": 5, "薬学": 1, "歴史": 20
-            };
-
+            // 技能の抽出ロジック（ポイントが振られているものだけ）
+            const initVals = { "回避": getNum('base-DEX')*2, "母国語": getNum('base-EDU')*5, "キック": 25, "組み付き": 25, "こぶし": 50, "投擲": 25, "応急手当": 30, "聞き耳": 25, "図書館": 25, "目星": 25, "運転": 20, "機械修理": 20, "水泳": 25, "跳躍": 25, "説得": 25, "歴史": 20 };
             let skillSet = new Set();
-            Object.keys(char).forEach(key => {
-                if(key.match(/^sk-(job|int|gro|oth)-/)) skillSet.add(key.replace(/^sk-(job|int|gro|oth)-/, ''));
-            });
+            Object.keys(char).forEach(key => { if(key.match(/^sk-(job|int|gro|oth)-/)) skillSet.add(key.replace(/^sk-(job|int|gro|oth)-/, '')); });
 
             let skillsHTML = '';
             skillSet.forEach(sk => {
-                let init = initVals[sk] || 0;
-                let job = getNum(`sk-job-${sk}`);
-                let intP = getNum(`sk-int-${sk}`);
-                let gro = getNum(`sk-gro-${sk}`);
-                let oth = getNum(`sk-oth-${sk}`);
-                let total = init + job + intP + gro + oth;
-                
-                // ポイントが1でも振られている技能だけを表示
+                let init = initVals[sk] || (["頭突き","隠れる","忍び歩き","写真術","追跡","電気修理","ナビゲート","経理","博物学"].includes(sk) ? 10 : (["乗馬","製作","言いくるめ","値切り","医学","オカルト","芸術","心理学","法律"].includes(sk) ? 5 : 1));
+                let job = getNum(`sk-job-${sk}`), intP = getNum(`sk-int-${sk}`), gro = getNum(`sk-gro-${sk}`), oth = getNum(`sk-oth-${sk}`);
                 if (job > 0 || intP > 0 || gro > 0 || oth > 0) {
-                    skillsHTML += `
-                        <tr>
-                            <td class="skill-name">${sk}</td>
-                            <td>${init}</td>
-                            <td>${job || ''}</td>
-                            <td>${intP || ''}</td>
-                            <td>${gro || ''}</td>
-                            <td>${oth || ''}</td>
-                            <td class="skill-total">${total}</td>
-                        </tr>
-                    `;
+                    skillsHTML += `<tr><td class="skill-name">${sk}</td><td>${init}</td><td>${job||''}</td><td>${intP||''}</td><td>${gro||''}</td><td>${oth||''}</td><td class="skill-total">${init+job+intP+gro+oth}</td></tr>`;
                 }
             });
+            const mythos = getNum('skill-mythos') + getNum('sk-oth-神話');
+            if(mythos > 0) skillsHTML += `<tr><td class="skill-name" style="color:#ff7597;">クトゥルフ神話</td><td>0</td><td></td><td></td><td>${getNum('skill-mythos')||''}</td><td>${getNum('sk-oth-神話')||''}</td><td class="skill-total" style="color:#ff7597;">${mythos}</td></tr>`;
 
-            // 神話技能が1以上あれば表示
-            if (mythos > 0) {
-                skillsHTML += `
-                    <tr>
-                        <td class="skill-name" style="color:#ff7597;">クトゥルフ神話</td>
-                        <td>0</td><td></td><td></td>
-                        <td>${getNum('skill-mythos') || ''}</td>
-                        <td>${getNum('sk-oth-神話') || ''}</td>
-                        <td class="skill-total" style="color:#ff7597;">${mythos}</td>
-                    </tr>
-                `;
-            }
+            // 能力値計算
+            const str = getNum('base-STR')+getNum('bonus-STR')+getNum('temp-STR');
+            const siz = getNum('base-SIZ')+getNum('bonus-SIZ')+getNum('temp-SIZ');
+            const san = getNum('san-input') || (getNum('base-POW')*5);
 
-            // HTML組み立て
-            const html = `
+            document.getElementById('view-content').innerHTML = `
                 <div class="view-container">
                     <div class="left-col">
                         ${imgHTML}
+                        ${descHTML}
+                        <div class="tag-area">タグ: ${getVal('char-tag') || 'なし'}</div>
                     </div>
-                    
                     <div class="right-col">
                         <div class="name-section">
-                            <div class="furigana">${getVal('char-furigana', ' ')}</div>
-                            <div class="name">${getVal('name', '無名の探索者')}</div>
+                            <div class="furigana">${getVal('char-furigana')}</div>
+                            <div class="name">${getVal('name')}</div>
                         </div>
-                        
                         <div class="profile-grid">
                             <div class="profile-item"><span class="profile-label">職業</span><span class="profile-value">${getVal('char-job')}</span></div>
                             <div class="profile-item"><span class="profile-label">年齢</span><span class="profile-value">${getVal('char-age')}</span></div>
                             <div class="profile-item"><span class="profile-label">性別</span><span class="profile-value">${getVal('char-gender')}</span></div>
+                            <div class="profile-item"><span class="profile-label">出身</span><span class="profile-value">${getVal('char-origin')}</span></div>
                             <div class="profile-item"><span class="profile-label">身長</span><span class="profile-value">${getVal('char-height')}</span></div>
+                            <div class="profile-item"><span class="profile-label">体重</span><span class="profile-value">${getVal('char-weight')}</span></div>
+                            <div class="profile-item"><span class="profile-label">髪の色</span><span class="profile-value">${getVal('char-hair')}</span></div>
                             <div class="profile-item"><span class="profile-label">瞳の色</span><span class="profile-value">${getVal('char-eyes')}</span></div>
+                            <div class="profile-item"><span class="profile-label">肌の色</span><span class="profile-value">${getVal('char-skin')}</span></div>
                             <div class="profile-item"><span class="profile-label">誕生日</span><span class="profile-value">${getVal('char-birthday')}</span></div>
+                            <div class="profile-item"><span class="profile-label">種族</span><span class="profile-value">${getVal('char-race')}</span></div>
+                            <div class="profile-item"><span class="profile-label">最終学歴</span><span class="profile-value">${getVal('char-education')}</span></div>
                         </div>
-                        
                         <div class="stats-row">
-                            <div class="stat-box"><div class="stat-label">STR</div><div class="stat-value">${str || '-'}</div></div>
-                            <div class="stat-box"><div class="stat-label">CON</div><div class="stat-value">${con || '-'}</div></div>
-                            <div class="stat-box"><div class="stat-label">POW</div><div class="stat-value">${pow || '-'}</div></div>
-                            <div class="stat-box"><div class="stat-label">DEX</div><div class="stat-value">${dex || '-'}</div></div>
-                            <div class="stat-box"><div class="stat-label">APP</div><div class="stat-value">${app || '-'}</div></div>
-                            <div class="stat-box"><div class="stat-label">SIZ</div><div class="stat-value">${siz || '-'}</div></div>
-                            <div class="stat-box"><div class="stat-label">INT</div><div class="stat-value">${int || '-'}</div></div>
-                            <div class="stat-box"><div class="stat-label">EDU</div><div class="stat-value">${edu || '-'}</div></div>
+                            <div class="stat-box"><div class="stat-label">STR</div><div class="stat-value">${str||'-'}</div></div>
+                            <div class="stat-box"><div class="stat-label">CON</div><div class="stat-value">${getNum('base-CON')||'-'}</div></div>
+                            <div class="stat-box"><div class="stat-label">POW</div><div class="stat-value">${getNum('base-POW')||'-'}</div></div>
+                            <div class="stat-box"><div class="stat-label">DEX</div><div class="stat-value">${getNum('base-DEX')||'-'}</div></div>
+                            <div class="stat-box"><div class="stat-label">APP</div><div class="stat-value">${getNum('base-APP')||'-'}</div></div>
+                            <div class="stat-box"><div class="stat-label">SIZ</div><div class="stat-value">${siz||'-'}</div></div>
+                            <div class="stat-box"><div class="stat-label">INT</div><div class="stat-value">${getNum('base-INT')||'-'}</div></div>
+                            <div class="stat-box"><div class="stat-label">EDU</div><div class="stat-value">${getNum('base-EDU')||'-'}</div></div>
                         </div>
-
                         <div class="derived-stats">
-                            <div class="derived-box san-box">SAN値 ${san}/${maxSan} 不定領域<span class="san-insane">${Math.floor(san*0.8)}</span></div>
-                            <div class="derived-box">HP ${hp || '-'}</div>
-                            <div class="derived-box">MP ${mp || '-'}</div>
-                            <div class="derived-box">DB ${db}</div>
-                            <div class="derived-box">アイデア ${idea || '-'}</div>
-                            <div class="derived-box">幸運 ${luck || '-'}</div>
-                            <div class="derived-box">知識 ${know || '-'}</div>
+                            <div class="derived-box san-box">SAN値 ${san}/${99-mythos}</div>
+                            <div class="derived-box">HP ${Math.ceil((getNum('base-CON')+siz)/2) || '-'}</div>
+                            <div class="derived-box">MP ${getNum('base-POW') || '-'}</div>
+                            <div class="derived-box">アイデア ${getNum('base-INT')*5 || '-'}</div>
+                            <div class="derived-box">幸運 ${getNum('base-POW')*5 || '-'}</div>
+                            <div class="derived-box">知識 ${getNum('base-EDU')*5 || '-'}</div>
                         </div>
-
-                        <div class="bottom-section">
-                            <div class="skills-area">
-                                <table class="skill-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="skill-name">技能名</th>
-                                            <th>初期</th><th>職業</th><th>興味</th><th>成長</th><th>他</th><th>合計</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${skillsHTML}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="memo-area">
-                                <div class="memo-box">
-                                    <div class="memo-title">タグ・その他</div>
-                                    <div class="memo-content">出身: ${getVal('char-origin', '未設定')} / 髪の色: ${getVal('char-hair', '未設定')} / 肌の色: ${getVal('char-skin', '未設定')}\nタグ: ${getVal('char-tag', 'なし')}</div>
-                                </div>
-                            </div>
-                        </div>
+                        <table class="skill-table">
+                            <thead><tr><th class="skill-name">技能名</th><th>初期</th><th>職業</th><th>興味</th><th>成長</th><th>他</th><th>合計</th></tr></thead>
+                            <tbody>${skillsHTML}</tbody>
+                        </table>
                     </div>
                 </div>
             `;
-            document.getElementById('view-content').innerHTML = html;
         }
     </script>
 </body>
