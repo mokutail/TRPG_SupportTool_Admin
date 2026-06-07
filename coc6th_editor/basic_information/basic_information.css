@@ -157,3 +157,29 @@
 .image-modal-footer { background: #202225; padding: 15px 20px; display: flex; justify-content: flex-start; border-top: 1px solid #4f545c; }
 .btn-done { background: #007bff; color: white; border: none; padding: 10px 30px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 .btn-done:hover { background: #0056b3; }
+
+/* --- 画像管理モーダル追記分 --- */
+.img-section-title { font-weight: bold; color: #b9bbbe; padding-bottom: 5px; border-bottom: 1px solid #4f545c; margin-bottom: 10px; }
+.sort-btns { display: flex; flex-direction: column; gap: 2px; }
+.sort-btns button { background: #4f545c; color: white; border: none; padding: 4px 8px; font-size: 10px; cursor: pointer; border-radius: 2px; }
+.sort-btns button:hover { background: #7289da; }
+#image-rows-container { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.image-row { display: flex; align-items: center; gap: 8px; background: #202225; padding: 10px; border-radius: 6px; border: 1px solid #4f545c; }
+.btn-change-file { background: #43b581; color: white; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+.btn-delete-img { background: #f04747; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.btn-add-img-row { margin: 10px 0; background: #7289da; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; text-align: center; }
+
+
+
+/* 基本情報のスマホ対応 */
+@media screen and (max-width: 600px) {
+    .info-content-wrapper {
+        flex-direction: column !important;
+    }
+    .info-left-box {
+        flex: 0 0 auto !important;
+    }
+    .info-right-box .info-input-row {
+        flex-direction: column !important;
+    }
+}

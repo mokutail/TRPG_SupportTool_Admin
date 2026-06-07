@@ -266,3 +266,29 @@ body {
 .control-footer { margin-top: 30px; display: flex !important; gap: 15px !important; }
 .btn-submit { background: #4e555b !important; border: 1px solid #6c757d !important; color: white !important; padding: 14px 28px !important; border-radius: 4px !important; cursor: pointer !important; font-weight: bold !important; font-size: 15px !important; }
 .btn-submit:hover { background-color: #6c757d !important; }
+
+
+
+/* スマホ・タブレット用：能力値テーブルのレイアウト崩れ対策 */
+@media screen and (max-width: 800px) {
+    .ability-table {
+        overflow-x: auto !important; /* 横スクロールを許可 */
+        display: block !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+    }
+    
+    .table-row {
+        min-width: 800px !important; /* テーブル全体が潰れないように最小幅を確保 */
+    }
+
+    .cell {
+        padding: 8px 4px !important;
+        font-size: 12px !important;
+    }
+
+    /* パネルの折り返し */
+    .status-panel-row {
+        flex-direction: column !important;
+    }
+}

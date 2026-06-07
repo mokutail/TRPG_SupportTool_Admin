@@ -39,7 +39,7 @@
     <script src="skill_value/skill_value.js"></script>
     <script src="ability_value/ability_value.js"></script>
 
-   <script>
+<script>
         // 1. ページを開いたときにデータを全自動でフォームに入れる処理
         document.addEventListener("DOMContentLoaded", () => {
             const editIndex = localStorage.getItem('editingIndex');
@@ -49,77 +49,60 @@
                 const char = chars[parseInt(editIndex, 10)];
                 
                 if (char) {
-                    window.charImages = char.images || [];
-                    if(typeof updateMainPreview === 'function') updateMainPreview(); // ロード時にプレビューを表示
+                    // ★最新：メイン画像と表情差分をそれぞれ復元
+                    window.charMainImages = char.mainImages || [];
+                    window.charExprImages = char.exprImages || [];
+                    if(typeof updateMainPreview === 'function') updateMainPreview(); 
 
-                    // 画面内のすべての input(テキストや数値) と select(プルダウン) を取得
-                    const elements = document.querySelectorAll("#char-editor input, #char-editor select");
-                    
-                    elements.forEach((el, index) => {
-                        // id または name をキー（保存用の名前）として使う
-                        let key = el.name || el.id;
-                        
-                        // 「運転（自動車）」のようにidもnameもない特別な入力欄への対応
-                        if (!key && el.classList.contains('skill-name-inline')) {
-                            key = 'inline-skill-' + index;
-                        }
-                        
-                        // データに保存されていたら、その値を入力欄に戻す
-                        if (key && char[key] !== undefined) {
-                            if (el.type === 'checkbox') {
-                                el.checked = char[key]; // チェックボックスの復元
-                            } else {
-                                el.value = char[key];   // 文字や数値の復元
+                    // 画面内のすべての input/select を自動セット
+                    setTimeout(() => {
+                        const elements = document.querySelectorAll("#char-editor input, #char-editor select");
+                        elements.forEach((el, index) => {
+                            let key = el.name || el.id;
+                            if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
+                            
+                            if (key && char[key] !== undefined) {
+                                if (el.type === 'checkbox') el.checked = char[key];
+                                else el.value = char[key];
                             }
-                        }
-                    });
-
-                    // すべての数字を入れ終わったら、合計値などを再計算して画面に反映させる
-                    if (typeof calcAll === 'function') calcAll();
-                    if (typeof calcSkills === 'function') calcSkills();
+                        });
+                        if (typeof calcAll === 'function') calcAll();
+                        if (typeof calcSkills === 'function') calcSkills();
+                    }, 100);
                 }
             }
         });
 
-        // 2. 保存ボタンを押したときの処理（全自動収集）
+        // 2. 保存ボタンを押したときの処理（画像データ分離対応）
         function saveCharacter() {
             const chars = JSON.parse(localStorage.getItem('characters') || '[]');
             const editIndex = localStorage.getItem('editingIndex');
             
-            const newData = {}; // 空の箱を用意
+            const newData = {};
             
-            newData.images = window.charImages || [];
-            // 画面内のすべての input と select を取得
+            // ★最新：メイン画像と表情差分を個別に保存
+            newData.mainImages = window.charMainImages || [];
+            newData.exprImages = window.charExprImages || [];
+            
+            // フォームの内容を収集
             const elements = document.querySelectorAll("#char-editor input, #char-editor select");
-            
             elements.forEach((el, index) => {
                 let key = el.name || el.id;
-                
-                if (!key && el.classList.contains('skill-name-inline')) {
-                    key = 'inline-skill-' + index;
-                }
-                
-                // 空の箱に、画面の入力値をすべて詰め込む
-                if (key) {
-                    newData[key] = el.type === 'checkbox' ? el.checked : el.value;
-                }
+                if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
+                if (key) newData[key] = el.type === 'checkbox' ? el.checked : el.value;
             });
 
-            // 玄関(ダッシュボード)に名前を表示するため、明示的に name を設定しておく
             newData.name = document.getElementById("char-name-new")?.value || "無名の探索者";
 
             if (editIndex !== null && editIndex !== "") {
-                // 編集モードならその場所を上書き
                 chars[parseInt(editIndex, 10)] = newData;
                 localStorage.removeItem('editingIndex');
             } else {
-                // 新規作成なら一番後ろに追加
                 chars.push(newData);
             }
 
-            // データを保存して玄関に戻る
             localStorage.setItem('characters', JSON.stringify(chars));
-            alert("基本情報・能力値・技能値のすべてを保存しました！");
+            alert("基本情報・能力値・技能値・画像データのすべてを保存しました！");
             window.location.href = "../index.html";
         }
     </script>
