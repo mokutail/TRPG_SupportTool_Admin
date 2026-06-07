@@ -8,11 +8,17 @@
 <body>
     <header>
         <h1>Cthulhu Architect</h1>
-        <a href="coc6th_editor/coc6th_edit.html" class="btn-new">+ 新規作成</a>
+        <div class="header-actions">
+            <div id="drop-zone" class="drop-zone">
+                📝 ドロップ または Ctrl+V<br>（クリックでファイルを選択）
+            </div>
+            <input type="file" id="file-input" style="display:none;" accept=".txt,.json">
+            
+            <a href="coc6th_editor/coc6th_edit.html" class="btn-new" onclick="localStorage.removeItem('editingIndex')">+ 新規作成</a>
+        </div>
     </header>
 
-    <main id="dashboard" class="char-list">
-        </main>
+    <main id="dashboard" class="char-list"></main>
 
     <div id="export-modal" class="modal" style="display:none;">
         <div class="modal-content">
