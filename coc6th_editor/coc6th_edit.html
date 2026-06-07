@@ -39,8 +39,8 @@
     <script src="skill_value/skill_value.js"></script>
     <script src="ability_value/ability_value.js"></script>
 
-    <script>
-        // 1. ページを開いたときにデータをフォームに入れる処理
+   <script>
+        // 1. ページを開いたときにデータを全自動でフォームに入れる処理
         document.addEventListener("DOMContentLoaded", () => {
             const editIndex = localStorage.getItem('editingIndex');
             
@@ -48,56 +48,65 @@
                 const chars = JSON.parse(localStorage.getItem('characters') || '[]');
                 const char = chars[parseInt(editIndex, 10)];
                 
-                // データを各入力欄にセットする
                 if (char) {
-                    if (document.getElementById("char-name-new")) document.getElementById("char-name-new").value = char.name || "";
-                    if (document.getElementById("char-furigana")) document.getElementById("char-furigana").value = char.furigana || "";
-                    if (document.getElementById("char-tag")) document.getElementById("char-tag").value = char.tag || "";
-                    if (document.getElementById("char-job")) document.getElementById("char-job").value = char.job || "";
-                    if (document.getElementById("char-age")) document.getElementById("char-age").value = char.age || "";
-                    if (document.getElementById("char-gender")) document.getElementById("char-gender").value = char.gender || "";
-                    if (document.getElementById("char-height")) document.getElementById("char-height").value = char.height || "";
-                    if (document.getElementById("char-weight")) document.getElementById("char-weight").value = char.weight || "";
-                    if (document.getElementById("char-origin")) document.getElementById("char-origin").value = char.origin || "";
-                    if (document.getElementById("char-hair")) document.getElementById("char-hair").value = char.hair || "";
-                    if (document.getElementById("char-eyes")) document.getElementById("char-eyes").value = char.eyes || "";
-                    if (document.getElementById("char-skin")) document.getElementById("char-skin").value = char.skin || "";
-                    if (document.getElementById("char-birthday")) document.getElementById("char-birthday").value = char.birthday || "";
-                    if (document.getElementById("char-race")) document.getElementById("char-race").value = char.race || "";
-                    if (document.getElementById("char-education")) document.getElementById("char-education").value = char.education || "";
+                    // 画面内のすべての input(テキストや数値) と select(プルダウン) を取得
+                    const elements = document.querySelectorAll("#char-editor input, #char-editor select");
+                    
+                    elements.forEach((el, index) => {
+                        // id または name をキー（保存用の名前）として使う
+                        let key = el.name || el.id;
+                        
+                        // 「運転（自動車）」のようにidもnameもない特別な入力欄への対応
+                        if (!key && el.classList.contains('skill-name-inline')) {
+                            key = 'inline-skill-' + index;
+                        }
+                        
+                        // データに保存されていたら、その値を入力欄に戻す
+                        if (key && char[key] !== undefined) {
+                            if (el.type === 'checkbox') {
+                                el.checked = char[key]; // チェックボックスの復元
+                            } else {
+                                el.value = char[key];   // 文字や数値の復元
+                            }
+                        }
+                    });
+
+                    // すべての数字を入れ終わったら、合計値などを再計算して画面に反映させる
+                    if (typeof calcAll === 'function') calcAll();
+                    if (typeof calcSkills === 'function') calcSkills();
                 }
-                // ※ ここで removeItem はしません。保存するときに消します。
             }
         });
 
-        // 2. 保存ボタンを押したときの処理
+        // 2. 保存ボタンを押したときの処理（全自動収集）
         function saveCharacter() {
             const chars = JSON.parse(localStorage.getItem('characters') || '[]');
             const editIndex = localStorage.getItem('editingIndex');
             
-            // 画面の入力内容をすべて集める
-            const newData = {
-                name: document.getElementById("char-name-new")?.value || "無名の探索者",
-                furigana: document.getElementById("char-furigana")?.value || "",
-                tag: document.getElementById("char-tag")?.value || "",
-                job: document.getElementById("char-job")?.value || "",
-                age: document.getElementById("char-age")?.value || "",
-                gender: document.getElementById("char-gender")?.value || "",
-                height: document.getElementById("char-height")?.value || "",
-                weight: document.getElementById("char-weight")?.value || "",
-                origin: document.getElementById("char-origin")?.value || "",
-                hair: document.getElementById("char-hair")?.value || "",
-                eyes: document.getElementById("char-eyes")?.value || "",
-                skin: document.getElementById("char-skin")?.value || "",
-                birthday: document.getElementById("char-birthday")?.value || "",
-                race: document.getElementById("char-race")?.value || "",
-                education: document.getElementById("char-education")?.value || ""
-            };
+            const newData = {}; // 空の箱を用意
+            
+            // 画面内のすべての input と select を取得
+            const elements = document.querySelectorAll("#char-editor input, #char-editor select");
+            
+            elements.forEach((el, index) => {
+                let key = el.name || el.id;
+                
+                if (!key && el.classList.contains('skill-name-inline')) {
+                    key = 'inline-skill-' + index;
+                }
+                
+                // 空の箱に、画面の入力値をすべて詰め込む
+                if (key) {
+                    newData[key] = el.type === 'checkbox' ? el.checked : el.value;
+                }
+            });
+
+            // 玄関(ダッシュボード)に名前を表示するため、明示的に name を設定しておく
+            newData.name = document.getElementById("char-name-new")?.value || "無名の探索者";
 
             if (editIndex !== null && editIndex !== "") {
                 // 編集モードならその場所を上書き
                 chars[parseInt(editIndex, 10)] = newData;
-                // 保存が終わったら編集モードを解除
                 localStorage.removeItem('editingIndex');
             } else {
                 // 新規作成なら一番後ろに追加
@@ -106,7 +115,7 @@
 
             // データを保存して玄関に戻る
             localStorage.setItem('characters', JSON.stringify(chars));
-            alert("保存しました！");
+            alert("基本情報・能力値・技能値のすべてを保存しました！");
             window.location.href = "../index.html";
         }
     </script>
