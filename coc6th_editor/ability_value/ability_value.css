@@ -270,7 +270,7 @@ body {
 
 
 /* スマホ・タブレット用：能力値テーブルのレイアウト崩れ対策 */
-@media screen and (max-width: 800px) {
+@media screen and (max-width: 700px) {
     .ability-table {
         overflow-x: auto !important; /* 横スクロールを許可 */
         display: block !important;
@@ -279,7 +279,7 @@ body {
     }
     
     .table-row {
-        min-width: 800px !important; /* テーブル全体が潰れないように最小幅を確保 */
+        min-width: 700px !important; /* テーブル全体が潰れないように最小幅を確保 */
     }
 
     .cell {
