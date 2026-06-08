@@ -23,7 +23,6 @@ function renderDashboard() {
                 <div class="menu-container">
                     <button class="btn-menu" onclick="toggleMenu(this)">⋮</button>
                     <div class="menu-dropdown">
-                        <button onclick="viewChar(${index})">閲覧</button>
                         <button onclick="editChar(${index})">詳細編集</button>
                         <button onclick="openModal(${index})">ココフォリア出力</button>
                         <button onclick="shareChar(${index})">共有（URLコピー）</button>
