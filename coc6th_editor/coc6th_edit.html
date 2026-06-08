@@ -40,71 +40,76 @@
     <script src="ability_value/ability_value.js"></script>
 
 <script>
-        // 1. ページを開いたときにデータを全自動でフォームに入れる処理
-        document.addEventListener("DOMContentLoaded", () => {
-            const editIndex = localStorage.getItem('editingIndex');
+    // 1. ページ読み込み時にデータを復元
+    document.addEventListener("DOMContentLoaded", () => {
+        const editIndex = localStorage.getItem('editingIndex');
+        
+        if (editIndex !== null && editIndex !== "") {
+            const chars = JSON.parse(localStorage.getItem('characters') || '[]');
+            const char = chars[parseInt(editIndex, 10)];
             
-            if (editIndex !== null && editIndex !== "") {
-                const chars = JSON.parse(localStorage.getItem('characters') || '[]');
-                const char = chars[parseInt(editIndex, 10)];
+            if (char) {
+                // 配列を正しくセット
+                window.charMainImages = char.mainImages || [];
+                window.charExprImages = char.exprImages || [];
                 
-                if (char) {
-                    // ★最新：メイン画像と表情差分をそれぞれ復元
-                    window.charMainImages = char.mainImages || [];
-                    window.charExprImages = char.exprImages || [];
-                    if(typeof updateMainPreview === 'function') updateMainPreview(); 
+                if(typeof updateMainPreview === 'function') updateMainPreview();
 
-                    // 画面内のすべての input/select を自動セット
-                    setTimeout(() => {
-                        const elements = document.querySelectorAll("#char-editor input, #char-editor select");
-                        elements.forEach((el, index) => {
-                            let key = el.name || el.id;
-                            if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
-                            
-                            if (key && char[key] !== undefined) {
-                                if (el.type === 'checkbox') el.checked = char[key];
-                                else el.value = char[key];
-                            }
-                        });
-                        if (typeof calcAll === 'function') calcAll();
-                        if (typeof calcSkills === 'function') calcSkills();
-                    }, 100);
-                }
+                setTimeout(() => {
+                    const elements = document.querySelectorAll("#char-editor input, #char-editor select");
+                    elements.forEach((el, index) => {
+                        let key = el.name || el.id;
+                        if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
+                        
+                        if (key && char[key] !== undefined) {
+                            if (el.type === 'checkbox') el.checked = char[key];
+                            else el.value = char[key];
+                        }
+                    });
+                    if (typeof calcAll === 'function') calcAll();
+                    if (typeof calcSkills === 'function') calcSkills();
+                }, 100);
             }
+        }
+    });
+
+    // 2. 保存処理
+    function saveCharacter() {
+        const chars = JSON.parse(localStorage.getItem('characters') || '[]');
+        const editIndex = localStorage.getItem('editingIndex');
+        
+        // フォーム内の全データを収集
+        const newData = {};
+        const elements = document.querySelectorAll("#char-editor input, #char-editor select");
+        elements.forEach((el, index) => {
+            let key = el.name || el.id;
+            if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
+            if (key) newData[key] = el.type === 'checkbox' ? el.checked : el.value;
         });
 
-        // 2. 保存ボタンを押したときの処理（画像データ分離対応）
-        function saveCharacter() {
-            const chars = JSON.parse(localStorage.getItem('characters') || '[]');
-            const editIndex = localStorage.getItem('editingIndex');
-            
-            const newData = {};
-            
-            // ★最新：メイン画像と表情差分を個別に保存
-            newData.mainImages = window.charMainImages || [];
-            newData.exprImages = window.charExprImages || [];
-            
-            // フォームの内容を収集
-            const elements = document.querySelectorAll("#char-editor input, #char-editor select");
-            elements.forEach((el, index) => {
-                let key = el.name || el.id;
-                if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
-                if (key) newData[key] = el.type === 'checkbox' ? el.checked : el.value;
-            });
+        // 画像データをセット（ここでグローバル変数の配列をnewDataに渡す）
+        newData.mainImages = window.charMainImages || [];
+        newData.exprImages = window.charExprImages || [];
 
-            newData.name = document.getElementById("char-name-new")?.value || "無名の探索者";
+        newData.name = document.getElementById("char-name-new")?.value || "無名の探索者";
 
-            if (editIndex !== null && editIndex !== "") {
-                chars[parseInt(editIndex, 10)] = newData;
-                localStorage.removeItem('editingIndex');
-            } else {
-                chars.push(newData);
-            }
+        if (editIndex !== null && editIndex !== "") {
+            chars[parseInt(editIndex, 10)] = newData;
+            localStorage.removeItem('editingIndex');
+        } else {
+            chars.push(newData);
+        }
 
+        // 保存時にエラーが起きないかチェックする
+        try {
             localStorage.setItem('characters', JSON.stringify(chars));
             alert("基本情報・能力値・技能値・画像データのすべてを保存しました！");
             window.location.href = "../index.html";
+        } catch (e) {
+            console.error("保存エラー:", e);
+            alert("【保存失敗】ブラウザの保存容量（5MB）を超過しました。\n不要なキャラクターを削除するか、画像の枚数を減らしてください。");
         }
-    </script>
+    }
+</script>
 </body>
 </html>
