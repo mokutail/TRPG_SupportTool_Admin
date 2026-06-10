@@ -8,48 +8,114 @@
     <link rel="stylesheet" href="skill_value/skill_value.css">
     <title>キャラクター作成 - CoC 6th</title>
     <style>
-        /* --- 追加UI（アコーディオン・グリッド等）の専用スタイル --- */
-        .details-section { margin-top: 30px; max-width: 1300px; width: 100%; display: flex; flex-direction: column; gap: 15px; }
-        .acc-group { background: #212529; border: 1px solid #2d323f; border-radius: 6px; overflow: hidden; }
-        .acc-header { background: #2d323b; padding: 12px 20px; font-weight: bold; color: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
-        .acc-header:hover { background: #363b45; }
-        .acc-content { padding: 15px; display: none; flex-direction: column; gap: 10px; background: #1e2227; }
-        .acc-group.open .acc-content { display: flex; }
-        .acc-group.open .acc-icon { transform: rotate(180deg); }
+        /* --- ヘッダーの追従スタイル --- */
+        body { margin: 0; padding-bottom: 50px; background-color: #36393f; color: #dcddde; font-family: 'Segoe UI', sans-serif; }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #36393f;
+            padding: 15px 40px;
+            border-bottom: 1px solid #202225;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .editor-title { margin: 0; color: #fff; font-size: 24px; }
+        
+        .btn-submit {
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            border: none;
+            color: white;
+            background: #43b581;
+            transition: 0.2s;
+        }
+        .btn-submit:hover { background: #3ca374; }
 
-        .dynamic-row { background: #252a31; border: 1px solid #3e4452; border-radius: 6px; padding: 10px; position: relative; }
-        .row-controls { display: flex; gap: 5px; margin-bottom: 8px; justify-content: flex-end; }
-        .row-controls button { background: #3e4452; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        /* ② 左側の固定メニュー */
+        .fixed-left-menu {
+            position: fixed;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+        .fixed-left-menu button {
+            background: #2f3136;
+            color: #fff;
+            border: 1px solid #4f545c;
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: 0.2s;
+            line-height: 1.2;
+        }
+        .fixed-left-menu button:hover {
+            background: #4f545c;
+            border-color: #bb86fc;
+            color: #bb86fc;
+            transform: scale(1.1);
+        }
+        .editor-main { padding: 20px 40px 20px 90px; } /* 左メニュー分の余白を確保 */
+
+        /* ④ CSSの !important 競合を上書きして折りたたみを有効化 */
+        .info-content-wrapper[style*="display: none"],
+        .accordion-content[style*="display: none"] {
+            display: none !important;
+        }
+
+        /* ⑤ デザイン統一用コンテナ（基本情報・技能セクションと同じ） */
+        .custom-section { 
+            max-width: 1300px; width: 100%; background-color: #1e2227; 
+            border: 1px solid #323842; border-radius: 6px; padding: 20px; 
+            margin-bottom: 25px; display: flex; flex-direction: column; box-sizing: border-box; 
+        }
+
+        .dynamic-row { background: #252a31; border: 1px solid #3e4452; border-radius: 6px; padding: 15px; margin-bottom: 10px; position: relative; }
+        .row-controls { display: flex; gap: 5px; margin-bottom: 10px; justify-content: flex-end; }
+        .row-controls button { background: #3e4452; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .row-controls button:hover { background: #5c6370; }
         .row-controls button.btn-del { background: #f04747; }
         .row-controls button.btn-del:hover { background: #d84040; }
 
-        .grid-inputs { display: grid; gap: 8px; }
-        .grid-inputs label { font-size: 12px; color: #aaa; display: flex; flex-direction: column; gap: 4px; }
-        .grid-inputs input, .grid-inputs textarea { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 14px; outline: none; }
+        .grid-inputs { display: grid; gap: 10px; }
+        .grid-inputs label { font-size: 13px; color: #aaa; display: flex; flex-direction: column; gap: 4px; }
+        .grid-inputs input, .grid-inputs textarea { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 8px; border-radius: 4px; font-size: 14px; outline: none; }
+        .grid-inputs input[type="date"] { cursor: pointer; color: #fff; }
         .grid-inputs input:focus, .grid-inputs textarea:focus { border-color: #bb86fc; }
 
-        /* 武器グリッド (画像1枚目再現) */
+        input[type="color"] { cursor: pointer; border: none; background: transparent; width: 60px; height: 35px; padding: 0; border-radius: 4px; }
+
         .weapon-grid-top { grid-template-columns: 2fr 1fr 1fr; }
         .weapon-grid-bottom { grid-template-columns: repeat(6, 1fr); }
-        
-        /* 所持品グリッド (画像2枚目再現) */
         .item-grid-top { grid-template-columns: 2fr 1fr 1fr; }
         .item-grid-bottom { grid-template-columns: 1fr 3fr; }
+        .scenario-grid { grid-template-columns: 1fr 2fr; }
 
-        /* シナリオグリッド */
-        .scenario-grid { grid-template-columns: 1fr 3fr; }
+        .btn-add-row { background: transparent; border: 1px solid #4c566a; color: #d8dee9; padding: 10px; border-radius: 4px; cursor: pointer; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;}
+        .btn-add-row:hover { background: #3b4252; color: #fff; }
 
-        .btn-add-row { background: transparent; border: 1px solid #4c566a; color: #d8dee9; padding: 8px; border-radius: 4px; cursor: pointer; text-align: center; font-weight: bold; margin-top: 5px; }
-        .btn-add-row:hover { background: #3b4252; }
-
-        /* メモ専用スタイル */
         .memo-grid-top { grid-template-columns: 1fr auto; align-items: end; }
         
-        /* 所持金固定枠 */
-        .money-fixed-box { display: flex; gap: 20px; background: #252a31; padding: 15px; border-radius: 6px; border: 1px solid #3e4452; margin-top: 10px; }
+        .money-fixed-box { display: flex; gap: 20px; background: #252a31; padding: 15px; border-radius: 6px; border: 1px solid #3e4452; margin-top: 15px; margin-bottom: 10px; }
         .money-fixed-box label { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: bold; font-size: 14px; }
-        .money-fixed-box input { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 6px 10px; border-radius: 4px; width: 150px; outline: none; }
+        .money-fixed-box input { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 8px 10px; border-radius: 4px; width: 150px; outline: none; }
 
         /* パスワードモーダル */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; }
@@ -65,61 +131,83 @@
 </head>
 <body>
     <header class="editor-header">
-        <a href="../index.html" class="back-link">← 玄関に戻る</a>
-        <h1 class="editor-title">キャラクター作成</h1>
+        <h1 class="editor-title">キャラクター作成・編集</h1>
+        <div class="header-actions">
+            <button type="button" class="btn-submit" onclick="saveCharacter()">💾 保存する</button>
+        </div>
     </header>
+
+    <div class="fixed-left-menu">
+        <button type="button" onclick="goToView()" title="閲覧画面へ">👁<br><span style="font-size:10px;">閲覧</span></button>
+        <button type="button" onclick="window.location.href='../index.html'" title="玄関に戻る">🚪<br><span style="font-size:10px;">玄関</span></button>
+    </div>
 
     <main class="editor-main">
         <form id="char-editor">
+            
             <div id="component-info-value"></div>
+            
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('theme-area', this)">
+                    <h2 class="section-subtitle">テーマ設定</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
+                    <label style="color: #b9bbbe; font-size: 14px; font-weight: bold;">イメージカラー:</label>
+                    <input type="color" id="char-color" name="char-color" value="#ffffff" title="キャラクターのテーマカラーを選択">
+                </div>
+            </div>
+
             <div id="component-ability-value"></div>
             <div class="ability-control-bar">
                 <button type="button" class="btn-random-all" onclick="rollAll()">一斉ランダム</button>
             </div>
             <div id="component-skills-list"></div>
 
-            <div class="details-section">
-                <div class="acc-group">
-                    <div class="acc-header" onclick="this.parentElement.classList.toggle('open')">戦闘・武器・防具 <span class="acc-icon">▼</span></div>
-                    <div class="acc-content">
-                        <div id="weapons-container"></div>
-                        <button type="button" class="btn-add-row" onclick="addWeaponRow()">+ 武器・防具を追加</button>
-                    </div>
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('weapons-area', this)">
+                    <h2 class="section-subtitle">戦闘・武器・防具</h2><span class="accordion-icon">⋗</span>
                 </div>
-
-                <div class="acc-group">
-                    <div class="acc-header" onclick="this.parentElement.classList.toggle('open')">所持品・所持金 <span class="acc-icon">▼</span></div>
-                    <div class="acc-content">
-                        <div id="items-container"></div>
-                        <button type="button" class="btn-add-row" onclick="addItemRow()">+ 所持品を追加</button>
-                        <div class="money-fixed-box">
-                            <label>現在の所持金 <input type="text" id="char-money" placeholder="例: 100,000円"></label>
-                            <label>借金 <input type="text" id="char-debt" placeholder="例: 0円"></label>
-                        </div>
-                    </div>
+                <div id="weapons-area" class="accordion-content" style="display: none;">
+                    <div id="weapons-container"></div>
+                    <button type="button" class="btn-add-row" onclick="addWeaponRow()">+ 武器・防具を追加</button>
                 </div>
+            </div>
 
-                <div class="acc-group">
-                    <div class="acc-header" onclick="this.parentElement.classList.toggle('open')">通過したシナリオ <span class="acc-icon">▼</span></div>
-                    <div class="acc-content">
-                        <div id="scenarios-container"></div>
-                        <button type="button" class="btn-add-row" onclick="addScenarioRow()">+ シナリオ歴を追加</button>
-                    </div>
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('items-area', this)">
+                    <h2 class="section-subtitle">所持品・所持金</h2><span class="accordion-icon">⋗</span>
                 </div>
-
-                <div class="acc-group open">
-                    <div class="acc-header" onclick="this.parentElement.classList.toggle('open')">詳細メモ（秘匿・バックストーリー等） <span class="acc-icon">▼</span></div>
-                    <div class="acc-content">
-                        <div id="memos-container"></div>
-                        <button type="button" class="btn-add-row" onclick="addMemoRow()">+ 新しいメモを作成</button>
+                <div id="items-area" class="accordion-content" style="display: none;">
+                    <div class="money-fixed-box">
+                        <label>現在の所持金 <input type="text" id="char-money" placeholder="例: 100,000円"></label>
+                        <label>借金 <input type="text" id="char-debt" placeholder="例: 0円"></label>
                     </div>
+                    <div id="items-container"></div>
+                    <button type="button" class="btn-add-row" onclick="addItemRow()">+ 所持品を追加</button>
+                </div>
+            </div>
+
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('scenarios-area', this)">
+                    <h2 class="section-subtitle">通過したシナリオ</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="scenarios-area" class="accordion-content open" style="display: flex;">
+                    <div id="scenarios-container"></div>
+                    <button type="button" class="btn-add-row" onclick="addScenarioRow()">+ シナリオ歴を追加</button>
+                </div>
+            </div>
+
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('memos-area', this)">
+                    <h2 class="section-subtitle">詳細メモ（秘匿・バックストーリー等）</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="memos-area" class="accordion-content open" style="display: flex;">
+                    <div id="memos-container"></div>
+                    <button type="button" class="btn-add-row" onclick="addMemoRow()">+ 新しいメモを作成</button>
                 </div>
             </div>
 
             <div id="js-tooltip" class="custom-tooltip"></div>
-            <div class="control-footer">
-                <button type="button" class="btn-submit" onclick="saveCharacter()">保存して玄関に戻る</button>
-            </div>
         </form>
     </main>
 
@@ -146,7 +234,17 @@
     <script src="ability_value/ability_value.js"></script>
 
 <script>
-    // --- 行の並べ替え・削除共通ロジック ---
+    // ② 閲覧画面への遷移
+    function goToView() {
+        const editIndex = localStorage.getItem('editingIndex');
+        if (editIndex !== null && editIndex !== "") {
+            localStorage.setItem('viewingIndex', editIndex);
+            window.location.href = '../view.html';
+        } else {
+            alert('キャラクターが保存されていません。一度保存ボタンを押してください。');
+        }
+    }
+
     function moveUp(btn) {
         const row = btn.closest('.dynamic-row');
         if (row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
@@ -159,7 +257,6 @@
         if(confirm('この項目を削除しますか？')) btn.closest('.dynamic-row').remove();
     }
 
-    // --- 各項目の追加ロジック ---
     function addWeaponRow(data = {}) {
         const div = document.createElement('div'); div.className = 'dynamic-row weapon-row';
         div.innerHTML = `
@@ -198,19 +295,22 @@
         document.getElementById('items-container').appendChild(div);
     }
 
+    // ③ カレンダー入力と詳細メモの追加
     function addScenarioRow(data = {}) {
         const div = document.createElement('div'); div.className = 'dynamic-row scenario-row';
         div.innerHTML = `
             <div class="row-controls"><button type="button" onclick="moveUp(this)">▲</button><button type="button" onclick="moveDown(this)">▼</button><button type="button" class="btn-del" onclick="deleteRow(this)">✖ 削除</button></div>
             <div class="grid-inputs scenario-grid">
-                <label>完了日<input type="text" class="s-date" placeholder="YYYY/MM/DD" value="${data.date||''}"></label>
+                <label>完了日<input type="date" class="s-date" value="${data.date||''}"></label>
                 <label>シナリオ名<input type="text" class="s-name" value="${data.name||''}"></label>
+            </div>
+            <div class="grid-inputs" style="margin-top: 8px;">
+                <label>メモ（成長した技能やSAN値の減少など）<textarea class="s-memo" style="height: 60px; resize: vertical;" placeholder="減少したSAN値や手に入れたアーティファクト、成長技能などをメモ">${data.memo||''}</textarea></label>
             </div>
         `;
         document.getElementById('scenarios-container').appendChild(div);
     }
 
-    // パスワード設定機能
     let activePwdInput = null;
     function openPasswordModal(btn) {
         activePwdInput = btn.closest('.memo-row').querySelector('.m-pwd');
@@ -221,6 +321,7 @@
     function applyPassword() {
         if(activePwdInput) activePwdInput.value = document.getElementById('modal-pwd-input').value;
         closePasswordModal();
+        activePwdInput.parentElement.querySelector('button').innerText = activePwdInput.value ? '🔒 保護中' : '🔑 パスワード設定';
     }
 
     function addMemoRow(data = {}) {
@@ -240,7 +341,6 @@
         document.getElementById('memos-container').appendChild(div);
     }
 
-    // --- ロード・セーブ処理 ---
     document.addEventListener("DOMContentLoaded", () => {
         const editIndex = localStorage.getItem('editingIndex');
         if (editIndex !== null && editIndex !== "") {
@@ -250,7 +350,6 @@
                 window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
                 if(typeof updateMainPreview === 'function') updateMainPreview();
 
-                // 単一項目の復元
                 setTimeout(() => {
                     document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
                         let key = el.name || el.id;
@@ -266,7 +365,6 @@
                     if (typeof calcSkills === 'function') calcSkills();
                 }, 100);
 
-                // 動的リストの復元
                 if(char.weapons) char.weapons.forEach(w => addWeaponRow(w));
                 if(char.items) char.items.forEach(i => addItemRow(i));
                 if(char.scenarios) char.scenarios.forEach(s => addScenarioRow(s));
@@ -274,7 +372,6 @@
             }
         }
         
-        // 新規作成時などで空なら1行ずつデフォで出しておく
         if(document.getElementById('weapons-container').children.length === 0) addWeaponRow();
         if(document.getElementById('items-container').children.length === 0) addItemRow();
         if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
@@ -286,21 +383,18 @@
         const editIndex = localStorage.getItem('editingIndex');
         const newData = {};
 
-        // 単一データ収集
         document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
             let key = el.name || el.id;
             if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
             if (key) newData[key] = el.type === 'checkbox' ? el.checked : el.value;
         });
 
-        // 画像、所持金、名前
         newData.mainImages = window.charMainImages || [];
         newData.exprImages = window.charExprImages || [];
         newData.name = document.getElementById("char-name-new")?.value || "無名の探索者";
         newData.money = document.getElementById("char-money").value;
         newData.debt = document.getElementById("char-debt").value;
 
-        // 動的リスト収集
         newData.weapons = Array.from(document.querySelectorAll('.weapon-row')).map(row => ({
             name: row.querySelector('.w-name').value, rate: row.querySelector('.w-rate').value, damage: row.querySelector('.w-dmg').value,
             range: row.querySelector('.w-range').value, attacks: row.querySelector('.w-attacks').value, ammo: row.querySelector('.w-ammo').value,
@@ -312,32 +406,35 @@
             totalPrice: row.querySelector('.i-total').value, notes: row.querySelector('.i-notes').value
         })).filter(i => i.name.trim() !== "");
 
+        // ③ メモ欄の収集を追加
         newData.scenarios = Array.from(document.querySelectorAll('.scenario-row')).map(row => ({
-            date: row.querySelector('.s-date').value, name: row.querySelector('.s-name').value
+            date: row.querySelector('.s-date').value, 
+            name: row.querySelector('.s-name').value,
+            memo: row.querySelector('.s-memo').value
         })).filter(s => s.name.trim() !== "");
 
         newData.memos = Array.from(document.querySelectorAll('.memo-row')).map(row => ({
             title: row.querySelector('.m-title').value, content: row.querySelector('.m-content').value, password: row.querySelector('.m-pwd').value
         })).filter(m => m.title.trim() !== "" || m.content.trim() !== "");
 
-        // 既存データのID引き継ぎ
         if (editIndex !== null && editIndex !== "") {
             newData.uid = chars[parseInt(editIndex, 10)].uid;
             chars[parseInt(editIndex, 10)] = newData;
-            localStorage.removeItem('editingIndex');
         } else {
             newData.uid = 'char_' + Date.now().toString(16) + Math.random().toString(16).slice(2);
             chars.push(newData);
+            // 新規作成時、保存したデータのindexをセットして閲覧画面等に飛べるようにする
+            localStorage.setItem('editingIndex', chars.length - 1);
         }
 
-        // Firebase同期処理
         try {
             if (window.setDoc && window.doc && window.db) {
                 await window.setDoc(window.doc(window.db, "characters", newData.uid), newData);
             }
             localStorage.setItem('characters', JSON.stringify(chars));
-            alert("保存しました！");
-            window.location.href = "../index.html";
+            
+            // ① アラートを出してページ移動は行わない
+            alert("保存しました！引き続き編集・または左のメニューから閲覧画面に移動できます。");
         } catch (e) {
             console.error("保存エラー:", e);
             alert("保存に失敗しました。容量制限または通信エラーの可能性があります。");
