@@ -25,6 +25,19 @@
         }
         .editor-title { margin: 0; color: #fff; font-size: 24px; }
         
+        .btn-submit {
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            border: none;
+            color: white;
+            background: #43b581;
+            transition: 0.2s;
+        }
+        .btn-submit:hover { background: #3ca374; }
+
         /* ② 左側の固定メニュー (保存を上に配置) */
         .fixed-left-menu {
             position: fixed;
@@ -122,6 +135,21 @@
         
         /* ③ テーマカラーの左寄せ固定 */
         #theme-area { justify-content: flex-start !important; }
+
+        /* 能力値テーブル用追加スタイル */
+        .ability-table-wrapper { width: 100%; }
+        .ability-table { width: 100%; border-collapse: collapse; text-align: center; color: #dcddde; font-size: 13px; margin-bottom:15px; }
+        .ability-table th, .ability-table td { border: 1px solid #3e4452; padding: 8px 4px; }
+        .ability-table th { background-color: #252a31; font-weight: bold; }
+        .ability-table select, .ability-table input { background-color: #14161a; color: #fff; border: 1px solid #4f545c; border-radius: 4px; padding: 6px 4px; width: 50px; text-align: center; }
+        .btn-dice { background: transparent; border: none; cursor: pointer; font-size: 16px; margin-left: 3px; }
+        .btn-dice:hover { transform: scale(1.2); }
+        .current-val { color: #43b581; font-weight: bold; font-size: 15px; }
+        .san-db-row { display: flex; gap: 10px; margin-top: 15px; }
+        .san-db-box { display: flex; background-color: #252a31; border: 1px solid #3e4452; border-radius: 4px; flex: 1; }
+        .san-db-label { background-color: #1e2227; padding: 10px 15px; font-weight: bold; border-right: 1px solid #3e4452; color: #fff; display: flex; align-items: center;}
+        .san-db-value { padding: 10px 15px; display: flex; align-items: center; color: #fff; font-weight: bold; }
+        .san-db-value input { background: transparent; border: none; color: #fff; font-weight: bold; font-size: 16px; width: 60px; text-align: center; border-bottom: 1px solid #4f545c; }
     </style>
 </head>
 <body>
@@ -155,10 +183,128 @@
                 </div>
             </div>
 
-           <div id="component-ability-value"></div>
-            <div class="ability-control-bar">
-                <button type="button" class="btn-random-all" onclick="rollAll()">一斉ランダム</button>
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('ability-area', this)">
+                    <h2 class="section-subtitle">能力値一覧</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="ability-area" class="accordion-content open" style="display: block;">
+                    <div class="ability-table-wrapper">
+                        <table class="ability-table">
+                            <thead>
+                                <tr>
+                                    <th>項目</th>
+                                    <th data-popup="3d6 で決定 (2-18)">STR<button type="button" class="btn-dice" onclick="rollIndividual('STR')">🎲</button></th>
+                                    <th data-popup="3d6 で決定 (2-18)">CON<button type="button" class="btn-dice" onclick="rollIndividual('CON')">🎲</button></th>
+                                    <th data-popup="3d6 で決定 (2-18)">POW<button type="button" class="btn-dice" onclick="rollIndividual('POW')">🎲</button></th>
+                                    <th data-popup="3d6 で決定 (2-18)">DEX<button type="button" class="btn-dice" onclick="rollIndividual('DEX')">🎲</button></th>
+                                    <th data-popup="3d6 で決定 (2-18)">APP<button type="button" class="btn-dice" onclick="rollIndividual('APP')">🎲</button></th>
+                                    <th data-popup="2d6+6 で決定 (8-18)">SIZ<button type="button" class="btn-dice" onclick="rollIndividual('SIZ')">🎲</button></th>
+                                    <th data-popup="2d6+6 で決定 (8-18)">INT<button type="button" class="btn-dice" onclick="rollIndividual('INT')">🎲</button></th>
+                                    <th data-popup="3d6+3 で決定 (3-21)">EDU<button type="button" class="btn-dice" onclick="rollIndividual('EDU')">🎲</button></th>
+                                    <th data-popup="算出方法: (CON + SIZ) / 2 ※端数切り上げ">HP</th>
+                                    <th data-popup="算出方法: POW と同じ値">MP</th>
+                                    <th data-popup="算出方法: POW × 5">SAN</th>
+                                    <th data-popup="算出方法: INT × 5">IDE</th>
+                                    <th data-popup="算出方法: POW × 5">幸運</th>
+                                    <th data-popup="算出方法: EDU × 5">知識</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-weight:bold; color:#fff;">能力値</td>
+                                    <td><select name="base-STR" onchange="calcAll()"></select></td>
+                                    <td><select name="base-CON" onchange="calcAll()"></select></td>
+                                    <td><select name="base-POW" onchange="calcAll()"></select></td>
+                                    <td><select name="base-DEX" onchange="calcAll()"></select></td>
+                                    <td><select name="base-APP" onchange="calcAll()"></select></td>
+                                    <td><select name="base-SIZ" onchange="calcAll()"></select></td>
+                                    <td><select name="base-INT" onchange="calcAll()"></select></td>
+                                    <td><select name="base-EDU" onchange="calcAll()"></select></td>
+                                    <td><span id="base-HP">-</span></td>
+                                    <td><span id="base-MP">-</span></td>
+                                    <td><span id="base-SAN">-</span></td>
+                                    <td><span id="base-IDE">-</span></td>
+                                    <td><span id="base-幸運">-</span></td>
+                                    <td><span id="base-知識">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; color:#b9bbbe;">増加分</td>
+                                    <td><input type="number" name="bonus-STR" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-CON" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-POW" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-DEX" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-APP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-SIZ" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-INT" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-EDU" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-HP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-MP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-SAN" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-IDE" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-幸運" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-知識" placeholder="0" oninput="calcAll()"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; color:#b9bbbe;">一時的</td>
+                                    <td><input type="number" name="temp-STR" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-CON" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-POW" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-DEX" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-APP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-SIZ" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-INT" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-EDU" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-HP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-MP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-SAN" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-IDE" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-幸運" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-知識" placeholder="0" oninput="calcAll()"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; color:#fff;">現在値</td>
+                                    <td class="current-val" id="cur-STR">0</td>
+                                    <td class="current-val" id="cur-CON">0</td>
+                                    <td class="current-val" id="cur-POW">0</td>
+                                    <td class="current-val" id="cur-DEX">0</td>
+                                    <td class="current-val" id="cur-APP">0</td>
+                                    <td class="current-val" id="cur-SIZ">0</td>
+                                    <td class="current-val" id="cur-INT">0</td>
+                                    <td class="current-val" id="cur-EDU">0</td>
+                                    <td class="current-val" id="cur-HP">0</td>
+                                    <td class="current-val" id="cur-MP">0</td>
+                                    <td class="current-val" id="cur-SAN">0</td>
+                                    <td class="current-val" id="cur-IDE">0</td>
+                                    <td class="current-val" id="cur-幸運">0</td>
+                                    <td class="current-val" id="cur-知識">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="san-db-row">
+                            <div class="san-db-box" style="flex: 2;">
+                                <div class="san-db-label">SAN値</div>
+                                <div class="san-db-value">
+                                    <input type="number" id="san-input" name="san-input" placeholder="0" min="0" max="99" oninput="handleSanInput()">
+                                    <span class="san-max" style="color:#b9bbbe; font-size:14px; margin-left:5px;">/ 99</span>
+                                </div>
+                            </div>
+                            <div class="san-db-box" style="flex: 1;">
+                                <div class="san-db-label">不定</div>
+                                <div class="san-db-value" id="insanity-display">0</div>
+                            </div>
+                        </div>
+                        <div class="san-db-row" style="margin-top: 10px;">
+                            <div class="san-db-box">
+                                <div class="san-db-label">ダメージボーナス</div>
+                                <div class="san-db-value" id="db-display">なし</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-submit" style="margin-top: 15px;" onclick="if(typeof rollAll === 'function') rollAll()">一斉ランダム</button>
+                </div>
             </div>
+            
             <div id="component-skills-list"></div>
 
             <div class="custom-section">
@@ -232,7 +378,6 @@
     <script src="ability_value/ability_value.js"></script>
 
 <script>
-    // ⑥ 変更検知と警告機能
     let isChanged = false;
     function markAsChanged() { isChanged = true; }
 
@@ -263,7 +408,6 @@
         window.location.href = '../index.html';
     }
 
-    // セクション折りたたみ
     function toggleAccordion(targetId, headerBar) {
         const content = document.getElementById(targetId);
         const icon = headerBar.querySelector(".accordion-icon");
@@ -380,7 +524,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        // 外部ファイルのDOM生成を待つ
         setTimeout(() => {
             const editIndex = localStorage.getItem('editingIndex');
             if (editIndex !== null && editIndex !== "") {
@@ -403,7 +546,6 @@
                     if (typeof window.calcAll === 'function') window.calcAll();
                     if (typeof window.calcSkills === 'function') window.calcSkills();
                     
-                    // ⑩ SAN値から不定の狂気（4/5）を算出・反映させる
                     const sanInput = document.getElementById('san-input');
                     if (sanInput && typeof window.calcInsanityOnly === 'function') {
                         window.calcInsanityOnly();
@@ -416,13 +558,12 @@
             if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
             if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
 
-            // 自動入力で「変更あり」にならないように遅延
             setTimeout(() => {
                 isChanged = false;
                 document.getElementById('char-editor').addEventListener('input', markAsChanged);
                 document.getElementById('char-editor').addEventListener('change', markAsChanged);
             }, 100);
-        }, 500); // 外部ファイルの描画完了を待つ時間
+        }, 500);
     });
 
     async function saveCharacter() {
@@ -489,7 +630,6 @@
 
 <script>
     window.addEventListener('load', function() {
-        // 外部ファイル（ability_value.js）内の関数をオーバーライドして修正
         setTimeout(() => {
             if(typeof window.calcInsanityOnly === 'function') {
                 window.calcInsanityOnly = function() {
@@ -512,6 +652,14 @@
                     const insanityDisplay = document.getElementById('insanity-display');
                     if(insanityDisplay) insanityDisplay.textContent = insanityVal;
                 };
+
+                const sanInputEl = document.getElementById('san-input');
+                if(sanInputEl) {
+                    sanInputEl.addEventListener('input', () => {
+                        window.hasManuallySetSan = true;
+                        window.calcInsanityOnly();
+                    });
+                }
             }
         }, 1000);
     });
