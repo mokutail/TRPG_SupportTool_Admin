@@ -39,8 +39,9 @@
         .left-col { flex: 0 0 320px; display: flex; flex-direction: column; gap: 15px; }
         .right-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 
-        .image-carousel { position: relative; width: 100%; height: 500px; background: #202225; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #4f545c; overflow: hidden; }
-        .image-carousel img { width: 100%; height: 100%; object-fit: contain; }
+        /* 立ち絵の後ろをイメージカラーに連動させるスタイル */
+        .image-carousel { position: relative; width: 100%; height: 500px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #4f545c; overflow: hidden; transition: background-color 0.3s ease; }
+        .image-carousel img { width: 100%; height: 100%; object-fit: contain; z-index: 2; position: relative; }
         .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; font-size: 20px; width: 40px; height: 40px; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; }
         .nav-btn:hover { background: rgba(0,0,0,0.9); }
         .nav-btn.left { left: 10px; } .nav-btn.right { right: 10px; }
@@ -178,6 +179,11 @@
         function getVal(key) { return window.char[key] || ''; }
         function getNum(key) { return parseInt(window.char[key]) || 0; }
         
+        // ★能力値計算用の補助関数（ベース値、ボーナス値、一時的な値を安全に合算する）
+        function getStatTotal(statName) {
+            return getNum(`base-${statName}`) + getNum(`bonus-${statName}`) + getNum(`temp-${statName}`);
+        }
+        
         function goToEdit() { 
             const index = localStorage.getItem('viewingIndex');
             localStorage.setItem('editingIndex', index); 
@@ -227,21 +233,21 @@
         }
 
         function exportCCfolia(exportAllSkills) {
-            const str = getNum('base-STR')+getNum('bonus-STR')+getNum('temp-STR');
-            const con = getNum('base-CON')+getNum('bonus-CON')+getNum('temp-CON');
-            const pow = getNum('base-POW')+getNum('bonus-POW')+getNum('temp-POW');
-            const dex = getNum('base-DEX')+getNum('bonus-DEX')+getNum('temp-DEX');
-            const app = getNum('base-APP')+getNum('bonus-APP')+getNum('temp-APP');
-            const siz = getNum('base-SIZ')+getNum('bonus-SIZ')+getNum('temp-SIZ');
-            const int = getNum('base-INT')+getNum('bonus-INT')+getNum('temp-INT');
-            const edu = getNum('base-EDU')+getNum('bonus-EDU')+getNum('temp-EDU');
+            const str = getStatTotal('STR');
+            const con = getStatTotal('CON');
+            const pow = getStatTotal('POW');
+            const dex = getStatTotal('DEX');
+            const app = getStatTotal('APP');
+            const siz = getStatTotal('SIZ');
+            const int = getStatTotal('INT');
+            const edu = getStatTotal('EDU');
 
             const mythos = getNum('skill-mythos') + getNum('sk-oth-神話');
             const maxSan = 99 - mythos;
             const san = getNum('san-input') || (pow * 5);
             const hp = Math.ceil((con + siz) / 2);
 
-            let commands = `1d100<={SAN} 【正気度ロール】\nCCB<={アイデア} 【アイデア】\nCCB<={幸運} 【幸運】\nCCB<={知識} 【知識】\n`;
+            let commands = `1d100<={SAN} 【正気度ロール】\nCCB<={アイデア} 【アイデア} \nCCB<={幸運} 【幸運】\nCCB<={知識} 【知識】\n`;
             
             const initVals = { "回避": dex*2, "母国語": edu*5, "キック": 25, "組み付き": 25, "こぶし": 50, "投擲": 25, "応急手当": 30, "聞き耳": 25, "図書館": 25, "目星": 25, "運転": 20, "機械修理": 20, "水泳": 25, "跳躍": 25, "説得": 25, "歴史": 20 };
             let skillSet = new Set(["回避","キック","組み付き","こぶし","投擲","応急手当","聞き耳","図書館","目星","運転","機械修理","水泳","跳躍","説得","歴史","母国語"]);
@@ -310,11 +316,19 @@
                 exprHTML += `</div></div>`;
             }
 
-            const str = getNum('base-STR')+getNum('bonus-STR')+getNum('temp-STR');
-            const siz = getNum('base-SIZ')+getNum('bonus-SIZ')+getNum('temp-SIZ');
+            // ★基本ステータス実数値の呼び出し処理のバグを修正
+            const str = getStatTotal('STR');
+            const con = getStatTotal('CON');
+            const pow = getStatTotal('POW');
+            const dex = getStatTotal('DEX');
+            const app = getStatTotal('APP');
+            const siz = getStatTotal('SIZ');
+            const int = getStatTotal('INT');
+            const edu = getStatTotal('EDU');
+            
             const mythos = getNum('skill-mythos') + getNum('sk-oth-神話');
-            const san = getNum('san-input') || (getNum('base-POW')*5);
-            const colorCode = getVal('char-color') || '#ffffff';
+            const san = getNum('san-input') || (pow * 5);
+            const colorCode = getVal('char-color') || '#202225'; // 色がない場合はデフォルト色
 
             document.getElementById('view-content').innerHTML = `
                 <div class="layout-wrapper">
@@ -337,7 +351,7 @@
                     
                     <div class="center-content">
                         <div class="left-col">
-                            <div class="image-carousel">
+                            <div class="image-carousel" style="background-color: ${colorCode};">
                                 ${prevBtn}
                                 <img id="main-preview-img" src="${initImgUrl}" onerror="this.style.display='none'">
                                 ${nextBtn}
@@ -367,21 +381,21 @@
                             </div>
                             <div class="stats-row">
                                 <div class="stat-box"><div class="stat-label">STR</div><div class="stat-value">${str||'-'}</div></div>
-                                <div class="stat-box"><div class="stat-label">CON</div><div class="stat-value">${getNum('base-CON')||'-'}</div></div>
-                                <div class="stat-box"><div class="stat-label">POW</div><div class="stat-value">${getNum('base-POW')||'-'}</div></div>
-                                <div class="stat-box"><div class="stat-label">DEX</div><div class="stat-value">${getNum('base-DEX')||'-'}</div></div>
-                                <div class="stat-box"><div class="stat-label">APP</div><div class="stat-value">${getNum('base-APP')||'-'}</div></div>
+                                <div class="stat-box"><div class="stat-label">CON</div><div class="stat-value">${con||'-'}</div></div>
+                                <div class="stat-box"><div class="stat-label">POW</div><div class="stat-value">${pow||'-'}</div></div>
+                                <div class="stat-box"><div class="stat-label">DEX</div><div class="stat-value">${dex||'-'}</div></div>
+                                <div class="stat-box"><div class="stat-label">APP</div><div class="stat-value">${app||'-'}</div></div>
                                 <div class="stat-box"><div class="stat-label">SIZ</div><div class="stat-value">${siz||'-'}</div></div>
-                                <div class="stat-box"><div class="stat-label">INT</div><div class="stat-value">${getNum('base-INT')||'-'}</div></div>
-                                <div class="stat-box"><div class="stat-label">EDU</div><div class="stat-value">${getNum('base-EDU')||'-'}</div></div>
+                                <div class="stat-box"><div class="stat-label">INT</div><div class="stat-value">${int||'-'}</div></div>
+                                <div class="stat-box"><div class="stat-label">EDU</div><div class="stat-value">${edu||'-'}</div></div>
                             </div>
                             <div class="derived-stats">
                                 <div class="derived-box san-box">SAN値 ${san}/${99-mythos}</div>
-                                <div class="derived-box">HP ${Math.ceil((getNum('base-CON')+siz)/2) || '-'}</div>
-                                <div class="derived-box">MP ${getNum('base-POW') || '-'}</div>
-                                <div class="derived-box">アイデア ${getNum('base-INT')*5 || '-'}</div>
-                                <div class="derived-box">幸運 ${getNum('base-POW')*5 || '-'}</div>
-                                <div class="derived-box">知識 ${getNum('base-EDU')*5 || '-'}</div>
+                                <div class="derived-box">HP ${Math.ceil((con+siz)/2) || '-'}</div>
+                                <div class="derived-box">MP ${pow || '-'}</div>
+                                <div class="derived-box">アイデア ${int*5 || '-'}</div>
+                                <div class="derived-box">幸運 ${pow*5 || '-'}</div>
+                                <div class="derived-box">知識 ${edu*5 || '-'}</div>
                             </div>
                             <table class="skill-table">
                                 <thead id="skill-thead"></thead>
@@ -417,7 +431,7 @@
                 let isMythos = (baseSk === "神話" || baseSk === "クトゥルフ神話");
                 
                 if (isMythos) {
-                    init = 0; // 神話技能の初期値は絶対に 0
+                    init = 0; 
                     displayName = "クトゥルフ神話";
                 } else if (window.char['sk-init-' + sk] === undefined) {
                     if (["頭突き","隠れる","忍び歩き","写真術","追跡","電気修理","ナビゲート","経理","博物学"].includes(baseSk)) init = 10;
@@ -448,7 +462,6 @@
                            (filter === 'gro_oth' && (gro > 0 || oth > 0)) || 
                            (filter === 'job_gro' && (job > 0 || intP > 0 || gro > 0 || oth > 0));
                 
-                // クトゥルフ神話はポイントが1つも振られていなければ非表示
                 if (isMythos && (gro + oth === 0)) {
                     show = false;
                 }
