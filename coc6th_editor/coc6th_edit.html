@@ -507,8 +507,8 @@
                     if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
                     if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
                     
-                    // 不定の狂気 ＝ 現在のSAN値の 4/5 (80%) を切り捨て
-                    const insanityVal = Math.floor(currentSan * 4 / 5);
+                    // 不定の狂気 ＝ 現在のSAN値の 1/5 (80%) に
+                    const insanityVal = Math.floor(currentSan * 1 / 5);
                     const insanityDisplay = document.getElementById('insanity-display');
                     if(insanityDisplay) insanityDisplay.textContent = insanityVal;
                 };
