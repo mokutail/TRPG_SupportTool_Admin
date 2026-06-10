@@ -426,6 +426,64 @@
                 let isMythos = (baseSk === "神話" || baseSk === "クトゥルフ神話");
                 
                 if (isMythos) {
+                    init = 0; // 神話技能の初期値は絶対に 0
+                    displayName = "クトゥルフ神話";
+                } else if (window.char['sk-init-' + sk] === undefined) {
+                    if (["頭突き","隠れる","忍び歩き","写真術","追跡","電気修理","ナビゲート","経理","博物学"].includes(baseSk)) init = 10;
+                    else if (["乗馬","製作","言いくるめ","値切り","医学","オカルト","芸術","心理学","法律"].includes(baseSk)) init = 5;
+                    else if (["マーシャルアーツ","鍵開け","精神分析","重機械操作","操縦","変装","化学","考古学","コンピューター","人類学","生物学","地質学","電子工学","天文学","物理学","薬学"].includes(baseSk)) init = 1;
+                    else if (["拳銃"].includes(baseSk)) init = 20;
+                    else if (["サブマシンガン", "マシンガン"].includes(baseSk)) init = 15;
+                    else if (["ショットガン"].includes(baseSk)) init = 30;
+                    else if (["ライフル"].includes(baseSk)) init = 25;
+                    else if (["登攀"].includes(baseSk)) init = 40;
+                    else if (["信用"].includes(baseSk)) init = 15;
+                    else if (["回避"].includes(baseSk)) init = getNum('base-DEX') * 2;
+                    else if (["母国語"].includes(baseSk)) init = getNum('base-EDU') * 5;
+                    else if (["キック","組み付き","投擲","聞き耳","図書館","目星","水泳","跳躍","説得"].includes(baseSk)) init = 25;
+                    else if (["こぶし"].includes(baseSk)) init = 50;
+                    else if (["応急手当"].includes(baseSk)) init = 30;
+                    else if (["運転","機械修理","歴史"].includes(baseSk)) init = 20;
+                    else init = 1;
+                }
+
+                let job = getNum(`sk-job-${sk}`);
+                let intP = getNum(`sk-int-${sk}`);
+                let gro = isMythos ? Math.max(getNum(`sk-gro-${sk}`), getNum('skill-mythos')) : getNum(`sk-gro-${sk}`);
+                let oth = getNum(`sk-oth-${sk}`);
+                
+                let show = (filter === 'all') || 
+                           (filter === 'job_int' && (job > 0 || intP > 0)) || 
+                           (filter === 'gro_oth' && (gro > 0 || oth > 0)) || 
+                           (filter === 'job_gro' && (job > 0 || intP > 0 || gro > 0 || oth > 0));
+                
+                // クトゥルフ神話はポイントが1つも振られていなければ非表示
+                if (isMythos && (gro + oth === 0)) {
+                    show = false;
+                }
+                
+                if (show) {
+                    rows += `<tr>
+                        <td class="skill-name">${displayName}</td>
+                        <td>${init}</td>
+                        <td>${job||''}</td>
+                        <td>${intP||''}</td>
+                        <td>${gro||''}</td>
+                        <td>${oth||''}</td>
+                        <td class="skill-total" ${isMythos ? 'style="color:#ff7597;"' : ''}>${init+job+intP+gro+oth}</td>
+                    </tr>`;
+                }
+            });
+            document.getElementById('skill-tbody').innerHTML = rows;
+        }
+            let rows = "";
+            skillSet.forEach(sk => {
+                let baseSk = sk.replace(/（.*?）|\(.*?\)/g, "").trim();
+                let init = getNum('sk-init-' + sk);
+                let displayName = sk;
+                let isMythos = (baseSk === "神話" || baseSk === "クトゥルフ神話");
+                
+                if (isMythos) {
                     init = 0;
                     displayName = "クトゥルフ神話";
                 } else if (window.char['sk-init-' + sk] === undefined) {
