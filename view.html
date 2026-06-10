@@ -18,7 +18,6 @@
         .btn-action.export { background: #007bff; } .btn-action.export:hover { background: #0056b3; }
         .btn-action.edit { background: #28a745; } .btn-action.edit:hover { background: #218838; }
 
-        /* レイアウトの最適化（横スクロール対策） */
         .layout-wrapper { display: flex; gap: 20px; max-width: 100%; padding: 0 20px; box-sizing: border-box; margin: 0 auto; align-items: flex-start; justify-content: center; }
         
         .left-sidebar { flex: 0 0 220px; position: sticky; top: 90px; }
@@ -39,8 +38,8 @@
         .left-col { flex: 0 0 320px; display: flex; flex-direction: column; gap: 15px; }
         .right-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 
-        /* 立ち絵の後ろをイメージカラーに連動させるスタイル */
-        .image-carousel { position: relative; width: 100%; height: 500px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #4f545c; overflow: hidden; transition: background-color 0.3s ease; }
+        /* ⑧ 透過画像への対応：デフォルトはtransparent */
+        .image-carousel { position: relative; width: 100%; height: 500px; background: transparent; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #4f545c; overflow: hidden; transition: background-color 0.3s ease; }
         .image-carousel img { width: 100%; height: 100%; object-fit: contain; z-index: 2; position: relative; }
         .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; font-size: 20px; width: 40px; height: 40px; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; }
         .nav-btn:hover { background: rgba(0,0,0,0.9); }
@@ -124,10 +123,7 @@
     <script type="module">
         import { db } from './firebase-config.js';
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-        window.db = db;
-        window.doc = doc;
-        window.getDoc = getDoc;
+        window.db = db; window.doc = doc; window.getDoc = getDoc;
         window.initializeView();
     </script>
 
@@ -147,7 +143,7 @@
                         window.char = docSnap.data();
                         setupImagesAndRender();
                     } else {
-                        document.getElementById('view-content').innerHTML = '<p style="text-align:center; padding-top:50px;">指定されたキャラクターデータが見つかりません。<br>削除されたか、URLが間違っている可能性があります。</p>';
+                        document.getElementById('view-content').innerHTML = '<p style="text-align:center; padding-top:50px;">指定されたキャラクターデータが見つかりません。</p>';
                     }
                 } catch(e) {
                     console.error("Firebase取得エラー:", e);
@@ -179,7 +175,6 @@
         function getVal(key) { return window.char[key] || ''; }
         function getNum(key) { return parseInt(window.char[key]) || 0; }
         
-        // ★能力値計算用の補助関数（ベース値、ボーナス値、一時的な値を安全に合算する）
         function getStatTotal(statName) {
             return getNum(`base-${statName}`) + getNum(`bonus-${statName}`) + getNum(`temp-${statName}`);
         }
@@ -247,7 +242,7 @@
             const san = getNum('san-input') || (pow * 5);
             const hp = Math.ceil((con + siz) / 2);
 
-            let commands = `1d100<={SAN} 【正気度ロール】\nCCB<={アイデア} 【アイデア} \nCCB<={幸運} 【幸運】\nCCB<={知識} 【知識】\n`;
+            let commands = `1d100<={SAN} 【正気度ロール】\nCCB<={アイデア} 【アイデア】\nCCB<={幸運} 【幸運】\nCCB<={知識} 【知識】\n`;
             
             const initVals = { "回避": dex*2, "母国語": edu*5, "キック": 25, "組み付き": 25, "こぶし": 50, "投擲": 25, "応急手当": 30, "聞き耳": 25, "図書館": 25, "目星": 25, "運転": 20, "機械修理": 20, "水泳": 25, "跳躍": 25, "説得": 25, "歴史": 20 };
             let skillSet = new Set(["回避","キック","組み付き","こぶし","投擲","応急手当","聞き耳","図書館","目星","運転","機械修理","水泳","跳躍","説得","歴史","母国語"]);
@@ -295,7 +290,7 @@
             closeExportModal();
         }
 
-       function renderView() {
+        function renderView() {
             let initImgUrl = '', initImgDesc = '';
             let prevBtn = '', nextBtn = '';
             if (window.viewMainImages.length > 0) {
@@ -327,11 +322,11 @@
             
             const mythos = getNum('skill-mythos') + getNum('sk-oth-神話');
             const san = getNum('san-input') || (pow * 5);
-            const colorCode = getVal('char-color') || '#202225';
+            const colorCode = getVal('char-color') || '#ffffff';
             
-            // ★追加：編集画面でチェックを入れた場合のみ、背景色を適用する
-            const useBgColor = getVal('use-bg-color') === true;
-            const carouselBg = useBgColor ? colorCode : '#202225';
+            // ⑨ テーマ選択の欄に、viewの際にイメージカラーを画像の背景に用いるか選択する処理
+            const useBgColor = String(getVal('use-bg-color')) === 'true';
+            const carouselBg = useBgColor ? colorCode : 'transparent'; // ⑧ 透過対応
 
             document.getElementById('view-content').innerHTML = `
                 <div class="layout-wrapper">
@@ -355,19 +350,6 @@
                     <div class="center-content">
                         <div class="left-col">
                             <div class="image-carousel" style="background-color: ${carouselBg};">
-                                ${prevBtn}
-                                <img id="main-preview-img" src="${initImgUrl}" onerror="this.style.display='none'">
-                                ${nextBtn}
-                            </div>
-                            <div class="img-desc" id="main-preview-desc">${initImgDesc}</div>
-                            <div class="tag-area">タグ: ${getVal('char-tag') || 'なし'}</div>
-                            ${exprHTML}
-                        </div>
-                        <div class="right-col">
-                    
-                    <div class="center-content">
-                        <div class="left-col">
-                            <div class="image-carousel" style="background-color: ${colorCode};">
                                 ${prevBtn}
                                 <img id="main-preview-img" src="${initImgUrl}" onerror="this.style.display='none'">
                                 ${nextBtn}
