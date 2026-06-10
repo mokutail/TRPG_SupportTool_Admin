@@ -11,7 +11,6 @@
         /* --- ヘッダーの追従スタイル --- */
         body { margin: 0; padding-bottom: 50px; background-color: #36393f; color: #dcddde; font-family: 'Segoe UI', sans-serif; }
         
-        /* ① ヘッダーがスクロールについてこないように修正 (stickyをrelativeに) */
         .editor-header {
             display: flex;
             justify-content: space-between;
@@ -19,26 +18,14 @@
             background-color: #36393f;
             padding: 15px 40px;
             border-bottom: 1px solid #202225;
-            position: relative; 
+            position: sticky;
+            top: 0;
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .editor-title { margin: 0; color: #fff; font-size: 24px; }
         
-        .btn-submit {
-            padding: 12px 30px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 18px;
-            border: none;
-            color: white;
-            background: #43b581;
-            transition: 0.2s;
-        }
-        .btn-submit:hover { background: #3ca374; }
-
-        /* ② 左側の固定メニュー */
+        /* ② 左側の固定メニュー (保存を上に配置) */
         .fixed-left-menu {
             position: fixed;
             left: 10px;
@@ -129,7 +116,8 @@
         .btn-modal-save { background: #43b581; } .btn-modal-save:hover { background: #3ca374; }
         .btn-modal-cancel { background: #4f545c; } .btn-modal-cancel:hover { background: #686d73; }
 
-        /* ② 一番左の「成長」チェックを邪魔にならないよう完全に非表示化 */
+        /* 追加要件スタイル */
+        /* ② 成長チェックの完全非表示化 */
         .check-col, th.check-col, td.check-col { display: none !important; }
         
         /* ③ テーマカラーの左寄せ固定 */
@@ -162,16 +150,15 @@
                     <label style="color: #b9bbbe; font-size: 14px; font-weight: bold;">イメージカラー:</label>
                     <input type="color" id="char-color" name="char-color" value="#ffffff" title="キャラクターのテーマカラーを選択">
                     <label style="color: #b9bbbe; font-size: 14px; display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="checkbox" name="use-bg-color" id="use-bg-color" class="theme-check"> viewの際にイメージカラーを画像の背景に用いる
+                        <input type="checkbox" name="use-bg-color" id="use-bg-color" class="theme-check"> 背景色として立ち絵に適用する
                     </label>
                 </div>
             </div>
 
-            <div id="component-ability-value"></div>
+           <div id="component-ability-value"></div>
             <div class="ability-control-bar">
                 <button type="button" class="btn-random-all" onclick="rollAll()">一斉ランダム</button>
             </div>
-            
             <div id="component-skills-list"></div>
 
             <div class="custom-section">
@@ -245,7 +232,7 @@
     <script src="ability_value/ability_value.js"></script>
 
 <script>
-    // ⑥ 未保存の警告機能
+    // ⑥ 変更検知と警告機能
     let isChanged = false;
     function markAsChanged() { isChanged = true; }
 
@@ -276,6 +263,7 @@
         window.location.href = '../index.html';
     }
 
+    // セクション折りたたみ
     function toggleAccordion(targetId, headerBar) {
         const content = document.getElementById(targetId);
         const icon = headerBar.querySelector(".accordion-icon");
@@ -392,6 +380,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+        // 外部ファイルのDOM生成を待つ
         setTimeout(() => {
             const editIndex = localStorage.getItem('editingIndex');
             if (editIndex !== null && editIndex !== "") {
@@ -411,8 +400,14 @@
                     if(char.money) document.getElementById('char-money').value = char.money;
                     if(char.debt) document.getElementById('char-debt').value = char.debt;
 
-                    if (typeof calcAll === 'function') calcAll();
-                    if (typeof calcSkills === 'function') calcSkills();
+                    if (typeof window.calcAll === 'function') window.calcAll();
+                    if (typeof window.calcSkills === 'function') window.calcSkills();
+                    
+                    // ⑩ SAN値から不定の狂気（4/5）を算出・反映させる
+                    const sanInput = document.getElementById('san-input');
+                    if (sanInput && typeof window.calcInsanityOnly === 'function') {
+                        window.calcInsanityOnly();
+                    }
                 }
             }
             
@@ -421,13 +416,13 @@
             if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
             if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
 
-            // 自動入力で「変更あり」にならないように少し待ってから監視開始
+            // 自動入力で「変更あり」にならないように遅延
             setTimeout(() => {
                 isChanged = false;
                 document.getElementById('char-editor').addEventListener('input', markAsChanged);
                 document.getElementById('char-editor').addEventListener('change', markAsChanged);
-            }, 500);
-        }, 800); // 外部ファイルの描画完了を待つ時間
+            }, 100);
+        }, 500); // 外部ファイルの描画完了を待つ時間
     });
 
     async function saveCharacter() {
@@ -483,7 +478,7 @@
             }
             localStorage.setItem('characters', JSON.stringify(chars));
             
-            isChanged = false; // 保存完了でフラグをリセット
+            isChanged = false; // 保存完了
             alert("保存しました！引き続き編集可能です。");
         } catch (e) {
             console.error("保存エラー:", e);
@@ -494,14 +489,14 @@
 
 <script>
     window.addEventListener('load', function() {
+        // 外部ファイル（ability_value.js）内の関数をオーバーライドして修正
         setTimeout(() => {
             if(typeof window.calcInsanityOnly === 'function') {
-                // 既存の関数を上書き
                 window.calcInsanityOnly = function() {
                     const sanInput = document.getElementById('san-input');
                     if (!sanInput) return;
                     
-                    const mythosValue = parseInt(document.querySelector('input[name="skill-mythos"]')?.value, 10) || parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
+                    const mythosValue = parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
                     const maxSan = 99 - mythosValue;
                     
                     const maxSanEl = document.querySelector('.san-max');
@@ -512,23 +507,13 @@
                     if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
                     if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
                     
-                    // ① 不定の狂気 ＝ 現在のSAN値の 4/5 (80%) を切り捨て
+                    // 不定の狂気 ＝ 現在のSAN値の 4/5 (80%) を切り捨て
                     const insanityVal = Math.floor(currentSan * 4 / 5);
                     const insanityDisplay = document.getElementById('insanity-display');
                     if(insanityDisplay) insanityDisplay.textContent = insanityVal;
                 };
-
-                // ⑩ SAN値入力時にリアルタイムで再計算
-                const sanInputEl = document.getElementById('san-input');
-                if(sanInputEl) {
-                    sanInputEl.addEventListener('input', () => {
-                        window.hasManuallySetSan = true;
-                        window.calcInsanityOnly();
-                        if (typeof markAsChanged === 'function') markAsChanged();
-                    });
-                }
             }
-        }, 1500); // 外部ファイルの描画完了を確実に待つ
+        }, 1000);
     });
 </script>
 </body>
