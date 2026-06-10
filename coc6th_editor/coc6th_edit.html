@@ -18,11 +18,11 @@
             background-color: #36393f;
             padding: 15px 40px;
             border-bottom: 1px solid #202225;
-            position: sticky;
-            top: 0;
+            position: relative; /* stickyをrelativeに変更して追従を解除 */
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+        
         .editor-title { margin: 0; color: #fff; font-size: 24px; }
         
         .btn-submit {
