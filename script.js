@@ -122,7 +122,6 @@ function parseCCfolia(str) {
     } catch(e) { return null; }
 }
 
-// ★script.js の parseIachara 関数を以下に丸ごと入れ替えてください★
 function parseIachara(str) {
     if (!str.includes("名前:")) return null; 
     const char = {};
@@ -156,7 +155,6 @@ function parseIachara(str) {
     char["char-skin"] = extractVal("肌の色");
     char["char-birthday"] = extractVal("誕生日");
 
-    // ★追加：複数画像の取得ロジック
     const iconMatch = str.match(/【アイコン】([\s\S]*?)【能力値】/);
     if (iconMatch) {
         const urls = iconMatch[1].match(/https?:\/\/[^\s\n]+/g);
@@ -193,6 +191,27 @@ function parseIachara(str) {
 }
 
 // ----------------------------------------
+// ★ 新しい共有（URLコピー）機能 ★
+// ----------------------------------------
+function shareChar(index) {
+    const chars = JSON.parse(localStorage.getItem('characters') || '[]');
+    const char = chars[index];
+    
+    if (!char || !char.uid) {
+        alert("このキャラクターはまだクラウドに保存されていません。\n一度編集画面を開いて「保存する」を押してください。");
+        return;
+    }
+    
+    let basePath = window.location.href.split('index.html')[0];
+    if(!basePath.endsWith('/')) basePath += '/';
+    
+    const shareUrl = basePath + "view.html?id=" + char.uid;
+    
+    navigator.clipboard.writeText(shareUrl);
+    alert("共有用URLをコピーしました！\n\n" + shareUrl);
+}
+
+// ----------------------------------------
 // 既存UI制御
 // ----------------------------------------
 function toggleMenu(btn) {
@@ -213,11 +232,6 @@ function deleteChar(index) {
     chars.splice(index, 1);
     localStorage.setItem('characters', JSON.stringify(chars));
     renderDashboard();
-}
-function shareChar(index) {
-    const shareUrl = window.location.origin + window.location.pathname + "?char=" + index;
-    navigator.clipboard.writeText(shareUrl);
-    alert("共有用URLをコピーしました！");
 }
 
 let currentIdx = null;
