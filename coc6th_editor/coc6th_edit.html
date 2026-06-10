@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="skill_value/skill_value.css">
     <title>キャラクター作成 - CoC 6th</title>
     <style>
+        /* --- ヘッダーの追従スタイル --- */
         body { margin: 0; padding-bottom: 50px; background-color: #36393f; color: #dcddde; font-family: 'Segoe UI', sans-serif; }
         
-        /* ヘッダーは追従せずトップに固定 */
         .editor-header {
             display: flex;
             justify-content: space-between;
@@ -18,20 +18,19 @@
             background-color: #36393f;
             padding: 15px 40px;
             border-bottom: 1px solid #202225;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 25px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .editor-title { margin: 0; color: #fff; font-size: 24px; }
         
         .btn-submit {
-            padding: 12px 25px;
+            padding: 12px 30px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px;
             border: none;
             color: white;
             background: #43b581;
@@ -39,24 +38,10 @@
         }
         .btn-submit:hover { background: #3ca374; }
 
-        .btn-new {
-            padding: 12px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            border: none;
-            color: white;
-            background: #4f545c;
-            transition: 0.2s;
-            text-decoration: none;
-        }
-        .btn-new:hover { background: #686d73; }
-
-        /* 左側の固定メニュー（大きく・保存ボタンも追加） */
+        /* ② 左側の固定メニュー */
         .fixed-left-menu {
             position: fixed;
-            left: 15px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             display: flex;
@@ -68,15 +53,15 @@
             background: #2f3136;
             color: #fff;
             border: 1px solid #4f545c;
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
             border-radius: 8px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             transition: 0.2s;
             line-height: 1.2;
@@ -85,21 +70,17 @@
             background: #4f545c;
             border-color: #bb86fc;
             color: #bb86fc;
-            transform: scale(1.05);
+            transform: scale(1.1);
         }
-        .fixed-left-menu button span {
-            font-size: 13px;
-            margin-top: 5px;
-            font-weight: bold;
-        }
+        .editor-main { padding: 20px 40px 20px 90px; } /* 左メニュー分の余白を確保 */
 
-        .editor-main { padding: 20px 40px 20px 110px; } /* 左メニュー拡大に伴う余白 */
-
+        /* ④ CSSの !important 競合を上書きして折りたたみを有効化 */
         .info-content-wrapper[style*="display: none"],
         .accordion-content[style*="display: none"] {
             display: none !important;
         }
 
+        /* ⑤ デザイン統一用コンテナ（基本情報・技能セクションと同じ） */
         .custom-section { 
             max-width: 1300px; width: 100%; background-color: #1e2227; 
             border: 1px solid #323842; border-radius: 6px; padding: 20px; 
@@ -136,6 +117,7 @@
         .money-fixed-box label { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: bold; font-size: 14px; }
         .money-fixed-box input { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 8px 10px; border-radius: 4px; width: 150px; outline: none; }
 
+        /* パスワードモーダル */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .modal-content { background: #1e1e24; border: 1px solid #4f545c; border-radius: 8px; padding: 20px; width: 350px; display: flex; flex-direction: column; gap: 15px; }
         .modal-content h3 { margin: 0; color: #fff; font-size: 16px; border-bottom: 1px solid #4f545c; padding-bottom: 10px; }
@@ -145,44 +127,87 @@
         .modal-actions button { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #fff; }
         .btn-modal-save { background: #43b581; } .btn-modal-save:hover { background: #3ca374; }
         .btn-modal-cancel { background: #4f545c; } .btn-modal-cancel:hover { background: #686d73; }
+        
+        /* 復活させた基本情報のスタイル */
+        .basic-info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .ability-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin-top: 15px; text-align: center; }
+        .ability-box { background: #252a31; padding: 10px; border-radius: 6px; border: 1px solid #3e4452; }
+        .ability-label { color: #bb86fc; font-weight: bold; margin-bottom: 5px; display: block; }
+        .ability-input { width: 100%; background: #14161a; border: 1px solid #4f545c; color: #fff; text-align: center; padding: 5px; border-radius: 4px; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <header class="editor-header">
-        <div class="header-left">
-            <h1 class="editor-title">キャラクター作成・編集</h1>
-            <button type="button" class="btn-submit" onclick="saveCharacter()">💾 保存する</button>
-        </div>
+        <h1 class="editor-title">キャラクター作成・編集</h1>
         <div class="header-actions">
-            <button type="button" class="btn-new" onclick="goToHome()">玄関に戻る</button>
+            <button type="button" class="btn-submit" onclick="saveCharacter()">💾 保存する</button>
         </div>
     </header>
 
     <div class="fixed-left-menu">
-        <button type="button" onclick="saveCharacter()" title="保存する">💾<br><span>保存</span></button>
-        <button type="button" onclick="goToView()" title="閲覧画面へ">👁<br><span>閲覧</span></button>
-        <button type="button" onclick="goToHome()" title="玄関に戻る">🚪<br><span>玄関</span></button>
+        <button type="button" onclick="goToView()" title="閲覧画面へ">👁<br><span style="font-size:10px;">閲覧</span></button>
+        <button type="button" onclick="window.location.href='../index.html'" title="玄関に戻る">🚪<br><span style="font-size:10px;">玄関</span></button>
     </div>
 
     <main class="editor-main">
         <form id="char-editor">
             
-            <div id="component-info-value"></div>
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('info-area', this)">
+                    <h2 class="section-subtitle">基本情報</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="info-area" class="accordion-content open" style="display: block;">
+                    <div class="grid-inputs basic-info-grid">
+                        <label>キャラクター名<input type="text" id="char-name-new" name="char-name-new"></label>
+                        <label>ふりがな<input type="text" id="char-furigana" name="char-furigana"></label>
+                        <label>職業<input type="text" id="char-job" name="char-job"></label>
+                        <label>年齢<input type="text" id="char-age" name="char-age"></label>
+                        <label>性別<input type="text" id="char-gender" name="char-gender"></label>
+                        <label>出身<input type="text" id="char-origin" name="char-origin"></label>
+                        <label>身長<input type="text" id="char-height" name="char-height"></label>
+                        <label>体重<input type="text" id="char-weight" name="char-weight"></label>
+                        <label>髪の色<input type="text" id="char-hair" name="char-hair"></label>
+                        <label>瞳の色<input type="text" id="char-eyes" name="char-eyes"></label>
+                        <label>肌の色<input type="text" id="char-skin" name="char-skin"></label>
+                        <label>誕生日<input type="text" id="char-birthday" name="char-birthday" placeholder="例: 10/31"></label>
+                        <label>種族<input type="text" id="char-race" name="char-race"></label>
+                        <label>最終学歴<input type="text" id="char-education" name="char-education"></label>
+                        <label>タグ<input type="text" id="char-tag" name="char-tag" placeholder="カンマ区切り"></label>
+                    </div>
+                </div>
+            </div>
             
             <div class="custom-section">
                 <div class="section-subtitle-bar" onclick="toggleAccordion('theme-area', this)">
                     <h2 class="section-subtitle">テーマ設定</h2><span class="accordion-icon">⋁</span>
                 </div>
-                <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 20px;">
+                <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
                     <label style="color: #b9bbbe; font-size: 14px; font-weight: bold;">イメージカラー:</label>
                     <input type="color" id="char-color" name="char-color" value="#ffffff" title="キャラクターのテーマカラーを選択">
                 </div>
             </div>
 
-            <div id="component-ability-value"></div>
-            <div class="ability-control-bar">
-                <button type="button" class="btn-random-all" onclick="rollAll()">一斉ランダム</button>
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('ability-area', this)">
+                    <h2 class="section-subtitle">能力値</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="ability-area" class="accordion-content open" style="display: block;">
+                    <div class="ability-control-bar" style="margin-bottom:10px; text-align:right;">
+                        <button type="button" class="btn-random-all" onclick="rollAll()" style="background:#007bff; color:#fff; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">🎲 一斉ランダム</button>
+                    </div>
+                    <div class="ability-grid">
+                        <div class="ability-box"><span class="ability-label">STR</span><select name="base-STR" class="ability-input" onchange="calcAll()"></select><br><input type="number" name="bonus-STR" class="ability-input" placeholder="補正" oninput="calcAll()"></div>
+                        <div class="ability-box"><span class="ability-label">CON</span><select name="base-CON" class="ability-input" onchange="calcAll()"></select><br><input type="number" name="bonus-CON" class="ability-input" placeholder="補正" oninput="calcAll()"></div>
+                        <div class="ability-box"><span class="ability-label">POW</span><select name="base-POW" class="ability-input" onchange="calcAll()"></select><br><input type="number" name="bonus-POW" class="ability-input" placeholder="補正" oninput="calcAll()"></div>
+                        <div class="ability-box"><span class="ability-label">DEX</span><select name="base-DEX" class="ability-input" onchange="calcAll()"></select><br><input type="number" name="bonus-DEX" class="ability-input" placeholder="補正" oninput="calcAll()"></div>
+                        <div class="ability-box"><span class="ability-label">APP</span><select name="base-APP" class="ability-input" onchange="calcAll()"></select><br><input type="number" name="bonus-APP" class="ability-input" placeholder="補正" oninput="calcAll()"></div>
+                        <div class="ability-box"><span class="ability-label">SIZ</span><select name="base-SIZ" class="ability-input" onchange="calcAll()"></select><br><input type="number" name="bonus-SIZ" class="ability-input" placeholder="補正" oninput="calcAll()"></div>
+                        <div class="ability-box"><span class="ability-label">INT</span><select name="base-INT" class="ability-input" onchange="calcAll()"></select><br><input type="number" name="bonus-INT" class="ability-input" placeholder="補正" oninput="calcAll()"></div>
+                        <div class="ability-box"><span class="ability-label">EDU</span><select name="base-EDU" class="ability-input" onchange="calcAll()"></select><br><input type="number" name="bonus-EDU" class="ability-input" placeholder="補正" oninput="calcAll()"></div>
+                    </div>
+                </div>
             </div>
+
             <div id="component-skills-list"></div>
 
             <div class="custom-section">
@@ -251,23 +276,28 @@
         window.db = db; window.doc = doc; window.setDoc = setDoc;
     </script>
 
-    <script src="basic_information/basic_information.js"></script>
     <script src="skill_value/skill_value.js"></script>
-    <script src="ability_value/ability_value.js"></script>
 
 <script>
     let isChanged = false;
-
-    // 変更検知フラグ
     function markAsChanged() { isChanged = true; }
 
-    // ブラウザの戻る・閉じるボタンに対する警告
     window.addEventListener('beforeunload', function (e) {
         if (isChanged) {
             e.preventDefault();
             e.returnValue = ''; 
         }
     });
+
+    function toggleAccordion(targetId, headerBar) {
+        const content = document.getElementById(targetId);
+        const icon = headerBar.querySelector(".accordion-icon");
+        if (content.classList.contains("open")) {
+            content.classList.remove("open"); content.style.display = "none"; icon.textContent = "⋗";
+        } else {
+            content.classList.add("open"); content.style.display = "flex"; icon.textContent = "⋁";
+        }
+    }
 
     function goToView() {
         if (isChanged) {
@@ -394,47 +424,53 @@
         markAsChanged();
     }
 
+    // 能力値の計算と一斉ランダム用の関数
+    function diceRoll(num, size, add = 0) {
+        let total = add;
+        for (let i = 0; i < num; i++) total += Math.floor(Math.random() * size) + 1;
+        return total;
+    }
+
+    window.rollAll = function() {
+        const stats = ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU'];
+        stats.forEach(stat => {
+            const select = document.querySelector(`select[name="base-${stat}"]`);
+            if (select) {
+                let result = 0;
+                if (['STR', 'CON', 'POW', 'DEX', 'APP'].includes(stat)) result = diceRoll(3, 6);
+                else if (['SIZ', 'INT'].includes(stat)) result = diceRoll(2, 6, 6);
+                else if (stat === 'EDU') result = diceRoll(3, 6, 3);
+                select.value = result;
+            }
+        });
+        if (typeof calcAll === 'function') calcAll();
+        markAsChanged();
+    }
+
+    // ロード時の初期化処理
     document.addEventListener("DOMContentLoaded", () => {
+        // 能力値のセレクトボックスを初期化
+        const selectElements = document.querySelectorAll(".ability-input");
+        selectElements.forEach(select => {
+            if(select.tagName === "SELECT") {
+                select.innerHTML = "<option value=''></option>";
+                let min = 2, max = 18;
+                if (select.name === "base-EDU") { min = 3; max = 21; }
+                for (let i = min; i <= max; i++) {
+                    const opt = document.createElement("option");
+                    opt.value = i; opt.textContent = i; select.appendChild(opt);
+                }
+            }
+        });
+
         const editIndex = localStorage.getItem('editingIndex');
         if (editIndex !== null && editIndex !== "") {
             const chars = JSON.parse(localStorage.getItem('characters') || '[]');
             const char = chars[parseInt(editIndex, 10)];
             if (char) {
                 window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
-                if(typeof updateMainPreview === 'function') updateMainPreview();
-
-                // カスタム追加された技能の復元
-                const standardSkills = ["回避","キック","組み付き","こぶし","頭突き","投擲","マーシャルアーツ","拳銃","サブマシンガン","ショットガン","マシンガン","ライフル","応急手当","鍵開け","隠す","隠れる","聞き耳","忍び歩き","写真術","精神分析","追跡","登攀","図書館","目星","運転","機械修理","重機械操作","乗馬","水泳","製作","操縦","跳躍","電気修理","ナビゲート","変装","言いくるめ","信用","説得","値切り","母国語","医学","オカルト","化学","芸術","経理","考古学","コンピューター","心理学","人類学","生物学","地質学","電子工学","天文学","博物学","物理学","法律","薬学","歴史","神話"];
-                Object.keys(char).forEach(key => {
-                    if(key.match(/^sk-(job|int|gro|oth)-/)) {
-                        const skillName = key.replace(/^sk-(job|int|gro|oth)-/, '');
-                        if (!standardSkills.includes(skillName) && !document.querySelector(`input[name="sk-job-${skillName}"]`)) {
-                            const list = document.querySelector('#knowledge-skills-area .skills-list');
-                            const uniqueId = Date.now() + Math.random().toString().slice(2, 6);
-                            const initVal = char['sk-init-' + skillName] || 1;
-                            const row = document.createElement('div');
-                            row.className = 'skill-row custom-added-skill';
-                            row.setAttribute('data-initial', initVal);
-                            row.innerHTML = `
-                                <div class="s-col name-col font-input-wrapper" style="display:flex; align-items:center;">
-                                    <input type="text" class="skill-name-inline custom-name-input" value="${skillName}" oninput="updateCustomSkillName(this, '${uniqueId}')" style="width:100px;">
-                                    <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; margin-left:5px; cursor:pointer;" onclick="this.parentElement.parentElement.remove(); calcSkills(); if(typeof markAsChanged === 'function') markAsChanged();">✖</button>
-                                </div>
-                                <div class="s-col val-col">
-                                    <input type="number" class="custom-init-input" name="sk-init-${skillName}" value="${initVal}" min="0" max="99" oninput="updateCustomSkillInit(this); calcSkills();" style="width:40px; background:transparent; border:1px solid #4f545c; color:#bb86fc; text-align:center; border-radius:4px; font-weight:bold;">
-                                </div>
-                                <div class="s-col input-col"><input type="number" name="sk-job-${skillName}" oninput="calcSkills()"></div>
-                                <div class="s-col input-col"><input type="number" name="sk-int-${skillName}" oninput="calcSkills()"></div>
-                                <div class="s-col input-col"><input type="number" name="sk-gro-${skillName}" oninput="calcSkills()"></div>
-                                <div class="s-col input-col"><input type="number" name="sk-oth-${skillName}" oninput="calcSkills()"></div>
-                                <div class="s-col total-col"><span class="skill-total">1</span></div>
-                            `;
-                            const mythosRow = list.querySelector('.skill-mythos-row');
-                            list.insertBefore(row, mythosRow);
-                        }
-                    }
-                });
-
+                
+                // データの流し込み
                 setTimeout(() => {
                     document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
                         let key = el.name || el.id;
@@ -462,13 +498,13 @@
         if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
         if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
 
-        // 変更検知リスナー
         setTimeout(() => {
             document.getElementById('char-editor').addEventListener('input', markAsChanged);
             document.getElementById('char-editor').addEventListener('change', markAsChanged);
         }, 1000);
     });
 
+    // 保存処理
     async function saveCharacter() {
         const chars = JSON.parse(localStorage.getItem('characters') || '[]');
         const editIndex = localStorage.getItem('editingIndex');
