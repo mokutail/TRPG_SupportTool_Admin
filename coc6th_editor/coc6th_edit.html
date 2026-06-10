@@ -25,20 +25,7 @@
         }
         .editor-title { margin: 0; color: #fff; font-size: 24px; }
         
-        .btn-submit {
-            padding: 12px 30px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 18px;
-            border: none;
-            color: white;
-            background: #43b581;
-            transition: 0.2s;
-        }
-        .btn-submit:hover { background: #3ca374; }
-
-        /* ② 左側の固定メニュー */
+        /* ② 左側の固定メニュー (保存を上に配置) */
         .fixed-left-menu {
             position: fixed;
             left: 10px;
@@ -100,7 +87,8 @@
         .grid-inputs input[type="date"] { cursor: pointer; color: #fff; }
         .grid-inputs input:focus, .grid-inputs textarea:focus { border-color: #bb86fc; }
 
-        input[type="color"] { cursor: pointer; border: none; background: transparent; width: 60px; height: 35px; padding: 0; border-radius: 4px; }
+        input[type="color"], input[type="checkbox"].theme-check { cursor: pointer; }
+        input[type="color"] { border: none; background: transparent; width: 60px; height: 35px; padding: 0; border-radius: 4px; }
 
         .weapon-grid-top { grid-template-columns: 2fr 1fr 1fr; }
         .weapon-grid-bottom { grid-template-columns: repeat(6, 1fr); }
@@ -127,19 +115,26 @@
         .modal-actions button { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #fff; }
         .btn-modal-save { background: #43b581; } .btn-modal-save:hover { background: #3ca374; }
         .btn-modal-cancel { background: #4f545c; } .btn-modal-cancel:hover { background: #686d73; }
+
+        /* 追加要件スタイル */
+        /* ② 成長チェックの完全非表示化 */
+        .check-col, th.check-col, td.check-col { display: none !important; }
+        
+        /* ③ テーマカラーの左寄せ固定 */
+        #theme-area { justify-content: flex-start !important; }
     </style>
 </head>
 <body>
     <header class="editor-header">
         <h1 class="editor-title">キャラクター作成・編集</h1>
         <div class="header-actions">
-            <button type="button" class="btn-submit" onclick="saveCharacter()">💾 保存する</button>
-        </div>
+            </div>
     </header>
 
     <div class="fixed-left-menu">
+        <button type="button" onclick="saveCharacter()" title="保存する">💾<br><span style="font-size:10px;">保存</span></button>
         <button type="button" onclick="goToView()" title="閲覧画面へ">👁<br><span style="font-size:10px;">閲覧</span></button>
-        <button type="button" onclick="window.location.href='../index.html'" title="玄関に戻る">🚪<br><span style="font-size:10px;">玄関</span></button>
+        <button type="button" onclick="goToHome()" title="玄関に戻る">🚪<br><span style="font-size:10px;">玄関</span></button>
     </div>
 
     <main class="editor-main">
@@ -154,6 +149,9 @@
                 <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
                     <label style="color: #b9bbbe; font-size: 14px; font-weight: bold;">イメージカラー:</label>
                     <input type="color" id="char-color" name="char-color" value="#ffffff" title="キャラクターのテーマカラーを選択">
+                    <label style="color: #b9bbbe; font-size: 14px; display:flex; align-items:center; gap:5px; cursor:pointer;">
+                        <input type="checkbox" name="use-bg-color" id="use-bg-color" class="theme-check"> 背景色として立ち絵に適用する
+                    </label>
                 </div>
             </div>
 
@@ -161,6 +159,7 @@
             <div class="ability-control-bar">
                 <button type="button" class="btn-random-all" onclick="if(typeof rollAll === 'function') rollAll()">一斉ランダム</button>
             </div>
+            
             <div id="component-skills-list"></div>
 
             <div class="custom-section">
@@ -230,11 +229,11 @@
     </script>
 
     <script src="basic_information/basic_information.js"></script>
-    <script src="ability_value/ability_value.js"></script>
     <script src="skill_value/skill_value.js"></script>
+    <script src="ability_value/ability_value.js"></script>
 
 <script>
-    // --- 未保存の警告機能 ---
+    // ⑥ 変更検知と警告機能
     let isChanged = false;
     function markAsChanged() { isChanged = true; }
 
@@ -265,7 +264,7 @@
         window.location.href = '../index.html';
     }
 
-    // --- UIコントロール機能 ---
+    // セクション折りたたみ
     function toggleAccordion(targetId, headerBar) {
         const content = document.getElementById(targetId);
         const icon = headerBar.querySelector(".accordion-icon");
@@ -381,9 +380,8 @@
         markAsChanged();
     }
 
-    // --- ロード時の初期化処理 ---
     document.addEventListener("DOMContentLoaded", () => {
-        // 外部JSがDOMを生成する時間を待ってからデータを流し込む
+        // 外部ファイルのDOM生成を待つ
         setTimeout(() => {
             const editIndex = localStorage.getItem('editingIndex');
             if (editIndex !== null && editIndex !== "") {
@@ -393,43 +391,6 @@
                     window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
                     if(typeof updateMainPreview === 'function') updateMainPreview();
 
-                    // カスタム追加された技能の自動復元
-                    const standardSkills = ["回避","キック","組み付き","こぶし","頭突き","投擲","マーシャルアーツ","拳銃","サブマシンガン","ショットガン","マシンガン","ライフル","応急手当","鍵開け","隠す","隠れる","聞き耳","忍び歩き","写真術","精神分析","追跡","登攀","図書館","目星","運転","機械修理","重機械操作","乗馬","水泳","製作","操縦","跳躍","電気修理","ナビゲート","変装","言いくるめ","信用","説得","値切り","母国語","医学","オカルト","化学","芸術","経理","考古学","コンピューター","心理学","人類学","生物学","地質学","電子工学","天文学","博物学","物理学","法律","薬学","歴史","神話"];
-                    Object.keys(char).forEach(key => {
-                        if(key.match(/^sk-(job|int|gro|oth)-/)) {
-                            const skillName = key.replace(/^sk-(job|int|gro|oth)-/, '');
-                            if (!standardSkills.includes(skillName) && !document.querySelector(`input[name="sk-job-${skillName}"]`)) {
-                                const list = document.querySelector('#knowledge-skills-area .skills-list');
-                                if(list) {
-                                    const uniqueId = Date.now() + Math.random().toString().slice(2, 6);
-                                    const initVal = char['sk-init-' + skillName] || 1;
-                                    const row = document.createElement('div');
-                                    row.className = 'skill-row custom-added-skill';
-                                    row.setAttribute('data-initial', initVal);
-                                    row.innerHTML = `
-                                        <div class="s-col check-col"><input type="checkbox"></div>
-                                        <div class="s-col name-col font-input-wrapper" style="display:flex; align-items:center;">
-                                            <input type="text" class="skill-name-inline custom-name-input" value="${skillName}" oninput="updateCustomSkillName(this, '${uniqueId}')" style="width:100px;">
-                                            <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; margin-left:5px; cursor:pointer;" onclick="this.parentElement.parentElement.remove(); calcSkills(); if(typeof markAsChanged === 'function') markAsChanged();">✖</button>
-                                        </div>
-                                        <div class="s-col val-col">
-                                            <input type="number" class="custom-init-input" name="sk-init-${skillName}" value="${initVal}" min="0" max="99" oninput="updateCustomSkillInit(this); calcSkills();" style="width:40px; background:transparent; border:1px solid #4f545c; color:#bb86fc; text-align:center; border-radius:4px; font-weight:bold;">
-                                        </div>
-                                        <div class="s-col input-col"><input type="number" name="sk-job-${skillName}" oninput="calcSkills()"></div>
-                                        <div class="s-col input-col"><input type="number" name="sk-int-${skillName}" oninput="calcSkills()"></div>
-                                        <div class="s-col input-col"><input type="number" name="sk-gro-${skillName}" oninput="calcSkills()"></div>
-                                        <div class="s-col input-col"><input type="number" name="sk-oth-${skillName}" oninput="calcSkills()"></div>
-                                        <div class="s-col total-col"><span class="skill-total">1</span></div>
-                                    `;
-                                    const mythosRow = list.querySelector('.skill-mythos-row');
-                                    if(mythosRow) list.insertBefore(row, mythosRow);
-                                    else list.appendChild(row);
-                                }
-                            }
-                        }
-                    });
-
-                    // 値の流し込み
                     document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
                         let key = el.name || el.id;
                         if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
@@ -440,17 +401,14 @@
                     if(char.money) document.getElementById('char-money').value = char.money;
                     if(char.debt) document.getElementById('char-debt').value = char.debt;
 
-                    // ★重要：外部JSの関数を確実に呼び出す
                     if (typeof window.calcAll === 'function') window.calcAll();
                     if (typeof window.calcSkills === 'function') window.calcSkills();
-
-                    // ★不定の狂気（4/5）の再計算を確実に発火させる
-                    setTimeout(() => {
-                        const sanInput = document.getElementById('san-input');
-                        if (sanInput && typeof window.calcInsanityOnly === 'function') {
-                            window.calcInsanityOnly();
-                        }
-                    }, 50);
+                    
+                    // ⑩ SAN値から不定の狂気（4/5）を算出・反映させる
+                    const sanInput = document.getElementById('san-input');
+                    if (sanInput && typeof window.calcInsanityOnly === 'function') {
+                        window.calcInsanityOnly();
+                    }
                 }
             }
             
@@ -459,16 +417,15 @@
             if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
             if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
 
-            // 自動入力で「変更あり」判定にならないように少し待ってから監視を開始
+            // 自動入力で「変更あり」にならないように遅延
             setTimeout(() => {
                 isChanged = false;
                 document.getElementById('char-editor').addEventListener('input', markAsChanged);
                 document.getElementById('char-editor').addEventListener('change', markAsChanged);
             }, 100);
-        }, 300); // 外部JSの描画完了を待つ時間
+        }, 500); // 外部ファイルの描画完了を待つ時間
     });
 
-    // --- 保存処理 ---
     async function saveCharacter() {
         const chars = JSON.parse(localStorage.getItem('characters') || '[]');
         const editIndex = localStorage.getItem('editingIndex');
@@ -522,7 +479,7 @@
             }
             localStorage.setItem('characters', JSON.stringify(chars));
             
-            isChanged = false; // 保存完了でフラグをリセット
+            isChanged = false; // 保存完了
             alert("保存しました！引き続き編集可能です。");
         } catch (e) {
             console.error("保存エラー:", e);
@@ -532,28 +489,32 @@
 </script>
 
 <script>
-    // 外部ファイル（ability_value.js）が読み込まれた直後に、不定の計算式だけを上書き(オーバーライド)します。
     window.addEventListener('load', function() {
-        if(typeof window.calcInsanityOnly === 'function') {
-            window.calcInsanityOnly = function() {
-                const sanInput = document.getElementById('san-input');
-                if (!sanInput) return;
-                
-                const mythosValue = parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
-                const maxSan = 99 - mythosValue;
-                
-                const maxSanEl = document.querySelector('.san-max');
-                if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
+        // 外部ファイル（ability_value.js）内の関数をオーバーライドして修正
+        setTimeout(() => {
+            if(typeof window.calcInsanityOnly === 'function') {
+                window.calcInsanityOnly = function() {
+                    const sanInput = document.getElementById('san-input');
+                    if (!sanInput) return;
+                    
+                    const mythosValue = parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
+                    const maxSan = 99 - mythosValue;
+                    
+                    const maxSanEl = document.querySelector('.san-max');
+                    if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
 
-                let currentSan = parseInt(sanInput.value, 10) || 0;
-                
-                if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
-                if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
-                
-                // ★修正：不定の狂気 ＝ 現在のSAN値の 4/5 (80%) 切り捨て
-                document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.8);
-            };
-        }
+                    let currentSan = parseInt(sanInput.value, 10) || 0;
+                    
+                    if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
+                    if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
+                    
+                    // 不定の狂気 ＝ 現在のSAN値の 4/5 (80%) を切り捨て
+                    const insanityVal = Math.floor(currentSan * 4 / 5);
+                    const insanityDisplay = document.getElementById('insanity-display');
+                    if(insanityDisplay) insanityDisplay.textContent = insanityVal;
+                };
+            }
+        }, 1000);
     });
 </script>
 </body>
