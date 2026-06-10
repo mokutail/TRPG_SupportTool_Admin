@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="skill_value/skill_value.css">
     <title>キャラクター作成 - CoC 6th</title>
     <style>
-        /* --- ヘッダーのスタイル --- */
+        /* --- ベーススタイル --- */
         body { margin: 0; padding-bottom: 50px; background-color: #36393f; color: #dcddde; font-family: 'Segoe UI', sans-serif; }
         
         .editor-header {
@@ -18,7 +18,13 @@
             background-color: #36393f;
             padding: 15px 40px;
             border-bottom: 1px solid #202225;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+        
+        /* ヘッダー左側にタイトルと保存ボタンを配置 */
         .header-left {
             display: flex;
             align-items: center;
@@ -31,7 +37,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 16px;
             border: none;
             color: white;
             background: #43b581;
@@ -39,21 +45,7 @@
         }
         .btn-submit:hover { background: #3ca374; }
 
-        .btn-new {
-            padding: 12px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            border: none;
-            color: white;
-            background: #4f545c;
-            transition: 0.2s;
-            text-decoration: none;
-        }
-        .btn-new:hover { background: #686d73; }
-
-        /* 左側の固定メニュー */
+        /* 左側の固定メニュー（大きく、保存・閲覧・玄関を配置） */
         .fixed-left-menu {
             position: fixed;
             left: 15px;
@@ -93,14 +85,19 @@
             font-weight: bold;
         }
 
-        .editor-main { padding: 20px 40px 20px 110px; } 
+        .editor-main { padding: 20px 40px 20px 110px; }
 
         .info-content-wrapper[style*="display: none"],
         .accordion-content[style*="display: none"] {
             display: none !important;
         }
 
-        /* デザイン統一用コンテナ */
+        /* 外部CSSの干渉を防ぎ、テーマ設定を確実に左寄せにする */
+        #theme-area {
+            justify-content: flex-start !important;
+        }
+
+        /* 汎用セクションデザイン */
         .custom-section { 
             max-width: 1300px; width: 100%; background-color: #1e2227; 
             border: 1px solid #323842; border-radius: 6px; padding: 20px; 
@@ -137,6 +134,7 @@
         .money-fixed-box label { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: bold; font-size: 14px; }
         .money-fixed-box input { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 8px 10px; border-radius: 4px; width: 150px; outline: none; }
 
+        /* パスワードモーダル */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .modal-content { background: #1e1e24; border: 1px solid #4f545c; border-radius: 8px; padding: 20px; width: 350px; display: flex; flex-direction: column; gap: 15px; }
         .modal-content h3 { margin: 0; color: #fff; font-size: 16px; border-bottom: 1px solid #4f545c; padding-bottom: 10px; }
@@ -153,9 +151,6 @@
         <div class="header-left">
             <h1 class="editor-title">キャラクター作成・編集</h1>
             <button type="button" class="btn-submit" onclick="saveCharacter()">💾 保存する</button>
-        </div>
-        <div class="header-actions">
-            <button type="button" class="btn-new" onclick="goToHome()">玄関に戻る</button>
         </div>
     </header>
 
@@ -174,18 +169,17 @@
                 <div class="section-subtitle-bar" onclick="toggleAccordion('theme-area', this)">
                     <h2 class="section-subtitle">テーマ設定</h2><span class="accordion-icon">⋁</span>
                 </div>
-                <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 20px;">
+                <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
                     <label style="color: #b9bbbe; font-size: 14px; font-weight: bold;">イメージカラー:</label>
                     <input type="color" id="char-color" name="char-color" value="#ffffff" title="キャラクターのテーマカラーを選択">
                 </div>
             </div>
 
             <div id="component-ability-value"></div>
-
             <div class="ability-control-bar">
                 <button type="button" class="btn-random-all" onclick="if(typeof rollAll === 'function') rollAll()">一斉ランダム</button>
             </div>
-
+            
             <div id="component-skills-list"></div>
 
             <div class="custom-section">
@@ -248,20 +242,21 @@
         </div>
     </div>
 
+    <!-- Firebase連携 -->
     <script type="module">
         import { db } from './firebase-config.js';
         import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
         window.db = db; window.doc = doc; window.setDoc = setDoc;
     </script>
 
+    <!-- ★重要：元々機能していた美しい外部ファイルをここで読み込みます -->
     <script src="basic_information/basic_information.js"></script>
     <script src="ability_value/ability_value.js"></script>
     <script src="skill_value/skill_value.js"></script>
 
 <script>
+    // --- 未保存の警告機能 ---
     let isChanged = false;
-
-    // 変更検知フラグ
     function markAsChanged() { isChanged = true; }
 
     window.addEventListener('beforeunload', function (e) {
@@ -270,16 +265,6 @@
             e.returnValue = ''; 
         }
     });
-
-    function toggleAccordion(targetId, headerBar) {
-        const content = document.getElementById(targetId);
-        const icon = headerBar.querySelector(".accordion-icon");
-        if (content.classList.contains("open")) {
-            content.classList.remove("open"); content.style.display = "none"; icon.textContent = "⋗";
-        } else {
-            content.classList.add("open"); content.style.display = "flex"; icon.textContent = "⋁";
-        }
-    }
 
     function goToView() {
         if (isChanged) {
@@ -299,6 +284,17 @@
             if (!confirm("保存されていません。このまま移動すると変更が破棄されます。本当に移動しますか？")) return;
         }
         window.location.href = '../index.html';
+    }
+
+    // --- UIコントロール機能 ---
+    function toggleAccordion(targetId, headerBar) {
+        const content = document.getElementById(targetId);
+        const icon = headerBar.querySelector(".accordion-icon");
+        if (content.classList.contains("open")) {
+            content.classList.remove("open"); content.style.display = "none"; icon.textContent = "⋗";
+        } else {
+            content.classList.add("open"); content.style.display = "flex"; icon.textContent = "⋁";
+        }
     }
 
     function moveUp(btn) {
@@ -406,8 +402,9 @@
         markAsChanged();
     }
 
+    // --- ロード時の初期化処理 ---
     document.addEventListener("DOMContentLoaded", () => {
-        // ★重要：外部ファイルの読み込みが終わるのを少し待ってから初期化処理を行う
+        // 外部JSがDOMを生成する時間を待ってからデータを流し込む
         setTimeout(() => {
             const editIndex = localStorage.getItem('editingIndex');
             if (editIndex !== null && editIndex !== "") {
@@ -417,7 +414,7 @@
                     window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
                     if(typeof updateMainPreview === 'function') updateMainPreview();
 
-                    // カスタム追加された技能の復元
+                    // カスタム追加された技能の自動復元
                     const standardSkills = ["回避","キック","組み付き","こぶし","頭突き","投擲","マーシャルアーツ","拳銃","サブマシンガン","ショットガン","マシンガン","ライフル","応急手当","鍵開け","隠す","隠れる","聞き耳","忍び歩き","写真術","精神分析","追跡","登攀","図書館","目星","運転","機械修理","重機械操作","乗馬","水泳","製作","操縦","跳躍","電気修理","ナビゲート","変装","言いくるめ","信用","説得","値切り","母国語","医学","オカルト","化学","芸術","経理","考古学","コンピューター","心理学","人類学","生物学","地質学","電子工学","天文学","博物学","物理学","法律","薬学","歴史","神話"];
                     Object.keys(char).forEach(key => {
                         if(key.match(/^sk-(job|int|gro|oth)-/)) {
@@ -431,6 +428,7 @@
                                     row.className = 'skill-row custom-added-skill';
                                     row.setAttribute('data-initial', initVal);
                                     row.innerHTML = `
+                                        <div class="s-col check-col"><input type="checkbox"></div>
                                         <div class="s-col name-col font-input-wrapper" style="display:flex; align-items:center;">
                                             <input type="text" class="skill-name-inline custom-name-input" value="${skillName}" oninput="updateCustomSkillName(this, '${uniqueId}')" style="width:100px;">
                                             <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; margin-left:5px; cursor:pointer;" onclick="this.parentElement.parentElement.remove(); calcSkills(); if(typeof markAsChanged === 'function') markAsChanged();">✖</button>
@@ -452,25 +450,19 @@
                         }
                     });
 
-                    setTimeout(() => {
-                        document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
-                            let key = el.name || el.id;
-                            if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
-                            if (key && char[key] !== undefined) {
-                                if (el.type === 'checkbox') el.checked = char[key]; else el.value = char[key];
-                            }
-                        });
-                        if(char.money) document.getElementById('char-money').value = char.money;
-                        if(char.debt) document.getElementById('char-debt').value = char.debt;
+                    // 値の流し込み
+                    document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
+                        let key = el.name || el.id;
+                        if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
+                        if (key && char[key] !== undefined) {
+                            if (el.type === 'checkbox') el.checked = char[key]; else el.value = char[key];
+                        }
+                    });
+                    if(char.money) document.getElementById('char-money').value = char.money;
+                    if(char.debt) document.getElementById('char-debt').value = char.debt;
 
-                        if (typeof window.calcAll === 'function') window.calcAll();
-                        if (typeof window.calcSkills === 'function') window.calcSkills();
-                    }, 100);
-
-                    if(char.weapons) char.weapons.forEach(w => addWeaponRow(w));
-                    if(char.items) char.items.forEach(i => addItemRow(i));
-                    if(char.scenarios) char.scenarios.forEach(s => addScenarioRow(s));
-                    if(char.memos) char.memos.forEach(m => addMemoRow(m));
+                    if (typeof calcAll === 'function') calcAll();
+                    if (typeof calcSkills === 'function') calcSkills();
                 }
             }
             
@@ -479,11 +471,13 @@
             if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
             if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
 
+            // 変更検知の開始
             document.getElementById('char-editor').addEventListener('input', markAsChanged);
             document.getElementById('char-editor').addEventListener('change', markAsChanged);
-        }, 500); // 外部ファイルの描画完了を待つための0.5秒遅延
+        }, 300); // 外部JSの描画完了を待つ時間
     });
 
+    // --- 保存処理 ---
     async function saveCharacter() {
         const chars = JSON.parse(localStorage.getItem('characters') || '[]');
         const editIndex = localStorage.getItem('editingIndex');
@@ -519,4 +513,31 @@
         })).filter(s => s.name.trim() !== "");
 
         newData.memos = Array.from(document.querySelectorAll('.memo-row')).map(row => ({
-            title: row.querySelector('.m-title').value, content: row.querySelector('.m-content
+            title: row.querySelector('.m-title').value, content: row.querySelector('.m-content').value, password: row.querySelector('.m-pwd').value
+        })).filter(m => m.title.trim() !== "" || m.content.trim() !== "");
+
+        if (editIndex !== null && editIndex !== "") {
+            newData.uid = chars[parseInt(editIndex, 10)].uid;
+            chars[parseInt(editIndex, 10)] = newData;
+        } else {
+            newData.uid = 'char_' + Date.now().toString(16) + Math.random().toString(16).slice(2);
+            chars.push(newData);
+            localStorage.setItem('editingIndex', chars.length - 1);
+        }
+
+        try {
+            if (window.setDoc && window.doc && window.db) {
+                await window.setDoc(window.doc(window.db, "characters", newData.uid), newData);
+            }
+            localStorage.setItem('characters', JSON.stringify(chars));
+            
+            isChanged = false; // 保存完了でフラグをリセット
+            alert("保存しました！引き続き編集可能です。");
+        } catch (e) {
+            console.error("保存エラー:", e);
+            alert("保存に失敗しました。容量制限または通信エラーの可能性があります。");
+        }
+    }
+</script>
+</body>
+</html>
