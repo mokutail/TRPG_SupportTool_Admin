@@ -245,3 +245,21 @@ input.skill-name-inline:focus {
     border-bottom: 1px solid #bb86fc !important; /* フォーカス時に点線を実線化 */
     color: #ffffff !important;
 }
+
+/* 成長チェックボックス列を完全に非表示にする */
+.check-col {
+    display: none !important;
+}
+
+/* 技能追加ボタンを左端に寄せる */
+.skill-table-control {
+    text-align: left !important;
+    padding-left: 10px;
+}
+
+/* 自由追加技能の削除ボタン(✖)を技能名のすぐ右に配置する */
+.custom-added-skill .name-col {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
