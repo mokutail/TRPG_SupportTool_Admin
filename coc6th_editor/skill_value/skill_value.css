@@ -158,14 +158,33 @@
     border: 1px solid transparent !important;
     transition: background-color 0.15s, border-color 0.15s;
 }
+.skills-table-header, .skill-row {
+    display: grid !important;
+    /* 左から [名前(残り), 初期値(80px), 追加分(100px), 合計(80px)] の順で固定 */
+    grid-template-columns: 1fr 80px 100px 80px !important;
+    align-items: center !important;
+}
+
 .skill-row:hover { background-color: #2b313a !important; border-color: #444c5a !important; }
 
-.s-col { justify-content: center !important; align-items: center !important; font-size: 15px !important; }
-.check-col { flex: 0.8 1 0% !important; }
-.name-col { flex: 3 1 0% !important; justify-content: flex-start !important; font-weight: bold !important; padding-left: 5px !important; }
-.val-col { flex: 1 1 0% !important; color: #aaaaaa !important; }
-.input-col { flex: 1.2 1 0% !important; }
-.total-col { flex: 1.2 1 0% !important; font-weight: bold !important; font-size: 16px !important; }
+/* 各列の幅を固定して縦線を揃える */
+.s-col { 
+    display: flex !important;
+    justify-content: center !important; 
+    align-items: center !important; 
+    font-size: 15px !important;
+}
+
+/* 技能名以外の列を固定幅にする（合計：約300px程度を想定） */
+.name-col { 
+    flex: 1 !important; /* 技能名は残り幅をすべて使う */
+    justify-content: flex-start !important; 
+    padding-left: 10px !important;
+}
+
+.val-col { width: 80px !important; flex: none !important; color: #aaaaaa !important; }
+.input-col { width: 100px !important; flex: none !important; }
+.total-col { width: 80px !important; flex: none !important; font-weight: bold !important; }
 
 .check-col input[type="checkbox"] {
     width: 16px !important;
