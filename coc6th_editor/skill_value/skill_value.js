@@ -776,7 +776,7 @@ function toggleAccordion(targetId, headerBar) {
     }
 }
 
-// 自由追加技能用の処理（削除ボタンを技能名のすぐ隣に配置）
+// 自由追加技能用の処理（削除ボタンを技能名のすぐ隣に配置し、レイアウト崩れを防ぐ）
 window.addCustomSkill = function(btn) {
     const list = btn.closest('.accordion-content').querySelector('.skills-list');
     const uniqueId = Date.now() + Math.random().toString().slice(2, 6);
@@ -786,10 +786,12 @@ window.addCustomSkill = function(btn) {
     row.className = 'skill-row custom-added-skill';
     row.setAttribute('data-initial', '1');
 
+    // ✖ボタンを <div class="s-col name-col"> の中に同居させることで列のズレを防ぐ
     row.innerHTML = `
-        <div class="s-col name-col font-input-wrapper" style="display:flex; align-items:center;">
+        <div class="s-col check-col"><input type="checkbox"></div>
+        <div class="s-col name-col font-input-wrapper">
             <input type="text" class="skill-name-inline custom-name-input" placeholder="追加技能名" oninput="updateCustomSkillName(this, '${uniqueId}')" style="width:100px;">
-            <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; margin-left:5px; cursor:pointer;" onclick="this.parentElement.parentElement.remove(); calcSkills(); if(typeof markAsChanged === 'function') markAsChanged();">✖</button>
+            <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; cursor:pointer;" onclick="this.parentElement.parentElement.remove(); calcSkills(); if(typeof markAsChanged === 'function') markAsChanged();">✖</button>
         </div>
         <div class="s-col val-col">
             <input type="number" class="custom-init-input" name="sk-init-custom_${uniqueId}" value="1" min="0" max="99" oninput="updateCustomSkillInit(this); calcSkills();" style="width:40px; background:transparent; border:1px solid #4f545c; color:#bb86fc; text-align:center; border-radius:4px; font-weight:bold;">
