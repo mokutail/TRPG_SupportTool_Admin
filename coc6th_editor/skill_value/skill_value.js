@@ -1,6 +1,5 @@
 // 技能セクションのHTML構造をコンポーネント管理
 const SKILL_VALUE_COMPONENT = `
-    <!-- 職業P・興味Pカスタム連動ヘッダーパネル -->
     <div class="skills-point-header-table">
         <div class="p-header-row p-head-title">
             <div class="p-head-cell"></div>
@@ -9,7 +8,6 @@ const SKILL_VALUE_COMPONENT = `
             <div class="p-head-cell">補正</div>
         </div>
         
-        <!-- 職業P行 -->
         <div class="p-header-row">
             <div class="p-head-cell p-label">職業P</div>
             <div class="p-head-cell">
@@ -33,7 +31,6 @@ const SKILL_VALUE_COMPONENT = `
             </div>
         </div>
 
-        <!-- 興味P行 -->
         <div class="p-header-row">
             <div class="p-head-cell p-label">興味P</div>
             <div class="p-head-cell">
@@ -48,7 +45,6 @@ const SKILL_VALUE_COMPONENT = `
         </div>
     </div>
 
-    <!-- ■ 1. 戦闘技能セクション -->
     <div class="skills-section">
         <div class="section-subtitle-bar" onclick="toggleAccordion('combat-skills-area', this)">
             <h2 class="section-subtitle">戦闘技能</h2>
@@ -202,12 +198,11 @@ const SKILL_VALUE_COMPONENT = `
             </div>
 
             <div class="skill-table-control">
-                <button type="button" class="btn-add-skill">追加</button>
+                <button type="button" class="btn-add-skill" onclick="addCustomSkill(this)">+ 技能を追加</button>
             </div>
         </div>
     </div>
 
-    <!-- ■ 2. 探索技能セクション -->
     <div class="skills-section">
         <div class="section-subtitle-bar" onclick="toggleAccordion('exploration-skills-area', this)">
             <h2 class="section-subtitle">探索技能</h2>
@@ -361,12 +356,11 @@ const SKILL_VALUE_COMPONENT = `
             </div>
 
             <div class="skill-table-control">
-                <button type="button" class="btn-add-skill">追加</button>
+                <button type="button" class="btn-add-skill" onclick="addCustomSkill(this)">+ 技能を追加</button>
             </div>
         </div>
     </div>
 
-    <!-- ■ 3. 行動技能セクション -->
     <div class="skills-section">
         <div class="section-subtitle-bar" onclick="toggleAccordion('action-skills-area', this)">
             <h2 class="section-subtitle">行動技能</h2>
@@ -510,12 +504,11 @@ const SKILL_VALUE_COMPONENT = `
             </div>
 
             <div class="skill-table-control">
-                <button type="button" class="btn-add-skill">追加</button>
+                <button type="button" class="btn-add-skill" onclick="addCustomSkill(this)">+ 技能を追加</button>
             </div>
         </div>
     </div>
 
-    <!-- ■ 4. 交渉技能セクション -->
     <div class="skills-section">
         <div class="section-subtitle-bar" onclick="toggleAccordion('negotiation-skills-area', this)">
             <h2 class="section-subtitle">交渉技能</h2>
@@ -599,12 +592,11 @@ const SKILL_VALUE_COMPONENT = `
             </div>
 
             <div class="skill-table-control">
-                <button type="button" class="btn-add-skill">追加</button>
+                <button type="button" class="btn-add-skill" onclick="addCustomSkill(this)">+ 技能を追加</button>
             </div>
         </div>
     </div>
 
-    <!-- ■ 5. 知識技能セクション -->
     <div class="skills-section">
         <div class="section-subtitle-bar" onclick="toggleAccordion('knowledge-skills-area', this)">
             <h2 class="section-subtitle">知識技能</h2>
@@ -805,7 +797,6 @@ const SKILL_VALUE_COMPONENT = `
                     <div class="s-col total-col"><span class="skill-total" id="total-歴史">20</span></div>
                 </div>
 
-                <!-- クトゥルフ神話技能 -->
                 <div class="skill-row skill-mythos-row" data-initial="0">
                     <div class="s-col check-col"><input type="checkbox" name="sk-chk-神話"></div>
                     <div class="s-col name-col mythos-label">クトゥルフ神話</div>
@@ -830,7 +821,7 @@ const SKILL_VALUE_COMPONENT = `
             </div>
 
             <div class="skill-table-control">
-                <button type="button" class="btn-add-skill">追加</button>
+                <button type="button" class="btn-add-skill" onclick="addCustomSkill(this)">+ 技能を追加</button>
             </div>
         </div>
     </div>
@@ -846,4 +837,296 @@ function toggleAccordion(targetId, headerBar) {
     } else {
         content.classList.add("open"); content.style.display = "flex"; icon.textContent = "⋁";
     }
+}
+
+// 自由追加技能用の処理
+window.addCustomSkill = function(btn) {
+    const list = btn.closest('.accordion-content').querySelector('.skills-list');
+    const uniqueId = Date.now() + Math.random().toString().slice(2, 6);
+    const isKnowledge = btn.closest('#knowledge-skills-area') !== null;
+
+    const row = document.createElement('div');
+    row.className = 'skill-row custom-added-skill';
+    row.setAttribute('data-initial', '1');
+
+    row.innerHTML = `
+        <div class="s-col check-col"><input type="checkbox"></div>
+        <div class="s-col name-col font-input-wrapper">
+            <input type="text" class="skill-name-inline custom-name-input" placeholder="追加技能名" oninput="updateCustomSkillName(this, '${uniqueId}')" style="width:100px;">
+        </div>
+        <div class="s-col val-col">
+            <input type="number" class="custom-init-input" name="sk-init-custom_${uniqueId}" value="1" min="0" max="99" oninput="updateCustomSkillInit(this); calcSkills();" style="width:40px; background:transparent; border:1px solid #4f545c; color:#bb86fc; text-align:center; border-radius:4px; font-weight:bold;">
+        </div>
+        <div class="s-col input-col"><input type="number" name="sk-job-custom_${uniqueId}" oninput="calcSkills()"></div>
+        <div class="s-col input-col"><input type="number" name="sk-int-custom_${uniqueId}" oninput="calcSkills()"></div>
+        <div class="s-col input-col"><input type="number" name="sk-gro-custom_${uniqueId}" oninput="calcSkills()"></div>
+        <div class="s-col input-col"><input type="number" name="sk-oth-custom_${uniqueId}" oninput="calcSkills()"></div>
+        <div class="s-col total-col"><span class="skill-total">1</span></div>
+        <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; margin-left:5px; cursor:pointer;" onclick="this.parentElement.remove(); calcSkills(); if(typeof markAsChanged === 'function') markAsChanged();">✖</button>
+    `;
+
+    // 知識技能の場合は「クトゥルフ神話」の上に挿入、それ以外は一番下に追加
+    if (isKnowledge) {
+        const mythosRow = list.querySelector('.skill-mythos-row');
+        if(mythosRow) {
+            list.insertBefore(row, mythosRow);
+        } else {
+            list.appendChild(row);
+        }
+    } else {
+        list.appendChild(row);
+    }
+    
+    if (typeof markAsChanged === 'function') markAsChanged();
+};
+
+// 追加した技能の「名前」が変わったら、連動して内部の `name` 属性（保存用ID）を書き換える
+window.updateCustomSkillName = function(inputEl, id) {
+    const name = inputEl.value.trim() || `custom_${id}`;
+    const row = inputEl.closest('.skill-row');
+    row.querySelector('.check-col input').name = `sk-chk-${name}`;
+    row.querySelector('.custom-init-input').name = `sk-init-${name}`;
+    row.querySelector('input[name^="sk-job-"]').name = `sk-job-${name}`;
+    row.querySelector('input[name^="sk-int-"]').name = `sk-int-${name}`;
+    row.querySelector('input[name^="sk-gro-"]').name = `sk-gro-${name}`;
+    row.querySelector('input[name^="sk-oth-"]').name = `sk-oth-${name}`;
+    if (typeof markAsChanged === 'function') markAsChanged();
+};
+
+// 追加した技能の「初期値」が変わったら、合計計算用の `data-initial` を更新する
+window.updateCustomSkillInit = function(inputEl) {
+    const row = inputEl.closest('.skill-row');
+    row.setAttribute('data-initial', inputEl.value || 0);
+    if (typeof markAsChanged === 'function') markAsChanged();
+};
+
+function diceRoll(num, size, add = 0) {
+    let total = add;
+    for (let i = 0; i < num; i++) {
+        total += Math.floor(Math.random() * size) + 1;
+    }
+    return total;
+}
+
+let hasManuallySetSan = false;
+
+function handleSanInput() {
+    hasManuallySetSan = true;
+    calcInsanityOnly();
+}
+
+const selectElements = document.querySelectorAll(".row-base select");
+selectElements.forEach(select => {
+    select.innerHTML = "";
+    const placeholderOpt = document.createElement("option");
+    placeholderOpt.value = ""; placeholderOpt.textContent = ""; placeholderOpt.selected = true;
+    select.appendChild(placeholderOpt);
+    let min = 2; let max = 18;
+    if (select.id === "job-calc-method" || select.name === undefined) return;
+    if (select.name === "base-EDU") { min = 3; max = 21; }
+    for (let i = min; i <= max; i++) {
+        const opt = document.createElement("option");
+        opt.value = i; opt.textContent = i; select.appendChild(opt);
+    }
+});
+
+calcAll();
+
+function rollIndividual(stat) {
+    const select = document.querySelector(`select[name="base-${stat}"]`);
+    if (!select) return;
+    let result = 0;
+    if (stat === 'STR' || stat === 'CON' || stat === 'POW' || stat === 'DEX' || stat === 'APP') { result = diceRoll(3, 6); }
+    else if (stat === 'SIZ' || stat === 'INT') { result = diceRoll(2, 6, 6); }
+    else if (stat === 'EDU') { result = diceRoll(3, 6, 3); }
+    select.value = result;
+
+    if (stat === 'POW') {
+        hasManuallySetSan = false;
+    }
+    calcAll();
+    if (typeof markAsChanged === 'function') markAsChanged();
+}
+
+function rollAll() {
+    hasManuallySetSan = false;
+    ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU'].forEach(stat => rollIndividual(stat));
+}
+
+function calcAll() {
+    const primaryStats = ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU'];
+    const baseValues = {}; const currentValues = {};
+
+    primaryStats.forEach(stat => {
+        const selectEl = document.querySelector(`select[name="base-${stat}"]`);
+        const base = selectEl ? (parseInt(selectEl.value) || 0) : 0;
+        const bonus = parseInt(document.querySelector(`input[name="bonus-${stat}"]`)?.value) || 0;
+        const temp = parseInt(document.querySelector(`input[name="temp-${stat}"]`)?.value) || 0;
+        baseValues[stat] = base;
+        currentValues[stat] = base === 0 ? 0 : (base + bonus + temp);
+        const curEl = document.getElementById(`cur-${stat}`);
+        if (curEl) curEl.textContent = base === 0 ? 0 : currentValues[stat];
+    });
+
+    const evadeInit = currentValues['DEX'] * 2;
+    const evadeInitDisplay = document.getElementById('init-evade');
+    if (evadeInitDisplay) {
+        evadeInitDisplay.textContent = evadeInit;
+        const row = evadeInitDisplay.closest('.skill-row');
+        if (row) row.setAttribute('data-initial', evadeInit);
+    }
+
+    const nativeInit = currentValues['EDU'] * 5;
+    const nativeInitDisplay = document.getElementById('init-native-lang');
+    if (nativeInitDisplay) {
+        nativeInitDisplay.textContent = nativeInit;
+        const row = nativeInitDisplay.closest('.skill-row');
+        if (row) row.setAttribute('data-initial', nativeInit);
+    }
+
+    const hasHP = baseValues['CON'] > 0 && baseValues['SIZ'] > 0;
+    const hasMP = baseValues['POW'] > 0;
+    const hasIDE = baseValues['INT'] > 0;
+    const hasKnow = baseValues['EDU'] > 0;
+
+    const BoneHP = hasHP ? Math.ceil((baseValues['CON'] + baseValues['SIZ']) / 2) : 0;
+    document.getElementById('base-HP').textContent = hasHP ? BoneHP : "-";
+    const bonusHP = parseInt(document.querySelector(`input[name="bonus-HP"]`)?.value) || 0;
+    const tempHP = parseInt(document.querySelector(`input[name="temp-HP"]`)?.value) || 0;
+    document.getElementById('cur-HP').textContent = hasHP ? (BoneHP + bonusHP + tempHP) : 0;
+
+    const baseMP = hasMP ? baseValues['POW'] : 0;
+    document.getElementById('base-MP').textContent = hasMP ? baseMP : "-";
+    const bonusMP = parseInt(document.querySelector(`input[name="bonus-MP"]`)?.value) || 0;
+    const tempMP = parseInt(document.querySelector(`input[name="temp-MP"]`)?.value) || 0;
+    document.getElementById('cur-MP').textContent = hasMP ? (baseMP + bonusMP + tempMP) : 0;
+
+    const baseSAN = hasMP ? baseValues['POW'] * 5 : 0;
+    document.getElementById('base-SAN').textContent = hasMP ? baseSAN : "-";
+    const bonusSAN = parseInt(document.querySelector(`input[name="bonus-SAN"]`)?.value) || 0;
+    const tempSAN = parseInt(document.querySelector(`input[name="temp-SAN"]`)?.value) || 0;
+    const totalSAN = hasMP ? (baseSAN + bonusSAN + tempSAN) : 0;
+    document.getElementById('cur-SAN').textContent = totalSAN;
+
+    const baseIDE = hasIDE ? baseValues['INT'] * 5 : 0;
+    document.getElementById('base-IDE').textContent = hasIDE ? baseIDE : "-";
+    const bonusIDE = parseInt(document.querySelector(`input[name="bonus-IDE"]`)?.value) || 0;
+    const tempIDE = parseInt(document.querySelector(`input[name="temp-IDE"]`)?.value) || 0;
+    document.getElementById('cur-IDE').textContent = hasIDE ? (baseIDE + bonusIDE + tempIDE) : 0;
+
+    const baseLucky = hasMP ? baseValues['POW'] * 5 : 0;
+    document.getElementById('base-幸運').textContent = hasMP ? baseLucky : "-";
+    const bonusLucky = parseInt(document.querySelector(`input[name="bonus-幸運"]`)?.value) || 0;
+    const tempLucky = parseInt(document.querySelector(`input[name="temp-幸運"]`)?.value) || 0;
+    document.getElementById('cur-幸運').textContent = hasMP ? (baseLucky + bonusLucky + tempLucky) : 0;
+
+    const baseKnow = hasKnow ? baseValues['EDU'] * 5 : 0;
+    document.getElementById('base-知識').textContent = hasKnow ? baseKnow : "-";
+    const bonusKnow = parseInt(document.querySelector(`input[name="bonus-知識"]`)?.value) || 0;
+    const tempKnow = parseInt(document.querySelector(`input[name="temp-知識"]`)?.value) || 0;
+    document.getElementById('cur-知識').textContent = hasKnow ? (baseKnow + bonusKnow + tempKnow) : 0;
+
+    if (baseValues['STR'] === 0 || baseValues['SIZ'] === 0) {
+        document.getElementById('db-display').textContent = "なし";
+    } else {
+        const sumDb = currentValues['STR'] + currentValues['SIZ'];
+        let dbResult = "0";
+        if (sumDb >= 2 && sumDb <= 12) { dbResult = "-1D6"; }
+        else if (sumDb >= 13 && sumDb <= 16) { dbResult = "-1D4"; }
+        else if (sumDb >= 17 && sumDb <= 24) { dbResult = "0"; }
+        else if (sumDb >= 25 && sumDb <= 32) { dbResult = "+1D4"; }
+        else if (sumDb >= 33 && sumDb <= 40) { dbResult = "+1D6"; }
+        else if (sumDb >= 41 && sumDb <= 56) { dbResult = "+2D6"; }
+        document.getElementById('db-display').textContent = dbResult;
+    }
+
+    let jobMax = 0;
+    const jobMethod = document.getElementById('job-calc-method')?.value || "EDU*20";
+    const jobBonus = parseInt(document.getElementById('job-points-bonus')?.value) || 0;
+
+    if (jobMethod === "MANUAL") {
+        jobMax = jobBonus;
+    } else {
+        if (jobMethod === "EDU*20") { jobMax = currentValues['EDU'] * 20; }
+        else if (jobMethod === "STR*10+EDU*10") { jobMax = (currentValues['STR'] * 10) + (currentValues['EDU'] * 10); }
+        else if (jobMethod === "CON*10+EDU*10") { jobMax = (currentValues['CON'] * 10) + (currentValues['EDU'] * 10); }
+        else if (jobMethod === "POW*10+EDU*10") { jobMax = (currentValues['POW'] * 10) + (currentValues['EDU'] * 10); }
+        else if (jobMethod === "DEX*10+EDU*10") { jobMax = (currentValues['DEX'] * 10) + (currentValues['EDU'] * 10); }
+        else if (jobMethod === "APP*10+EDU*10") { jobMax = (currentValues['APP'] * 10) + (currentValues['EDU'] * 10); }
+        else if (jobMethod === "SIZ*10+EDU*10") { jobMax = (currentValues['SIZ'] * 10) + (currentValues['EDU'] * 10); }
+        else if (jobMethod === "INT*10+EDU*10") { jobMax = (currentValues['INT'] * 10) + (currentValues['EDU'] * 10); }
+        jobMax += jobBonus;
+    }
+
+    const interestBonus = parseInt(document.getElementById('interest-points-bonus')?.value) || 0;
+    const interestMax = (currentValues['INT'] * 10) + interestBonus;
+
+    const jobMaxEl = document.getElementById('job-points-max');
+    const interestMaxEl = document.getElementById('interest-points-max');
+    if (jobMaxEl) jobMaxEl.textContent = `/ ${jobMax}`;
+    if (interestMaxEl) interestMaxEl.textContent = `/ ${interestMax}`;
+
+    const sanInput = document.getElementById('san-input');
+    if (sanInput && !hasManuallySetSan) {
+        if (!hasMP) { sanInput.value = ""; } else { sanInput.value = totalSAN; }
+    }
+
+    if (typeof calcSkills === "function" && document.querySelectorAll(".skill-row").length > 0) {
+        calcSkills();
+    }
+}
+
+window.calcSkills = function() {
+    let totalJobUsed = 0; let totalInterestUsed = 0;
+    const skillRows = document.querySelectorAll(".skill-row");
+    if (skillRows.length === 0) return;
+
+    skillRows.forEach(row => {
+        const initVal = parseInt(row.getAttribute("data-initial")) || 0;
+        const jobP = parseInt(row.querySelector('input[name^="sk-job-"]')?.value, 10) || 0;
+        const interestP = parseInt(row.querySelector('input[name^="sk-int-"]')?.value, 10) || 0;
+        const growP = parseInt(row.querySelector('input[name^="sk-gro-"]')?.value, 10) || 0;
+        const otherP = parseInt(row.querySelector('input[name^="sk-oth-"]')?.value, 10) || 0;
+        const mythosP = parseInt(row.querySelector('input[name="skill-mythos"]')?.value, 10) || 0;
+
+        let total = initVal + jobP + interestP + growP + otherP + mythosP;
+        if (total > 99 && !row.classList.contains('skill-mythos-row')) total = 99; // 神話技能以外は99上限
+        
+        const totalEl = row.querySelector(".skill-total");
+        if (totalEl) totalEl.textContent = total;
+
+        totalJobUsed += jobP; totalInterestUsed += interestP;
+    });
+
+    const jobMaxEl = document.getElementById('job-points-max');
+    const interestMaxEl = document.getElementById('interest-points-max');
+    if (!jobMaxEl || !interestMaxEl) return;
+
+    const jobMax = parseInt(jobMaxEl.textContent.replace('/ ', ''), 10) || 0;
+    const interestMax = parseInt(interestMaxEl.textContent.replace('/ ', ''), 10) || 0;
+
+    document.getElementById('job-points-left').textContent = jobMax - totalJobUsed;
+    document.getElementById('interest-points-left').textContent = interestMax - totalInterestUsed;
+
+    calcInsanityOnly();
+};
+
+function calcInsanityOnly() {
+    const sanInput = document.getElementById('san-input');
+    if (!sanInput) return;
+    if (document.getElementById('base-SAN').textContent === "-") {
+        sanInput.value = ""; document.getElementById('insanity-display').textContent = "0";
+        document.querySelector('.san-max').textContent = "/ 99"; return;
+    }
+    const mythosValue = parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
+    const maxSan = 99 - mythosValue;
+    
+    const maxSanEl = document.querySelector('.san-max');
+    if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
+
+    let currentSan = parseInt(sanInput.value, 10) || 0;
+    
+    if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
+    if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
+    document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.2);
 }
