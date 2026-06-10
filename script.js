@@ -202,8 +202,15 @@ function shareChar(index) {
         return;
     }
     
-    let basePath = window.location.href.split('index.html')[0];
-    if(!basePath.endsWith('/')) basePath += '/';
+    // GitHub Pages などの環境に依存せず、正確なベースURLを取得する
+    let currentUrl = window.location.href.split('?')[0];
+    let basePath = currentUrl;
+    if (basePath.endsWith('index.html')) {
+        basePath = basePath.replace('index.html', '');
+    }
+    if (!basePath.endsWith('/')) {
+        basePath += '/';
+    }
     
     const shareUrl = basePath + "view.html?id=" + char.uid;
     
