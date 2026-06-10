@@ -18,13 +18,27 @@
             background-color: #36393f;
             padding: 15px 40px;
             border-bottom: 1px solid #202225;
-            position: relative; /* ① ヘッダーがスクロールについてこないように修正 */
+            position: sticky;
+            top: 0;
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .editor-title { margin: 0; color: #fff; font-size: 24px; }
         
-        /* ⑤ 保存ボタンを左側の固定メニューに追加 */
+        .btn-submit {
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            border: none;
+            color: white;
+            background: #43b581;
+            transition: 0.2s;
+        }
+        .btn-submit:hover { background: #3ca374; }
+
+        /* ② 左側の固定メニュー */
         .fixed-left-menu {
             position: fixed;
             left: 10px;
@@ -58,13 +72,15 @@
             color: #bb86fc;
             transform: scale(1.1);
         }
-        .editor-main { padding: 20px 40px 20px 90px; }
+        .editor-main { padding: 20px 40px 20px 90px; } /* 左メニュー分の余白を確保 */
 
+        /* ④ CSSの !important 競合を上書きして折りたたみを有効化 */
         .info-content-wrapper[style*="display: none"],
         .accordion-content[style*="display: none"] {
             display: none !important;
         }
 
+        /* ⑤ デザイン統一用コンテナ（基本情報・技能セクションと同じ） */
         .custom-section { 
             max-width: 1300px; width: 100%; background-color: #1e2227; 
             border: 1px solid #323842; border-radius: 6px; padding: 20px; 
@@ -84,8 +100,7 @@
         .grid-inputs input[type="date"] { cursor: pointer; color: #fff; }
         .grid-inputs input:focus, .grid-inputs textarea:focus { border-color: #bb86fc; }
 
-        input[type="color"], input[type="checkbox"].theme-check { cursor: pointer; }
-        input[type="color"] { border: none; background: transparent; width: 60px; height: 35px; padding: 0; border-radius: 4px; }
+        input[type="color"] { cursor: pointer; border: none; background: transparent; width: 60px; height: 35px; padding: 0; border-radius: 4px; }
 
         .weapon-grid-top { grid-template-columns: 2fr 1fr 1fr; }
         .weapon-grid-bottom { grid-template-columns: repeat(6, 1fr); }
@@ -112,53 +127,19 @@
         .modal-actions button { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #fff; }
         .btn-modal-save { background: #43b581; } .btn-modal-save:hover { background: #3ca374; }
         .btn-modal-cancel { background: #4f545c; } .btn-modal-cancel:hover { background: #686d73; }
-
-        /* ② 一番左の「成長」チェックを完全に非表示化 */
-        .check-col, th.check-col, td.check-col { display: none !important; }
-        
-        /* ③ テーマカラーの左寄せ固定 */
-        #theme-area { justify-content: flex-start !important; }
-
-        /* 能力値・技能値テーブル用のスタイル(崩れないよう補強) */
-        .ability-table-wrapper { width: 100%; overflow-x: auto; }
-        .ability-table { width: 100%; border-collapse: collapse; text-align: center; color: #dcddde; font-size: 13px; margin-bottom:15px; }
-        .ability-table th, .ability-table td { border: 1px solid #3e4452; padding: 8px 4px; }
-        .ability-table th { background-color: #252a31; font-weight: bold; }
-        .ability-table select, .ability-table input { background-color: #14161a; color: #fff; border: 1px solid #4f545c; border-radius: 4px; padding: 6px 4px; width: 50px; text-align: center; }
-        .btn-dice { background: transparent; border: none; cursor: pointer; font-size: 16px; margin-left: 3px; }
-        .btn-dice:hover { transform: scale(1.2); }
-        .current-val { color: #43b581; font-weight: bold; font-size: 15px; }
-        .san-db-row { display: flex; gap: 10px; margin-top: 15px; }
-        .san-db-box { display: flex; background-color: #252a31; border: 1px solid #3e4452; border-radius: 4px; flex: 1; }
-        .san-db-label { background-color: #1e2227; padding: 10px 15px; font-weight: bold; border-right: 1px solid #3e4452; color: #fff; display: flex; align-items: center;}
-        .san-db-value { padding: 10px 15px; display: flex; align-items: center; color: #fff; font-weight: bold; flex: 1; }
-        .san-db-value input { background: transparent; border: none; color: #fff; font-weight: bold; font-size: 16px; width: 60px; text-align: center; border-bottom: 1px solid #4f545c; }
-        
-        .skills-point-header-table { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; background: #252a31; padding: 15px; border-radius: 6px; border: 1px solid #3e4452; }
-        .p-header-row { display: flex; justify-content: space-between; align-items: center; }
-        .skills-list { display: flex; flex-direction: column; gap: 5px; }
-        .skill-row { display: flex; align-items: center; background: #252a31; border: 1px solid #3e4452; border-radius: 4px; padding: 5px 10px; }
-        .skill-row .s-col { flex: 1; text-align: center; }
-        .skill-row .name-col { flex: 2; text-align: left; font-weight: bold; color: #fff; }
-        .skill-row input { background: #14161a; border: 1px solid #4f545c; color: #fff; width: 50px; text-align: center; border-radius: 4px; padding: 4px; }
-        .skills-table-header { display: flex; font-weight: bold; color: #b9bbbe; padding: 5px 10px; border-bottom: 1px solid #3e4452; margin-bottom: 5px; }
-        .skills-table-header .s-col { flex: 1; text-align: center; }
-        .skills-table-header .name-col { flex: 2; text-align: left; }
     </style>
 </head>
 <body>
     <header class="editor-header">
         <h1 class="editor-title">キャラクター作成・編集</h1>
         <div class="header-actions">
-            <!-- ④ ヘッダーからの保存ボタン削除 -->
+            <button type="button" class="btn-submit" onclick="saveCharacter()">💾 保存する</button>
         </div>
     </header>
 
-    <!-- ⑤ 保存を閲覧・玄関の上に設置 -->
     <div class="fixed-left-menu">
-        <button type="button" onclick="saveCharacter()" title="保存する">💾<br><span style="font-size:10px;">保存</span></button>
         <button type="button" onclick="goToView()" title="閲覧画面へ">👁<br><span style="font-size:10px;">閲覧</span></button>
-        <button type="button" onclick="goToHome()" title="玄関に戻る">🚪<br><span style="font-size:10px;">玄関</span></button>
+        <button type="button" onclick="window.location.href='../index.html'" title="玄関に戻る">🚪<br><span style="font-size:10px;">玄関</span></button>
     </div>
 
     <main class="editor-main">
@@ -170,141 +151,141 @@
                 <div class="section-subtitle-bar" onclick="toggleAccordion('theme-area', this)">
                     <h2 class="section-subtitle">テーマ設定</h2><span class="accordion-icon">⋁</span>
                 </div>
-                <!-- ③ 左寄せ固定 ＋ ⑨ 画像背景に色を適用するかどうかのチェックボックス追加 -->
                 <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
                     <label style="color: #b9bbbe; font-size: 14px; font-weight: bold;">イメージカラー:</label>
                     <input type="color" id="char-color" name="char-color" value="#ffffff" title="キャラクターのテーマカラーを選択">
-                    <label style="color: #b9bbbe; font-size: 14px; display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="checkbox" name="use-bg-color" id="use-bg-color" class="theme-check"> viewの際にイメージカラーを画像の背景に用いる
-                    </label>
                 </div>
             </div>
 
-            <!-- ★ 能力値テーブルを入れ込みました ★ -->
+            <!-- ★ ここに能力値テーブルを入れ込みました ★ -->
             <div class="custom-section">
                 <div class="section-subtitle-bar" onclick="toggleAccordion('ability-area', this)">
                     <h2 class="section-subtitle">能力値一覧</h2><span class="accordion-icon">⋁</span>
                 </div>
                 <div id="ability-area" class="accordion-content open" style="display: block;">
-                    <div class="ability-table-wrapper">
-                        <table class="ability-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th data-popup="3d6 で決定 (2-18)">STR<button type="button" class="btn-dice" onclick="if(typeof rollIndividual === 'function') rollIndividual('STR')">🎲</button></th>
-                                    <th data-popup="3d6 で決定 (2-18)">CON<button type="button" class="btn-dice" onclick="if(typeof rollIndividual === 'function') rollIndividual('CON')">🎲</button></th>
-                                    <th data-popup="3d6 で決定 (2-18)">POW<button type="button" class="btn-dice" onclick="if(typeof rollIndividual === 'function') rollIndividual('POW')">🎲</button></th>
-                                    <th data-popup="3d6 で決定 (2-18)">DEX<button type="button" class="btn-dice" onclick="if(typeof rollIndividual === 'function') rollIndividual('DEX')">🎲</button></th>
-                                    <th data-popup="3d6 で決定 (2-18)">APP<button type="button" class="btn-dice" onclick="if(typeof rollIndividual === 'function') rollIndividual('APP')">🎲</button></th>
-                                    <th data-popup="2d6+6 で決定 (8-18)">SIZ<button type="button" class="btn-dice" onclick="if(typeof rollIndividual === 'function') rollIndividual('SIZ')">🎲</button></th>
-                                    <th data-popup="2d6+6 で決定 (8-18)">INT<button type="button" class="btn-dice" onclick="if(typeof rollIndividual === 'function') rollIndividual('INT')">🎲</button></th>
-                                    <th data-popup="3d6+3 で決定 (3-21)">EDU<button type="button" class="btn-dice" onclick="if(typeof rollIndividual === 'function') rollIndividual('EDU')">🎲</button></th>
-                                    <th data-popup="算出方法: (CON + SIZ) / 2 ※端数切り上げ">HP</th>
-                                    <th data-popup="算出方法: POW と同じ値">MP</th>
-                                    <th data-popup="算出方法: POW × 5">SAN</th>
-                                    <th data-popup="算出方法: INT × 5">IDE</th>
-                                    <th data-popup="算出方法: POW × 5">幸運</th>
-                                    <th data-popup="算出方法: EDU × 5">知識</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="font-weight:bold; color:#fff;">能力値</td>
-                                    <td><select name="base-STR" class="ability-input" onchange="if(typeof calcAll === 'function') calcAll()"></select></td>
-                                    <td><select name="base-CON" class="ability-input" onchange="if(typeof calcAll === 'function') calcAll()"></select></td>
-                                    <td><select name="base-POW" class="ability-input" onchange="if(typeof calcAll === 'function') calcAll()"></select></td>
-                                    <td><select name="base-DEX" class="ability-input" onchange="if(typeof calcAll === 'function') calcAll()"></select></td>
-                                    <td><select name="base-APP" class="ability-input" onchange="if(typeof calcAll === 'function') calcAll()"></select></td>
-                                    <td><select name="base-SIZ" class="ability-input" onchange="if(typeof calcAll === 'function') calcAll()"></select></td>
-                                    <td><select name="base-INT" class="ability-input" onchange="if(typeof calcAll === 'function') calcAll()"></select></td>
-                                    <td><select name="base-EDU" class="ability-input" onchange="if(typeof calcAll === 'function') calcAll()"></select></td>
-                                    <td><span id="base-HP">-</span></td>
-                                    <td><span id="base-MP">-</span></td>
-                                    <td><span id="base-SAN">-</span></td>
-                                    <td><span id="base-IDE">-</span></td>
-                                    <td><span id="base-幸運">-</span></td>
-                                    <td><span id="base-知識">-</span></td>
-                                </tr>
-                                <tr>
-                                    <td style="font-weight:bold; color:#b9bbbe;">増加分</td>
-                                    <td><input type="number" name="bonus-STR" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-CON" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-POW" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-DEX" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-APP" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-SIZ" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-INT" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-EDU" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-HP" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-MP" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-SAN" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-IDE" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-幸運" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="bonus-知識" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                </tr>
-                                <tr>
-                                    <td style="font-weight:bold; color:#b9bbbe;">一時的</td>
-                                    <td><input type="number" name="temp-STR" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-CON" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-POW" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-DEX" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-APP" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-SIZ" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-INT" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-EDU" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-HP" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-MP" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-SAN" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-IDE" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-幸運" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                    <td><input type="number" name="temp-知識" placeholder="0" oninput="if(typeof calcAll === 'function') calcAll()"></td>
-                                </tr>
-                                <tr>
-                                    <td style="font-weight:bold; color:#fff;">現在値</td>
-                                    <td class="current-val" id="cur-STR">0</td>
-                                    <td class="current-val" id="cur-CON">0</td>
-                                    <td class="current-val" id="cur-POW">0</td>
-                                    <td class="current-val" id="cur-DEX">0</td>
-                                    <td class="current-val" id="cur-APP">0</td>
-                                    <td class="current-val" id="cur-SIZ">0</td>
-                                    <td class="current-val" id="cur-INT">0</td>
-                                    <td class="current-val" id="cur-EDU">0</td>
-                                    <td class="current-val" id="cur-HP">0</td>
-                                    <td class="current-val" id="cur-MP">0</td>
-                                    <td class="current-val" id="cur-SAN">0</td>
-                                    <td class="current-val" id="cur-IDE">0</td>
-                                    <td class="current-val" id="cur-幸運">0</td>
-                                    <td class="current-val" id="cur-知識">0</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        
-                        <div class="san-db-row">
-                            <div class="san-db-box" style="flex: 2;">
-                                <div class="san-db-label">SAN値</div>
-                                <div class="san-db-value">
-                                    <input type="number" id="san-input" name="san-input" placeholder="0" min="0" max="99" oninput="if(typeof handleSanInput === 'function') handleSanInput()"> 
-                                    <span class="san-max" style="color:#b9bbbe; font-size:14px; margin-left:5px;">/ 99</span>
+                    <div class="ability-table">
+                        <div class="table-row row-header">
+                            <div class="cell label-cell">項目</div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">STR<button type="button" class="btn-dice" onclick="rollIndividual('STR')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">CON<button type="button" class="btn-dice" onclick="rollIndividual('CON')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">POW<button type="button" class="btn-dice" onclick="rollIndividual('POW')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">DEX<button type="button" class="btn-dice" onclick="rollIndividual('DEX')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">APP<button type="button" class="btn-dice" onclick="rollIndividual('APP')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="2d6+6 で決定 (8-18)">SIZ<button type="button" class="btn-dice" onclick="rollIndividual('SIZ')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="2d6+6 で決定 (8-18)">INT<button type="button" class="btn-dice" onclick="rollIndividual('INT')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6+3 で決定 (3-21)">EDU<button type="button" class="btn-dice" onclick="rollIndividual('EDU')">🎲</button></div>
+                            <div class="cell" data-popup="算出方法: (CON + SIZ) / 2 ※端数切り上げ">HP</div>
+                            <div class="cell" data-popup="算出方法: POW と同じ値">MP</div>
+                            <div class="cell" data-popup="算出方法: POW × 5">SAN</div>
+                            <div class="cell" data-popup="算出方法: INT × 5">IDE</div>
+                            <div class="cell" data-popup="算出方法: POW × 5">幸運</div>
+                            <div class="cell" data-popup="算出方法: EDU × 5">知識</div>
+                        </div>
+
+                        <div class="table-row row-base">
+                            <div class="cell label-cell">能力値</div>
+                            <div class="cell"><select name="base-STR" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-CON" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-POW" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-DEX" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-APP" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-SIZ" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-INT" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-EDU" onchange="calcAll()"></select></div>
+                            <div class="cell"><span id="base-HP" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-MP" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-SAN" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-IDE" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-幸運" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-知識" class="auto-calc">-</span></div>
+                        </div>
+
+                        <div class="table-row row-bonus">
+                            <div class="cell label-cell">増加分</div>
+                            <div class="cell"><input type="number" name="bonus-STR" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-CON" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-POW" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-DEX" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-APP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-SIZ" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-INT" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-EDU" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-HP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-MP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-SAN" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-IDE" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-幸運" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-知識" placeholder="0" oninput="calcAll()"></div>
+                        </div>
+
+                        <div class="table-row row-temp">
+                            <div class="cell label-cell">一時的</div>
+                            <div class="cell"><input type="number" name="temp-STR" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-CON" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-POW" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-DEX" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-APP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-SIZ" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-INT" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-EDU" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-HP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-MP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-SAN" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-IDE" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-幸運" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-知識" placeholder="0" oninput="calcAll()"></div>
+                        </div>
+
+                        <div class="table-row row-current">
+                            <div class="cell label-cell">現在値</div>
+                            <div class="cell" id="cur-STR">0</div>
+                            <div class="cell" id="cur-CON">0</div>
+                            <div class="cell" id="cur-POW">0</div>
+                            <div class="cell" id="cur-DEX">0</div>
+                            <div class="cell" id="cur-APP">0</div>
+                            <div class="cell" id="cur-SIZ">0</div>
+                            <div class="cell" id="cur-INT">0</div>
+                            <div class="cell" id="cur-EDU">0</div>
+                            <div class="cell" id="cur-HP">0</div>
+                            <div class="cell" id="cur-MP">0</div>
+                            <div class="cell" id="cur-SAN">0</div>
+                            <div class="cell" id="cur-IDE">0</div>
+                            <div class="cell" id="cur-幸運">0</div>
+                            <div class="cell" id="cur-知識">0</div>
+                        </div>
+                    </div>
+
+                    <div class="derived-status-panel">
+                        <div class="status-panel-row">
+                            <div class="panel-item item-san">
+                                <span class="panel-label">SAN値</span>
+                                <div class="panel-value-box">
+                                    <input type="number" id="san-input" placeholder="0" min="0" max="99" oninput="if(typeof handleSanInput === 'function') handleSanInput()">
+                                    <span class="san-max">/ 99</span>
                                 </div>
                             </div>
-                            <div class="san-db-box" style="flex: 1;">
-                                <div class="san-db-label">不定</div>
-                                <div class="san-db-value" id="insanity-display">0</div>
+                            <div class="panel-item item-insanity">
+                                <span class="panel-label">不定</span>
+                                <div class="panel-value-box" id="insanity-display">0</div>
                             </div>
                         </div>
-                        
-                        <div class="san-db-row" style="margin-top: 10px;">
-                            <div class="san-db-box">
-                                <div class="san-db-label">ダメージボーナス</div>
-                                <div class="san-db-value" id="db-display">なし</div>
+                        <div class="status-panel-row">
+                            <div class="panel-item item-db">
+                                <span class="panel-label">ダメージボーナス</span>
+                                <div class="panel-value-box" id="db-display">なし</div>
                             </div>
                         </div>
                     </div>
                     
-                    <button type="button" class="btn-submit" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; background: #007bff;" onclick="if(typeof rollAll === 'function') rollAll()">一斉ランダム</button>
+                    <div class="ability-control-bar" style="margin-top: 15px;">
+                        <button type="button" class="btn-random-all" onclick="if(typeof rollAll === 'function') rollAll()">一斉ランダム</button>
+                    </div>
                 </div>
             </div>
-            
+            <!-- JSエラー防止用ダミー -->
+            <div id="component-ability-value" style="display:none;"></div>
+            <!-- ★ 入れ込みここまで ★ -->
+
             <div id="component-skills-list"></div>
 
             <div class="custom-section">
@@ -373,27 +354,13 @@
         window.db = db; window.doc = doc; window.setDoc = setDoc;
     </script>
 
-    <!-- 元の美しい外部ファイルをそのまま読み込む階層構造を100%維持 -->
     <script src="basic_information/basic_information.js"></script>
     <script src="skill_value/skill_value.js"></script>
     <script src="ability_value/ability_value.js"></script>
 
 <script>
-    // ⑥ 変更検知と未保存時の警告機能
-    let isChanged = false;
-    function markAsChanged() { isChanged = true; }
-
-    window.addEventListener('beforeunload', function (e) {
-        if (isChanged) {
-            e.preventDefault();
-            e.returnValue = ''; 
-        }
-    });
-
+    // ② 閲覧画面への遷移
     function goToView() {
-        if (isChanged) {
-            if (!confirm("保存されていません。このまま移動すると変更が破棄されます。本当に移動しますか？")) return;
-        }
         const editIndex = localStorage.getItem('editingIndex');
         if (editIndex !== null && editIndex !== "") {
             localStorage.setItem('viewingIndex', editIndex);
@@ -403,38 +370,16 @@
         }
     }
 
-    function goToHome() {
-        if (isChanged) {
-            if (!confirm("保存されていません。このまま移動すると変更が破棄されます。本当に移動しますか？")) return;
-        }
-        window.location.href = '../index.html';
-    }
-
-    function toggleAccordion(targetId, headerBar) {
-        const content = document.getElementById(targetId);
-        const icon = headerBar.querySelector(".accordion-icon");
-        if (content.classList.contains("open")) {
-            content.classList.remove("open"); content.style.display = "none"; icon.textContent = "⋗";
-        } else {
-            content.classList.add("open"); content.style.display = "flex"; icon.textContent = "⋁";
-        }
-    }
-
     function moveUp(btn) {
         const row = btn.closest('.dynamic-row');
         if (row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
-        markAsChanged();
     }
     function moveDown(btn) {
         const row = btn.closest('.dynamic-row');
         if (row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
-        markAsChanged();
     }
     function deleteRow(btn) {
-        if(confirm('この項目を削除しますか？')) {
-            btn.closest('.dynamic-row').remove();
-            markAsChanged();
-        }
+        if(confirm('この項目を削除しますか？')) btn.closest('.dynamic-row').remove();
     }
 
     function addWeaponRow(data = {}) {
@@ -456,7 +401,6 @@
             </div>
         `;
         document.getElementById('weapons-container').appendChild(div);
-        markAsChanged();
     }
 
     function addItemRow(data = {}) {
@@ -474,9 +418,9 @@
             </div>
         `;
         document.getElementById('items-container').appendChild(div);
-        markAsChanged();
     }
 
+    // ③ カレンダー入力と詳細メモの追加
     function addScenarioRow(data = {}) {
         const div = document.createElement('div'); div.className = 'dynamic-row scenario-row';
         div.innerHTML = `
@@ -490,7 +434,6 @@
             </div>
         `;
         document.getElementById('scenarios-container').appendChild(div);
-        markAsChanged();
     }
 
     let activePwdInput = null;
@@ -504,7 +447,6 @@
         if(activePwdInput) activePwdInput.value = document.getElementById('modal-pwd-input').value;
         closePasswordModal();
         activePwdInput.parentElement.querySelector('button').innerText = activePwdInput.value ? '🔒 保護中' : '🔑 パスワード設定';
-        markAsChanged();
     }
 
     function addMemoRow(data = {}) {
@@ -522,20 +464,18 @@
             <input type="hidden" class="m-pwd" value="${data.password||''}">
         `;
         document.getElementById('memos-container').appendChild(div);
-        markAsChanged();
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        // 外部ファイルのDOM生成を待つ
-        setTimeout(() => {
-            const editIndex = localStorage.getItem('editingIndex');
-            if (editIndex !== null && editIndex !== "") {
-                const chars = JSON.parse(localStorage.getItem('characters') || '[]');
-                const char = chars[parseInt(editIndex, 10)];
-                if (char) {
-                    window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
-                    if(typeof updateMainPreview === 'function') updateMainPreview();
+        const editIndex = localStorage.getItem('editingIndex');
+        if (editIndex !== null && editIndex !== "") {
+            const chars = JSON.parse(localStorage.getItem('characters') || '[]');
+            const char = chars[parseInt(editIndex, 10)];
+            if (char) {
+                window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
+                if(typeof updateMainPreview === 'function') updateMainPreview();
 
+                setTimeout(() => {
                     document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
                         let key = el.name || el.id;
                         if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
@@ -546,29 +486,21 @@
                     if(char.money) document.getElementById('char-money').value = char.money;
                     if(char.debt) document.getElementById('char-debt').value = char.debt;
 
-                    if (typeof window.calcAll === 'function') window.calcAll();
-                    if (typeof window.calcSkills === 'function') window.calcSkills();
-                    
-                    // ⑩ SAN値から不定の狂気（4/5）を算出・反映させる
-                    const sanInput = document.getElementById('san-input');
-                    if (sanInput && typeof window.calcInsanityOnly === 'function') {
-                        window.calcInsanityOnly();
-                    }
-                }
-            }
-            
-            if(document.getElementById('weapons-container').children.length === 0) addWeaponRow();
-            if(document.getElementById('items-container').children.length === 0) addItemRow();
-            if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
-            if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
+                    if (typeof calcAll === 'function') calcAll();
+                    if (typeof calcSkills === 'function') calcSkills();
+                }, 100);
 
-            // 自動入力で「変更あり」にならないように遅延して監視開始
-            setTimeout(() => {
-                isChanged = false;
-                document.getElementById('char-editor').addEventListener('input', markAsChanged);
-                document.getElementById('char-editor').addEventListener('change', markAsChanged);
-            }, 100);
-        }, 500); // 外部ファイルの描画完了を待つ時間
+                if(char.weapons) char.weapons.forEach(w => addWeaponRow(w));
+                if(char.items) char.items.forEach(i => addItemRow(i));
+                if(char.scenarios) char.scenarios.forEach(s => addScenarioRow(s));
+                if(char.memos) char.memos.forEach(m => addMemoRow(m));
+            }
+        }
+        
+        if(document.getElementById('weapons-container').children.length === 0) addWeaponRow();
+        if(document.getElementById('items-container').children.length === 0) addItemRow();
+        if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
+        if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
     });
 
     async function saveCharacter() {
@@ -599,6 +531,7 @@
             totalPrice: row.querySelector('.i-total').value, notes: row.querySelector('.i-notes').value
         })).filter(i => i.name.trim() !== "");
 
+        // ③ メモ欄の収集を追加
         newData.scenarios = Array.from(document.querySelectorAll('.scenario-row')).map(row => ({
             date: row.querySelector('.s-date').value, 
             name: row.querySelector('.s-name').value,
@@ -625,53 +558,13 @@
             }
             localStorage.setItem('characters', JSON.stringify(chars));
             
-            isChanged = false; // 保存完了
-            alert("保存しました！引き続き編集可能です。");
+            // ① アラートを出してページ移動は行わない
+            alert("保存しました！引き続き編集・または左のメニューから閲覧画面に移動できます。");
         } catch (e) {
             console.error("保存エラー:", e);
             alert("保存に失敗しました。容量制限または通信エラーの可能性があります。");
         }
     }
-</script>
-
-<!-- ①,⑩ 不定の狂気計算を「4/5」に上書きし、SAN値の入力に連動させる処理 -->
-<script>
-    window.addEventListener('load', function() {
-        // 外部ファイル内の関数をオーバーライドして修正
-        setTimeout(() => {
-            if(typeof window.calcInsanityOnly === 'function') {
-                window.calcInsanityOnly = function() {
-                    const sanInput = document.getElementById('san-input');
-                    if (!sanInput) return;
-                    
-                    const mythosValue = parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
-                    const maxSan = 99 - mythosValue;
-                    
-                    const maxSanEl = document.querySelector('.san-max');
-                    if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
-
-                    let currentSan = parseInt(sanInput.value, 10) || 0;
-                    
-                    if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
-                    if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
-                    
-                    // ① 不定の狂気 ＝ 現在のSAN値の 4/5 (80%) を切り捨て
-                    const insanityVal = Math.floor(currentSan * 4 / 5);
-                    const insanityDisplay = document.getElementById('insanity-display');
-                    if(insanityDisplay) insanityDisplay.textContent = insanityVal;
-                };
-
-                // ⑩ SAN値入力欄のイベントに上書き登録し、毎回算出させる
-                const sanInputEl = document.getElementById('san-input');
-                if(sanInputEl) {
-                    sanInputEl.addEventListener('input', () => {
-                        window.hasManuallySetSan = true;
-                        window.calcInsanityOnly();
-                    });
-                }
-            }
-        }, 1000);
-    });
 </script>
 </body>
 </html>
