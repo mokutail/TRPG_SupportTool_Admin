@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="skill_value/skill_value.css">
     <title>キャラクター作成 - CoC 6th</title>
     <style>
+        /* --- ヘッダーの追従スタイル --- */
         body { margin: 0; padding-bottom: 50px; background-color: #36393f; color: #dcddde; font-family: 'Segoe UI', sans-serif; }
         
-        /* ヘッダーの追従を解除 */
         .editor-header {
             display: flex;
             justify-content: space-between;
@@ -18,11 +18,25 @@
             background-color: #36393f;
             padding: 15px 40px;
             border-bottom: 1px solid #202225;
-            position: relative; /* stickyからrelativeに変更して追従を解除 */
+            position: sticky;
+            top: 0;
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .editor-title { margin: 0; color: #fff; font-size: 24px; }
+        
+        .btn-submit {
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            border: none;
+            color: white;
+            background: #43b581;
+            transition: 0.2s;
+        }
+        .btn-submit:hover { background: #3ca374; }
 
         /* ② 左側の固定メニュー */
         .fixed-left-menu {
@@ -58,13 +72,15 @@
             color: #bb86fc;
             transform: scale(1.1);
         }
-        .editor-main { padding: 20px 40px 20px 90px; }
+        .editor-main { padding: 20px 40px 20px 90px; } /* 左メニュー分の余白を確保 */
 
+        /* ④ CSSの !important 競合を上書きして折りたたみを有効化 */
         .info-content-wrapper[style*="display: none"],
         .accordion-content[style*="display: none"] {
             display: none !important;
         }
 
+        /* ⑤ デザイン統一用コンテナ（基本情報・技能セクションと同じ） */
         .custom-section { 
             max-width: 1300px; width: 100%; background-color: #1e2227; 
             border: 1px solid #323842; border-radius: 6px; padding: 20px; 
@@ -84,8 +100,7 @@
         .grid-inputs input[type="date"] { cursor: pointer; color: #fff; }
         .grid-inputs input:focus, .grid-inputs textarea:focus { border-color: #bb86fc; }
 
-        input[type="color"], input[type="checkbox"].theme-check { cursor: pointer; }
-        input[type="color"] { border: none; background: transparent; width: 60px; height: 35px; padding: 0; border-radius: 4px; }
+        input[type="color"] { cursor: pointer; border: none; background: transparent; width: 60px; height: 35px; padding: 0; border-radius: 4px; }
 
         .weapon-grid-top { grid-template-columns: 2fr 1fr 1fr; }
         .weapon-grid-bottom { grid-template-columns: repeat(6, 1fr); }
@@ -102,6 +117,7 @@
         .money-fixed-box label { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: bold; font-size: 14px; }
         .money-fixed-box input { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 8px 10px; border-radius: 4px; width: 150px; outline: none; }
 
+        /* パスワードモーダル */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .modal-content { background: #1e1e24; border: 1px solid #4f545c; border-radius: 8px; padding: 20px; width: 350px; display: flex; flex-direction: column; gap: 15px; }
         .modal-content h3 { margin: 0; color: #fff; font-size: 16px; border-bottom: 1px solid #4f545c; padding-bottom: 10px; }
@@ -111,28 +127,19 @@
         .modal-actions button { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #fff; }
         .btn-modal-save { background: #43b581; } .btn-modal-save:hover { background: #3ca374; }
         .btn-modal-cancel { background: #4f545c; } .btn-modal-cancel:hover { background: #686d73; }
-
-        /* ② 一番左の「成長」チェックを完全に非表示化 */
-        .check-col, th.check-col, td.check-col { display: none !important; }
-        
-        /* ③ テーマカラーの左寄せ固定 */
-        #theme-area { justify-content: flex-start !important; }
-        
-        /* ⑦ 技能値の「追加」ボタンを左寄せ固定 */
-        .skill-table-control { text-align: left !important; display: flex; justify-content: flex-start; padding-left: 0; margin-top: 10px; }
     </style>
 </head>
 <body>
     <header class="editor-header">
         <h1 class="editor-title">キャラクター作成・編集</h1>
         <div class="header-actions">
-            </div>
+            <button type="button" class="btn-submit" onclick="saveCharacter()">💾 保存する</button>
+        </div>
     </header>
 
     <div class="fixed-left-menu">
-        <button type="button" onclick="saveCharacter()" title="保存する">💾<br><span style="font-size:10px;">保存</span></button>
         <button type="button" onclick="goToView()" title="閲覧画面へ">👁<br><span style="font-size:10px;">閲覧</span></button>
-        <button type="button" onclick="goToHome()" title="玄関に戻る">🚪<br><span style="font-size:10px;">玄関</span></button>
+        <button type="button" onclick="window.location.href='../index.html'" title="玄関に戻る">🚪<br><span style="font-size:10px;">玄関</span></button>
     </div>
 
     <main class="editor-main">
@@ -147,16 +154,138 @@
                 <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
                     <label style="color: #b9bbbe; font-size: 14px; font-weight: bold;">イメージカラー:</label>
                     <input type="color" id="char-color" name="char-color" value="#ffffff" title="キャラクターのテーマカラーを選択">
-                    <label style="color: #b9bbbe; font-size: 14px; display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="checkbox" name="use-bg-color" id="use-bg-color" class="theme-check"> viewの際にイメージカラーを画像の背景に用いる
-                    </label>
                 </div>
             </div>
 
-            <div id="component-ability-value"></div>
-            <div class="ability-control-bar">
-                <button type="button" class="btn-random-all" onclick="if(typeof rollAll === 'function'){ rollAll(); }">一斉ランダム</button>
+            <!-- ★ ここに能力値テーブルを入れ込みました ★ -->
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('ability-area', this)">
+                    <h2 class="section-subtitle">能力値一覧</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="ability-area" class="accordion-content open" style="display: block;">
+                    <div class="ability-table">
+                        <div class="table-row row-header">
+                            <div class="cell label-cell">項目</div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">STR<button type="button" class="btn-dice" onclick="rollIndividual('STR')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">CON<button type="button" class="btn-dice" onclick="rollIndividual('CON')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">POW<button type="button" class="btn-dice" onclick="rollIndividual('POW')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">DEX<button type="button" class="btn-dice" onclick="rollIndividual('DEX')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">APP<button type="button" class="btn-dice" onclick="rollIndividual('APP')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="2d6+6 で決定 (8-18)">SIZ<button type="button" class="btn-dice" onclick="rollIndividual('SIZ')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="2d6+6 で決定 (8-18)">INT<button type="button" class="btn-dice" onclick="rollIndividual('INT')">🎲</button></div>
+                            <div class="cell header-cell" data-popup="3d6+3 で決定 (3-21)">EDU<button type="button" class="btn-dice" onclick="rollIndividual('EDU')">🎲</button></div>
+                            <div class="cell" data-popup="算出方法: (CON + SIZ) / 2 ※端数切り上げ">HP</div>
+                            <div class="cell" data-popup="算出方法: POW と同じ値">MP</div>
+                            <div class="cell" data-popup="算出方法: POW × 5">SAN</div>
+                            <div class="cell" data-popup="算出方法: INT × 5">IDE</div>
+                            <div class="cell" data-popup="算出方法: POW × 5">幸運</div>
+                            <div class="cell" data-popup="算出方法: EDU × 5">知識</div>
+                        </div>
+
+                        <div class="table-row row-base">
+                            <div class="cell label-cell">能力値</div>
+                            <div class="cell"><select name="base-STR" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-CON" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-POW" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-DEX" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-APP" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-SIZ" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-INT" onchange="calcAll()"></select></div>
+                            <div class="cell"><select name="base-EDU" onchange="calcAll()"></select></div>
+                            <div class="cell"><span id="base-HP" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-MP" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-SAN" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-IDE" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-幸運" class="auto-calc">-</span></div>
+                            <div class="cell"><span id="base-知識" class="auto-calc">-</span></div>
+                        </div>
+
+                        <div class="table-row row-bonus">
+                            <div class="cell label-cell">増加分</div>
+                            <div class="cell"><input type="number" name="bonus-STR" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-CON" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-POW" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-DEX" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-APP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-SIZ" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-INT" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-EDU" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-HP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-MP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-SAN" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-IDE" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-幸運" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="bonus-知識" placeholder="0" oninput="calcAll()"></div>
+                        </div>
+
+                        <div class="table-row row-temp">
+                            <div class="cell label-cell">一時的</div>
+                            <div class="cell"><input type="number" name="temp-STR" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-CON" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-POW" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-DEX" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-APP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-SIZ" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-INT" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-EDU" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-HP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-MP" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-SAN" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-IDE" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-幸運" placeholder="0" oninput="calcAll()"></div>
+                            <div class="cell"><input type="number" name="temp-知識" placeholder="0" oninput="calcAll()"></div>
+                        </div>
+
+                        <div class="table-row row-current">
+                            <div class="cell label-cell">現在値</div>
+                            <div class="cell" id="cur-STR">0</div>
+                            <div class="cell" id="cur-CON">0</div>
+                            <div class="cell" id="cur-POW">0</div>
+                            <div class="cell" id="cur-DEX">0</div>
+                            <div class="cell" id="cur-APP">0</div>
+                            <div class="cell" id="cur-SIZ">0</div>
+                            <div class="cell" id="cur-INT">0</div>
+                            <div class="cell" id="cur-EDU">0</div>
+                            <div class="cell" id="cur-HP">0</div>
+                            <div class="cell" id="cur-MP">0</div>
+                            <div class="cell" id="cur-SAN">0</div>
+                            <div class="cell" id="cur-IDE">0</div>
+                            <div class="cell" id="cur-幸運">0</div>
+                            <div class="cell" id="cur-知識">0</div>
+                        </div>
+                    </div>
+
+                    <div class="derived-status-panel">
+                        <div class="status-panel-row">
+                            <div class="panel-item item-san">
+                                <span class="panel-label">SAN値</span>
+                                <div class="panel-value-box">
+                                    <input type="number" id="san-input" placeholder="0" min="0" max="99" oninput="if(typeof handleSanInput === 'function') handleSanInput()">
+                                    <span class="san-max">/ 99</span>
+                                </div>
+                            </div>
+                            <div class="panel-item item-insanity">
+                                <span class="panel-label">不定</span>
+                                <div class="panel-value-box" id="insanity-display">0</div>
+                            </div>
+                        </div>
+                        <div class="status-panel-row">
+                            <div class="panel-item item-db">
+                                <span class="panel-label">ダメージボーナス</span>
+                                <div class="panel-value-box" id="db-display">なし</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ability-control-bar" style="margin-top: 15px;">
+                        <button type="button" class="btn-random-all" onclick="if(typeof rollAll === 'function') rollAll()">一斉ランダム</button>
+                    </div>
+                </div>
             </div>
+            <!-- JSエラー防止用ダミー -->
+            <div id="component-ability-value" style="display:none;"></div>
+            <!-- ★ 入れ込みここまで ★ -->
+
             <div id="component-skills-list"></div>
 
             <div class="custom-section">
@@ -230,21 +359,8 @@
     <script src="ability_value/ability_value.js"></script>
 
 <script>
-    // ⑥ 変更検知と未保存時の警告機能
-    let isChanged = false;
-    function markAsChanged() { isChanged = true; }
-
-    window.addEventListener('beforeunload', function (e) {
-        if (isChanged) {
-            e.preventDefault();
-            e.returnValue = ''; 
-        }
-    });
-
+    // ② 閲覧画面への遷移
     function goToView() {
-        if (isChanged) {
-            if (!confirm("保存されていません。このまま移動すると変更が破棄されます。本当に移動しますか？")) return;
-        }
         const editIndex = localStorage.getItem('editingIndex');
         if (editIndex !== null && editIndex !== "") {
             localStorage.setItem('viewingIndex', editIndex);
@@ -254,38 +370,16 @@
         }
     }
 
-    function goToHome() {
-        if (isChanged) {
-            if (!confirm("保存されていません。このまま移動すると変更が破棄されます。本当に移動しますか？")) return;
-        }
-        window.location.href = '../index.html';
-    }
-
-    function toggleAccordion(targetId, headerBar) {
-        const content = document.getElementById(targetId);
-        const icon = headerBar.querySelector(".accordion-icon");
-        if (content.classList.contains("open")) {
-            content.classList.remove("open"); content.style.display = "none"; icon.textContent = "⋗";
-        } else {
-            content.classList.add("open"); content.style.display = "flex"; icon.textContent = "⋁";
-        }
-    }
-
     function moveUp(btn) {
         const row = btn.closest('.dynamic-row');
         if (row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
-        markAsChanged();
     }
     function moveDown(btn) {
         const row = btn.closest('.dynamic-row');
         if (row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
-        markAsChanged();
     }
     function deleteRow(btn) {
-        if(confirm('この項目を削除しますか？')) {
-            btn.closest('.dynamic-row').remove();
-            markAsChanged();
-        }
+        if(confirm('この項目を削除しますか？')) btn.closest('.dynamic-row').remove();
     }
 
     function addWeaponRow(data = {}) {
@@ -307,7 +401,6 @@
             </div>
         `;
         document.getElementById('weapons-container').appendChild(div);
-        markAsChanged();
     }
 
     function addItemRow(data = {}) {
@@ -325,9 +418,9 @@
             </div>
         `;
         document.getElementById('items-container').appendChild(div);
-        markAsChanged();
     }
 
+    // ③ カレンダー入力と詳細メモの追加
     function addScenarioRow(data = {}) {
         const div = document.createElement('div'); div.className = 'dynamic-row scenario-row';
         div.innerHTML = `
@@ -341,7 +434,6 @@
             </div>
         `;
         document.getElementById('scenarios-container').appendChild(div);
-        markAsChanged();
     }
 
     let activePwdInput = null;
@@ -355,7 +447,6 @@
         if(activePwdInput) activePwdInput.value = document.getElementById('modal-pwd-input').value;
         closePasswordModal();
         activePwdInput.parentElement.querySelector('button').innerText = activePwdInput.value ? '🔒 保護中' : '🔑 パスワード設定';
-        markAsChanged();
     }
 
     function addMemoRow(data = {}) {
@@ -373,19 +464,18 @@
             <input type="hidden" class="m-pwd" value="${data.password||''}">
         `;
         document.getElementById('memos-container').appendChild(div);
-        markAsChanged();
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        setTimeout(() => {
-            const editIndex = localStorage.getItem('editingIndex');
-            if (editIndex !== null && editIndex !== "") {
-                const chars = JSON.parse(localStorage.getItem('characters') || '[]');
-                const char = chars[parseInt(editIndex, 10)];
-                if (char) {
-                    window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
-                    if(typeof updateMainPreview === 'function') updateMainPreview();
+        const editIndex = localStorage.getItem('editingIndex');
+        if (editIndex !== null && editIndex !== "") {
+            const chars = JSON.parse(localStorage.getItem('characters') || '[]');
+            const char = chars[parseInt(editIndex, 10)];
+            if (char) {
+                window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
+                if(typeof updateMainPreview === 'function') updateMainPreview();
 
+                setTimeout(() => {
                     document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
                         let key = el.name || el.id;
                         if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
@@ -396,8 +486,8 @@
                     if(char.money) document.getElementById('char-money').value = char.money;
                     if(char.debt) document.getElementById('char-debt').value = char.debt;
 
-                    if (typeof window.calcAll === 'function') window.calcAll();
-                    if (typeof window.calcSkills === 'function') window.calcSkills();
+                    if (typeof calcAll === 'function') calcAll();
+                    if (typeof calcSkills === 'function') calcSkills();
                 }, 100);
 
                 if(char.weapons) char.weapons.forEach(w => addWeaponRow(w));
@@ -405,18 +495,12 @@
                 if(char.scenarios) char.scenarios.forEach(s => addScenarioRow(s));
                 if(char.memos) char.memos.forEach(m => addMemoRow(m));
             }
-            
-            if(document.getElementById('weapons-container').children.length === 0) addWeaponRow();
-            if(document.getElementById('items-container').children.length === 0) addItemRow();
-            if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
-            if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
-
-            setTimeout(() => {
-                isChanged = false;
-                document.getElementById('char-editor').addEventListener('input', markAsChanged);
-                document.getElementById('char-editor').addEventListener('change', markAsChanged);
-            }, 100);
-        }, 500);
+        }
+        
+        if(document.getElementById('weapons-container').children.length === 0) addWeaponRow();
+        if(document.getElementById('items-container').children.length === 0) addItemRow();
+        if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
+        if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
     });
 
     async function saveCharacter() {
@@ -447,6 +531,7 @@
             totalPrice: row.querySelector('.i-total').value, notes: row.querySelector('.i-notes').value
         })).filter(i => i.name.trim() !== "");
 
+        // ③ メモ欄の収集を追加
         newData.scenarios = Array.from(document.querySelectorAll('.scenario-row')).map(row => ({
             date: row.querySelector('.s-date').value, 
             name: row.querySelector('.s-name').value,
@@ -463,6 +548,7 @@
         } else {
             newData.uid = 'char_' + Date.now().toString(16) + Math.random().toString(16).slice(2);
             chars.push(newData);
+            // 新規作成時、保存したデータのindexをセットして閲覧画面等に飛べるようにする
             localStorage.setItem('editingIndex', chars.length - 1);
         }
 
@@ -472,8 +558,8 @@
             }
             localStorage.setItem('characters', JSON.stringify(chars));
             
-            isChanged = false;
-            alert("保存しました！引き続き編集可能です。");
+            // ① アラートを出してページ移動は行わない
+            alert("保存しました！引き続き編集・または左のメニューから閲覧画面に移動できます。");
         } catch (e) {
             console.error("保存エラー:", e);
             alert("保存に失敗しました。容量制限または通信エラーの可能性があります。");
