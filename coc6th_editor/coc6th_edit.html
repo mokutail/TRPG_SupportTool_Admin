@@ -11,6 +11,7 @@
         /* --- ベーススタイル --- */
         body { margin: 0; padding-bottom: 50px; background-color: #36393f; color: #dcddde; font-family: 'Segoe UI', sans-serif; }
         
+        /* ヘッダーは追従せずトップに固定 */
         .editor-header {
             display: flex;
             justify-content: space-between;
@@ -92,11 +93,6 @@
             display: none !important;
         }
 
-        /* 外部CSSの干渉を防ぎ、テーマ設定を確実に左寄せにする */
-        #theme-area {
-            justify-content: flex-start !important;
-        }
-
         /* 汎用セクションデザイン */
         .custom-section { 
             max-width: 1300px; width: 100%; background-color: #1e2227; 
@@ -169,7 +165,7 @@
                 <div class="section-subtitle-bar" onclick="toggleAccordion('theme-area', this)">
                     <h2 class="section-subtitle">テーマ設定</h2><span class="accordion-icon">⋁</span>
                 </div>
-                <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
+                <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 20px;">
                     <label style="color: #b9bbbe; font-size: 14px; font-weight: bold;">イメージカラー:</label>
                     <input type="color" id="char-color" name="char-color" value="#ffffff" title="キャラクターのテーマカラーを選択">
                 </div>
@@ -242,14 +238,12 @@
         </div>
     </div>
 
-    <!-- Firebase連携 -->
     <script type="module">
         import { db } from './firebase-config.js';
         import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
         window.db = db; window.doc = doc; window.setDoc = setDoc;
     </script>
 
-    <!-- ★重要：元々機能していた美しい外部ファイルをここで読み込みます -->
     <script src="basic_information/basic_information.js"></script>
     <script src="ability_value/ability_value.js"></script>
     <script src="skill_value/skill_value.js"></script>
@@ -463,6 +457,13 @@
 
                     if (typeof calcAll === 'function') calcAll();
                     if (typeof calcSkills === 'function') calcSkills();
+
+                    // ★ 不定の狂気 (Indefinite Insanity) が0のままになるバグを修正
+                    // ロード完了後に入力イベントを強制発火させることで、外部JS内の計算処理を確実に呼び起こします。
+                    const sanInput = document.getElementById('san-input');
+                    if (sanInput && sanInput.value !== "") {
+                        sanInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
                 }
             }
             
@@ -471,10 +472,13 @@
             if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
             if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
 
-            // 変更検知の開始
-            document.getElementById('char-editor').addEventListener('input', markAsChanged);
-            document.getElementById('char-editor').addEventListener('change', markAsChanged);
-        }, 300); // 外部JSの描画完了を待つ時間
+            // 自動入力で「変更あり」判定にならないように少し待ってから監視を開始
+            setTimeout(() => {
+                isChanged = false;
+                document.getElementById('char-editor').addEventListener('input', markAsChanged);
+                document.getElementById('char-editor').addEventListener('change', markAsChanged);
+            }, 100);
+        }, 150); // 外部JSの描画完了を待つ時間
     });
 
     // --- 保存処理 ---
