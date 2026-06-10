@@ -38,7 +38,7 @@
         }
         .btn-submit:hover { background: #3ca374; }
 
-        /* ② 左側の固定メニュー (保存を上に配置) */
+        /* ② 左側の固定メニュー */
         .fixed-left-menu {
             position: fixed;
             left: 10px;
@@ -136,8 +136,8 @@
         /* ③ テーマカラーの左寄せ固定 */
         #theme-area { justify-content: flex-start !important; }
 
-        /* 能力値テーブル用追加スタイル */
-        .ability-table-wrapper { width: 100%; }
+        /* 能力値・技能値テーブル用のスタイル(崩れないよう補強) */
+        .ability-table-wrapper { width: 100%; overflow-x: auto; }
         .ability-table { width: 100%; border-collapse: collapse; text-align: center; color: #dcddde; font-size: 13px; margin-bottom:15px; }
         .ability-table th, .ability-table td { border: 1px solid #3e4452; padding: 8px 4px; }
         .ability-table th { background-color: #252a31; font-weight: bold; }
@@ -148,8 +148,19 @@
         .san-db-row { display: flex; gap: 10px; margin-top: 15px; }
         .san-db-box { display: flex; background-color: #252a31; border: 1px solid #3e4452; border-radius: 4px; flex: 1; }
         .san-db-label { background-color: #1e2227; padding: 10px 15px; font-weight: bold; border-right: 1px solid #3e4452; color: #fff; display: flex; align-items: center;}
-        .san-db-value { padding: 10px 15px; display: flex; align-items: center; color: #fff; font-weight: bold; }
+        .san-db-value { padding: 10px 15px; display: flex; align-items: center; color: #fff; font-weight: bold; flex: 1; }
         .san-db-value input { background: transparent; border: none; color: #fff; font-weight: bold; font-size: 16px; width: 60px; text-align: center; border-bottom: 1px solid #4f545c; }
+        
+        .skills-point-header-table { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; background: #252a31; padding: 15px; border-radius: 6px; border: 1px solid #3e4452; }
+        .p-header-row { display: flex; justify-content: space-between; align-items: center; }
+        .skills-list { display: flex; flex-direction: column; gap: 5px; }
+        .skill-row { display: flex; align-items: center; background: #252a31; border: 1px solid #3e4452; border-radius: 4px; padding: 5px 10px; }
+        .skill-row .s-col { flex: 1; text-align: center; }
+        .skill-row .name-col { flex: 2; text-align: left; font-weight: bold; color: #fff; }
+        .skill-row input { background: #14161a; border: 1px solid #4f545c; color: #fff; width: 50px; text-align: center; border-radius: 4px; padding: 4px; }
+        .skills-table-header { display: flex; font-weight: bold; color: #b9bbbe; padding: 5px 10px; border-bottom: 1px solid #3e4452; margin-bottom: 5px; }
+        .skills-table-header .s-col { flex: 1; text-align: center; }
+        .skills-table-header .name-col { flex: 2; text-align: left; }
     </style>
 </head>
 <body>
@@ -212,14 +223,14 @@
                             <tbody>
                                 <tr>
                                     <td style="font-weight:bold; color:#fff;">能力値</td>
-                                    <td><select name="base-STR" onchange="calcAll()"></select></td>
-                                    <td><select name="base-CON" onchange="calcAll()"></select></td>
-                                    <td><select name="base-POW" onchange="calcAll()"></select></td>
-                                    <td><select name="base-DEX" onchange="calcAll()"></select></td>
-                                    <td><select name="base-APP" onchange="calcAll()"></select></td>
-                                    <td><select name="base-SIZ" onchange="calcAll()"></select></td>
-                                    <td><select name="base-INT" onchange="calcAll()"></select></td>
-                                    <td><select name="base-EDU" onchange="calcAll()"></select></td>
+                                    <td><select name="base-STR" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-CON" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-POW" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-DEX" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-APP" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-SIZ" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-INT" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-EDU" class="ability-input" onchange="calcAll()"></select></td>
                                     <td><span id="base-HP">-</span></td>
                                     <td><span id="base-MP">-</span></td>
                                     <td><span id="base-SAN">-</span></td>
@@ -285,7 +296,7 @@
                             <div class="san-db-box" style="flex: 2;">
                                 <div class="san-db-label">SAN値</div>
                                 <div class="san-db-value">
-                                    <input type="number" id="san-input" name="san-input" placeholder="0" min="0" max="99" oninput="handleSanInput()">
+                                    <input type="number" id="san-input" name="san-input" placeholder="0" min="0" max="99" oninput="handleSanInput()"> 
                                     <span class="san-max" style="color:#b9bbbe; font-size:14px; margin-left:5px;">/ 99</span>
                                 </div>
                             </div>
@@ -294,6 +305,7 @@
                                 <div class="san-db-value" id="insanity-display">0</div>
                             </div>
                         </div>
+                        
                         <div class="san-db-row" style="margin-top: 10px;">
                             <div class="san-db-box">
                                 <div class="san-db-label">ダメージボーナス</div>
@@ -304,8 +316,53 @@
                     <button type="button" class="btn-submit" style="margin-top: 15px;" onclick="if(typeof rollAll === 'function') rollAll()">一斉ランダム</button>
                 </div>
             </div>
-            
-            <div id="component-skills-list"></div>
+
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('skills-area', this)">
+                    <h2 class="section-subtitle">技能値一覧</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="skills-area" class="accordion-content open" style="display: block;">
+                    
+                    <div class="skills-point-header-table">
+                        <div class="p-header-row" style="font-weight:bold; color:#b9bbbe; margin-bottom:5px;">
+                            <div style="flex:1;"></div><div style="flex:2;">計算方法</div><div style="flex:2;">現在値</div><div style="flex:1;">補正</div>
+                        </div>
+                        <div class="p-header-row">
+                            <div style="flex:1; font-weight:bold; color:#fff;">職業P</div>
+                            <div style="flex:2;">
+                                <select id="job-calc-method" onchange="calcAll()" style="background:#14161a; color:#fff; border:1px solid #4f545c; padding:4px; border-radius:4px;">
+                                    <option value="EDU*20">EDU×20</option>
+                                    <option value="STR*10+EDU*10">STR×10+EDU×10</option>
+                                    <option value="CON*10+EDU*10">CON×10+EDU×10</option>
+                                    <option value="POW*10+EDU*10">POW×10+EDU×10</option>
+                                    <option value="DEX*10+EDU*10">DEX×10+EDU×10</option>
+                                    <option value="APP*10+EDU*10">APP×10+EDU×10</option>
+                                    <option value="SIZ*10+EDU*10">SIZ×10+EDU×10</option>
+                                    <option value="INT*10+EDU*10">INT×10+EDU×10</option>
+                                    <option value="MANUAL">手動入力</option>
+                                </select>
+                            </div>
+                            <div style="flex:2; color:#fff; font-weight:bold;"><span id="job-points-left" style="color:#43b581; font-size:16px;">0</span> <span id="job-points-max" style="color:#b9bbbe;">/ 0</span></div>
+                            <div style="flex:1;"><input type="number" id="job-points-bonus" oninput="calcAll()" style="width:50px; background:#14161a; color:#fff; border:1px solid #4f545c; border-radius:4px; text-align:center;"></div>
+                        </div>
+                        <div class="p-header-row" style="margin-top:10px;">
+                            <div style="flex:1; font-weight:bold; color:#fff;">興味P</div>
+                            <div style="flex:2; color:#b9bbbe;">INT×10</div>
+                            <div style="flex:2; color:#fff; font-weight:bold;"><span id="interest-points-left" style="color:#43b581; font-size:16px;">0</span> <span id="interest-points-max" style="color:#b9bbbe;">/ 0</span></div>
+                            <div style="flex:1;"><input type="number" id="interest-points-bonus" oninput="calcAll()" style="width:50px; background:#14161a; color:#fff; border:1px solid #4f545c; border-radius:4px; text-align:center;"></div>
+                        </div>
+                    </div>
+
+                    <div class="skills-table-header">
+                        <div class="s-col name-col">技能名</div><div class="s-col">初期</div><div class="s-col">職P</div><div class="s-col">興P</div><div class="s-col">成長</div><div class="s-col">他</div><div class="s-col" style="color:#5ce1e6;">合計</div>
+                    </div>
+
+                    <div class="skills-list" id="main-skills-list">
+                        </div>
+                    
+                    <button type="button" class="btn-add-row" onclick="addCustomSkill(this)" style="margin-top:15px; text-align:left; padding-left:10px;">+ 技能を追加</button>
+                </div>
+            </div>
 
             <div class="custom-section">
                 <div class="section-subtitle-bar" onclick="toggleAccordion('weapons-area', this)">
@@ -374,10 +431,9 @@
     </script>
 
     <script src="basic_information/basic_information.js"></script>
-    <script src="skill_value/skill_value.js"></script>
-    <script src="ability_value/ability_value.js"></script>
 
 <script>
+    // ⑥ 未保存の警告機能
     let isChanged = false;
     function markAsChanged() { isChanged = true; }
 
@@ -523,7 +579,279 @@
         markAsChanged();
     }
 
+    // ★ 完全内包された能力値・技能値の計算ロジック ★
+    function diceRoll(num, size, add = 0) {
+        let total = add;
+        for (let i = 0; i < num; i++) total += Math.floor(Math.random() * size) + 1;
+        return total;
+    }
+
+    window.rollIndividual = function(stat) {
+        const select = document.querySelector(`select[name="base-${stat}"]`);
+        if (!select) return;
+        let result = 0;
+        if (['STR', 'CON', 'POW', 'DEX', 'APP'].includes(stat)) result = diceRoll(3, 6);
+        else if (['SIZ', 'INT'].includes(stat)) result = diceRoll(2, 6, 6);
+        else if (stat === 'EDU') result = diceRoll(3, 6, 3);
+        select.value = result;
+
+        if (stat === 'POW') window.hasManuallySetSan = false;
+        calcAll();
+        markAsChanged();
+    };
+
+    window.rollAll = function() {
+        window.hasManuallySetSan = false;
+        ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU'].forEach(stat => rollIndividual(stat));
+    };
+
+    window.hasManuallySetSan = false;
+    // ⑩ SAN値入力欄のイベント
+    window.handleSanInput = function() {
+        window.hasManuallySetSan = true;
+        calcInsanityOnly();
+        markAsChanged();
+    };
+
+    window.calcAll = function() {
+        const primaryStats = ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU'];
+        const baseValues = {}; const currentValues = {};
+
+        primaryStats.forEach(stat => {
+            const selectEl = document.querySelector(`select[name="base-${stat}"]`);
+            const base = selectEl ? (parseInt(selectEl.value) || 0) : 0;
+            const bonus = parseInt(document.querySelector(`input[name="bonus-${stat}"]`)?.value) || 0;
+            const temp = parseInt(document.querySelector(`input[name="temp-${stat}"]`)?.value) || 0;
+            baseValues[stat] = base;
+            currentValues[stat] = base === 0 ? 0 : (base + bonus + temp);
+            const curEl = document.getElementById(`cur-${stat}`);
+            if (curEl) curEl.textContent = base === 0 ? 0 : currentValues[stat];
+        });
+
+        const evadeInitDisplay = document.getElementById('init-回避');
+        if (evadeInitDisplay) {
+            evadeInitDisplay.textContent = currentValues['DEX'] * 2;
+            evadeInitDisplay.closest('.skill-row').setAttribute('data-initial', currentValues['DEX'] * 2);
+        }
+        const nativeInitDisplay = document.getElementById('init-母国語');
+        if (nativeInitDisplay) {
+            nativeInitDisplay.textContent = currentValues['EDU'] * 5;
+            nativeInitDisplay.closest('.skill-row').setAttribute('data-initial', currentValues['EDU'] * 5);
+        }
+
+        const hasHP = baseValues['CON'] > 0 && baseValues['SIZ'] > 0;
+        const hasMP = baseValues['POW'] > 0;
+        
+        document.getElementById('base-HP').textContent = hasHP ? Math.ceil((baseValues['CON'] + baseValues['SIZ']) / 2) : 0;
+        document.getElementById('cur-HP').textContent = hasHP ? (Math.ceil((baseValues['CON'] + baseValues['SIZ']) / 2) + (parseInt(document.querySelector('input[name="bonus-HP"]').value)||0) + (parseInt(document.querySelector('input[name="temp-HP"]').value)||0)) : 0;
+
+        document.getElementById('base-MP').textContent = hasMP ? baseValues['POW'] : 0;
+        document.getElementById('cur-MP').textContent = hasMP ? (baseValues['POW'] + (parseInt(document.querySelector('input[name="bonus-MP"]').value)||0) + (parseInt(document.querySelector('input[name="temp-MP"]').value)||0)) : 0;
+
+        const baseSAN = hasMP ? baseValues['POW'] * 5 : 0;
+        document.getElementById('base-SAN').textContent = baseSAN;
+        const totalSAN = hasMP ? (baseSAN + (parseInt(document.querySelector('input[name="bonus-SAN"]').value)||0) + (parseInt(document.querySelector('input[name="temp-SAN"]').value)||0)) : 0;
+        document.getElementById('cur-SAN').textContent = totalSAN;
+
+        document.getElementById('base-IDE').textContent = baseValues['INT'] * 5;
+        document.getElementById('cur-IDE').textContent = (baseValues['INT'] * 5) + (parseInt(document.querySelector('input[name="bonus-IDE"]').value)||0) + (parseInt(document.querySelector('input[name="temp-IDE"]').value)||0);
+
+        document.getElementById('base-幸運').textContent = baseValues['POW'] * 5;
+        document.getElementById('cur-幸運').textContent = (baseValues['POW'] * 5) + (parseInt(document.querySelector('input[name="bonus-幸運"]').value)||0) + (parseInt(document.querySelector('input[name="temp-幸運"]').value)||0);
+
+        document.getElementById('base-知識').textContent = baseValues['EDU'] * 5;
+        document.getElementById('cur-知識').textContent = (baseValues['EDU'] * 5) + (parseInt(document.querySelector('input[name="bonus-知識"]').value)||0) + (parseInt(document.querySelector('input[name="temp-知識"]').value)||0);
+
+        if (baseValues['STR'] === 0 || baseValues['SIZ'] === 0) {
+            document.getElementById('db-display').textContent = "なし";
+        } else {
+            const sumDb = currentValues['STR'] + currentValues['SIZ'];
+            let dbResult = "0";
+            if (sumDb >= 2 && sumDb <= 12) dbResult = "-1D6";
+            else if (sumDb >= 13 && sumDb <= 16) dbResult = "-1D4";
+            else if (sumDb >= 17 && sumDb <= 24) dbResult = "0";
+            else if (sumDb >= 25 && sumDb <= 32) dbResult = "+1D4";
+            else if (sumDb >= 33 && sumDb <= 40) dbResult = "+1D6";
+            else if (sumDb >= 41 && sumDb <= 56) dbResult = "+2D6";
+            document.getElementById('db-display').textContent = dbResult;
+        }
+
+        let jobMax = 0;
+        const jobMethod = document.getElementById('job-calc-method')?.value || "EDU*20";
+        const jobBonus = parseInt(document.getElementById('job-points-bonus')?.value) || 0;
+        if (jobMethod === "MANUAL") { jobMax = jobBonus; } 
+        else {
+            if (jobMethod === "EDU*20") jobMax = currentValues['EDU'] * 20;
+            else if (jobMethod === "STR*10+EDU*10") jobMax = (currentValues['STR'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "CON*10+EDU*10") jobMax = (currentValues['CON'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "POW*10+EDU*10") jobMax = (currentValues['POW'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "DEX*10+EDU*10") jobMax = (currentValues['DEX'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "APP*10+EDU*10") jobMax = (currentValues['APP'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "SIZ*10+EDU*10") jobMax = (currentValues['SIZ'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "INT*10+EDU*10") jobMax = (currentValues['INT'] * 10) + (currentValues['EDU'] * 10);
+            jobMax += jobBonus;
+        }
+        document.getElementById('job-points-max').textContent = `/ ${jobMax}`;
+
+        const interestBonus = parseInt(document.getElementById('interest-points-bonus')?.value) || 0;
+        const interestMax = (currentValues['INT'] * 10) + interestBonus;
+        document.getElementById('interest-points-max').textContent = `/ ${interestMax}`;
+
+        const sanInput = document.getElementById('san-input');
+        if (sanInput && !window.hasManuallySetSan) {
+            sanInput.value = hasMP ? totalSAN : "";
+        }
+
+        calcSkills();
+    };
+
+    window.calcSkills = function() {
+        let totalJobUsed = 0; let totalInterestUsed = 0;
+        const skillRows = document.querySelectorAll(".skill-row");
+        if (skillRows.length === 0) return;
+
+        skillRows.forEach(row => {
+            const initVal = parseInt(row.getAttribute("data-initial")) || 0;
+            const jobP = parseInt(row.querySelector('input[name^="sk-job-"]')?.value, 10) || 0;
+            const interestP = parseInt(row.querySelector('input[name^="sk-int-"]')?.value, 10) || 0;
+            const growP = parseInt(row.querySelector('input[name^="sk-gro-"]')?.value, 10) || 0;
+            const otherP = parseInt(row.querySelector('input[name^="sk-oth-"]')?.value, 10) || 0;
+            
+            const isMythos = row.classList.contains('skill-mythos-row');
+            const mythosP = isMythos ? (parseInt(row.querySelector('input[name="skill-mythos"]')?.value, 10) || 0) : 0;
+
+            let total = initVal + jobP + interestP + growP + otherP;
+            if(isMythos) total = mythosP + otherP;
+            
+            if (total > 99 && !isMythos) total = 99;
+            
+            const totalEl = row.querySelector(".skill-total");
+            if (totalEl) totalEl.textContent = total;
+
+            totalJobUsed += jobP; totalInterestUsed += interestP;
+        });
+
+        const jobMax = parseInt(document.getElementById('job-points-max')?.textContent.replace('/ ', ''), 10) || 0;
+        const interestMax = parseInt(document.getElementById('interest-points-max')?.textContent.replace('/ ', ''), 10) || 0;
+
+        document.getElementById('job-points-left').textContent = jobMax - totalJobUsed;
+        document.getElementById('interest-points-left').textContent = interestMax - totalInterestUsed;
+
+        calcInsanityOnly();
+    };
+
+    // ① 不定の狂気 4/5 (80%) の計算
+    window.calcInsanityOnly = function() {
+        const sanInput = document.getElementById('san-input');
+        if (!sanInput) return;
+        
+        const mythosValue = parseInt(document.querySelector('input[name="skill-mythos"]')?.value, 10) || 0;
+        const maxSan = 99 - mythosValue;
+        const maxSanEl = document.querySelector('.san-max');
+        if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
+
+        let currentSan = parseInt(sanInput.value, 10) || 0;
+        if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
+        if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
+        
+        document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.8);
+    };
+
+    window.addCustomSkill = function(btn) {
+        const list = document.getElementById('main-skills-list');
+        const uniqueId = Date.now() + Math.random().toString().slice(2, 6);
+        const row = document.createElement('div');
+        row.className = 'skill-row custom-added-skill';
+        row.setAttribute('data-initial', '1');
+        row.innerHTML = `
+            <div class="s-col name-col" style="display:flex; align-items:center;">
+                <input type="text" class="skill-name-inline custom-name-input" value="" placeholder="追加技能名" oninput="updateCustomSkillName(this, '${uniqueId}')" style="width:100px;">
+                <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; margin-left:5px; cursor:pointer;" onclick="this.parentElement.parentElement.remove(); calcSkills(); markAsChanged();">✖</button>
+            </div>
+            <div class="s-col val-col">
+                <input type="number" class="custom-init-input" name="sk-init-custom_${uniqueId}" value="1" min="0" max="99" oninput="updateCustomSkillInit(this); calcSkills();" style="width:40px; background:transparent; border:1px solid #4f545c; color:#bb86fc; text-align:center; border-radius:4px; font-weight:bold;">
+            </div>
+            <div class="s-col input-col"><input type="number" name="sk-job-custom_${uniqueId}" oninput="calcSkills()"></div>
+            <div class="s-col input-col"><input type="number" name="sk-int-custom_${uniqueId}" oninput="calcSkills()"></div>
+            <div class="s-col input-col"><input type="number" name="sk-gro-custom_${uniqueId}" oninput="calcSkills()"></div>
+            <div class="s-col input-col"><input type="number" name="sk-oth-custom_${uniqueId}" oninput="calcSkills()"></div>
+            <div class="s-col total-col"><span class="skill-total">1</span></div>
+        `;
+        list.appendChild(row);
+        markAsChanged();
+    };
+
+    window.updateCustomSkillName = function(inputEl, id) {
+        const name = inputEl.value.trim() || `custom_${id}`;
+        const row = inputEl.closest('.skill-row');
+        row.querySelector('.custom-init-input').name = `sk-init-${name}`;
+        row.querySelector('input[name^="sk-job-"]').name = `sk-job-${name}`;
+        row.querySelector('input[name^="sk-int-"]').name = `sk-int-${name}`;
+        row.querySelector('input[name^="sk-gro-"]').name = `sk-gro-${name}`;
+        row.querySelector('input[name^="sk-oth-"]').name = `sk-oth-${name}`;
+        markAsChanged();
+    };
+    window.updateCustomSkillInit = function(inputEl) {
+        inputEl.closest('.skill-row').setAttribute('data-initial', inputEl.value || 0);
+        markAsChanged();
+    };
+
+    // 初期化とDOM生成
     document.addEventListener("DOMContentLoaded", () => {
+        const selectElements = document.querySelectorAll(".ability-input");
+        selectElements.forEach(select => {
+            if(select.tagName === "SELECT") {
+                select.innerHTML = "<option value=''></option>";
+                let min = 2, max = 18;
+                if (select.name === "base-EDU") { min = 3; max = 21; }
+                for (let i = min; i <= max; i++) {
+                    const opt = document.createElement("option");
+                    opt.value = i; opt.textContent = i; select.appendChild(opt);
+                }
+            }
+        });
+
+        // ⑦ 技能の基本リストをHTML内に生成
+        const standardSkills = [
+            {n: "回避", i:0}, {n: "キック", i:25}, {n: "組み付き", i:25}, {n: "こぶし", i:50}, {n: "頭突き", i:10}, {n: "投擲", i:25}, {n: "マーシャルアーツ", i:1}, {n: "拳銃", i:20}, {n: "サブマシンガン", i:15}, {n: "ショットガン", i:30}, {n: "マシンガン", i:15}, {n: "ライフル", i:25},
+            {n: "応急手当", i:30}, {n: "鍵開け", i:1}, {n: "隠す", i:15}, {n: "隠れる", i:10}, {n: "聞き耳", i:25}, {n: "忍び歩き", i:10}, {n: "写真術", i:10}, {n: "精神分析", i:1}, {n: "追跡", i:10}, {n: "登攀", i:40}, {n: "図書館", i:25}, {n: "目星", i:25},
+            {n: "運転", i:20}, {n: "機械修理", i:20}, {n: "重機械操作", i:1}, {n: "乗馬", i:5}, {n: "水泳", i:25}, {n: "製作", i:5}, {n: "操縦", i:1}, {n: "跳躍", i:25}, {n: "電気修理", i:10}, {n: "ナビゲート", i:10}, {n: "変装", i:1},
+            {n: "言いくるめ", i:5}, {n: "信用", i:15}, {n: "説得", i:25}, {n: "値切り", i:5}, {n: "母国語", i:0},
+            {n: "医学", i:5}, {n: "オカルト", i:5}, {n: "化学", i:1}, {n: "芸術", i:5}, {n: "経理", i:10}, {n: "考古学", i:1}, {n: "コンピューター", i:1}, {n: "心理学", i:5}, {n: "人類学", i:1}, {n: "生物学", i:1}, {n: "地質学", i:1}, {n: "電子工学", i:1}, {n: "天文学", i:1}, {n: "博物学", i:10}, {n: "物理学", i:1}, {n: "法律", i:5}, {n: "薬学", i:1}, {n: "歴史", i:20}
+        ];
+        
+        const listDiv = document.getElementById("main-skills-list");
+        standardSkills.forEach(s => {
+            const isVar = ["運転","製作","操縦","母国語","芸術"].includes(s.n);
+            const nameHTML = isVar ? `${s.n}（<input type="text" class="skill-name-inline" placeholder="種類">）` : s.n;
+            const initId = (s.n==="回避" || s.n==="母国語") ? `id="init-${s.n}"` : "";
+            
+            listDiv.innerHTML += `
+                <div class="skill-row" data-initial="${s.i}">
+                    <div class="s-col name-col font-input-wrapper">${nameHTML}</div>
+                    <div class="s-col val-col init-val" ${initId}>${s.i}</div>
+                    <div class="s-col input-col"><input type="number" name="sk-job-${s.n}" oninput="calcSkills()"></div>
+                    <div class="s-col input-col"><input type="number" name="sk-int-${s.n}" oninput="calcSkills()"></div>
+                    <div class="s-col input-col"><input type="number" name="sk-gro-${s.n}" oninput="calcSkills()"></div>
+                    <div class="s-col input-col"><input type="number" name="sk-oth-${s.n}" oninput="calcSkills()"></div>
+                    <div class="s-col total-col"><span class="skill-total" id="total-${s.n}">${s.i}</span></div>
+                </div>
+            `;
+        });
+        // クトゥルフ神話
+        listDiv.innerHTML += `
+            <div class="skill-row skill-mythos-row" data-initial="0">
+                <div class="s-col name-col" style="color:#ff7597;">クトゥルフ神話</div>
+                <div class="s-col val-col init-val">0</div>
+                <div class="s-col input-col">—</div>
+                <div class="s-col input-col">—</div>
+                <div class="s-col input-col"><input type="number" name="skill-mythos" max="99" oninput="calcSkills()"></div>
+                <div class="s-col input-col"><input type="number" name="sk-oth-神話" oninput="calcSkills()"></div>
+                <div class="s-col total-col"><span class="skill-total" id="total-mythos" style="color:#ff7597;">0</span></div>
+            </div>
+        `;
+
+        // データの流し込み
         setTimeout(() => {
             const editIndex = localStorage.getItem('editingIndex');
             if (editIndex !== null && editIndex !== "") {
@@ -532,6 +860,35 @@
                 if (char) {
                     window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
                     if(typeof updateMainPreview === 'function') updateMainPreview();
+
+                    const stNames = standardSkills.map(s => s.n);
+                    Object.keys(char).forEach(key => {
+                        if(key.match(/^sk-(job|int|gro|oth)-/)) {
+                            const skillName = key.replace(/^sk-(job|int|gro|oth)-/, '');
+                            if (!stNames.includes(skillName) && skillName !== "神話" && !document.querySelector(`input[name="sk-job-${skillName}"]`)) {
+                                const uniqueId = Date.now() + Math.random().toString().slice(2, 6);
+                                const initVal = char['sk-init-' + skillName] || 1;
+                                const row = document.createElement('div');
+                                row.className = 'skill-row custom-added-skill';
+                                row.setAttribute('data-initial', initVal);
+                                row.innerHTML = `
+                                    <div class="s-col name-col font-input-wrapper" style="display:flex; align-items:center;">
+                                        <input type="text" class="skill-name-inline custom-name-input" value="${skillName}" oninput="updateCustomSkillName(this, '${uniqueId}')" style="width:100px;">
+                                        <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; margin-left:5px; cursor:pointer;" onclick="this.parentElement.parentElement.remove(); calcSkills(); markAsChanged();">✖</button>
+                                    </div>
+                                    <div class="s-col val-col">
+                                        <input type="number" class="custom-init-input" name="sk-init-${skillName}" value="${initVal}" min="0" max="99" oninput="updateCustomSkillInit(this); calcSkills();" style="width:40px; background:transparent; border:1px solid #4f545c; color:#bb86fc; text-align:center; border-radius:4px; font-weight:bold;">
+                                    </div>
+                                    <div class="s-col input-col"><input type="number" name="sk-job-${skillName}" oninput="calcSkills()"></div>
+                                    <div class="s-col input-col"><input type="number" name="sk-int-${skillName}" oninput="calcSkills()"></div>
+                                    <div class="s-col input-col"><input type="number" name="sk-gro-${skillName}" oninput="calcSkills()"></div>
+                                    <div class="s-col input-col"><input type="number" name="sk-oth-${skillName}" oninput="calcSkills()"></div>
+                                    <div class="s-col total-col"><span class="skill-total">1</span></div>
+                                `;
+                                listDiv.insertBefore(row, listDiv.querySelector('.skill-mythos-row'));
+                            }
+                        }
+                    });
 
                     document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
                         let key = el.name || el.id;
@@ -543,13 +900,12 @@
                     if(char.money) document.getElementById('char-money').value = char.money;
                     if(char.debt) document.getElementById('char-debt').value = char.debt;
 
-                    if (typeof window.calcAll === 'function') window.calcAll();
-                    if (typeof window.calcSkills === 'function') window.calcSkills();
-                    
-                    const sanInput = document.getElementById('san-input');
-                    if (sanInput && typeof window.calcInsanityOnly === 'function') {
-                        window.calcInsanityOnly();
-                    }
+                    calcAll();
+
+                    if(char.weapons) char.weapons.forEach(w => addWeaponRow(w));
+                    if(char.items) char.items.forEach(i => addItemRow(i));
+                    if(char.scenarios) char.scenarios.forEach(s => addScenarioRow(s));
+                    if(char.memos) char.memos.forEach(m => addMemoRow(m));
                 }
             }
             
@@ -563,10 +919,10 @@
                 document.getElementById('char-editor').addEventListener('input', markAsChanged);
                 document.getElementById('char-editor').addEventListener('change', markAsChanged);
             }, 100);
-        }, 500);
+        }, 300); // basic_information のDOM展開を待つ
     });
 
-    async function saveCharacter() {
+    window.saveCharacter = async function() {
         const chars = JSON.parse(localStorage.getItem('characters') || '[]');
         const editIndex = localStorage.getItem('editingIndex');
         const newData = {};
@@ -577,8 +933,6 @@
             if (key) newData[key] = el.type === 'checkbox' ? el.checked : el.value;
         });
 
-        newData.mainImages = window.charMainImages || [];
-        newData.exprImages = window.charExprImages || [];
         newData.name = document.getElementById("char-name-new")?.value || "無名の探索者";
         newData.money = document.getElementById("char-money").value;
         newData.debt = document.getElementById("char-debt").value;
@@ -606,9 +960,12 @@
 
         if (editIndex !== null && editIndex !== "") {
             newData.uid = chars[parseInt(editIndex, 10)].uid;
+            newData.mainImages = chars[parseInt(editIndex, 10)].mainImages || [];
+            newData.exprImages = chars[parseInt(editIndex, 10)].exprImages || [];
             chars[parseInt(editIndex, 10)] = newData;
         } else {
             newData.uid = 'char_' + Date.now().toString(16) + Math.random().toString(16).slice(2);
+            newData.mainImages = []; newData.exprImages = [];
             chars.push(newData);
             localStorage.setItem('editingIndex', chars.length - 1);
         }
@@ -619,50 +976,13 @@
             }
             localStorage.setItem('characters', JSON.stringify(chars));
             
-            isChanged = false; // 保存完了
+            isChanged = false;
             alert("保存しました！引き続き編集可能です。");
         } catch (e) {
             console.error("保存エラー:", e);
             alert("保存に失敗しました。容量制限または通信エラーの可能性があります。");
         }
     }
-</script>
-
-<script>
-    window.addEventListener('load', function() {
-        setTimeout(() => {
-            if(typeof window.calcInsanityOnly === 'function') {
-                window.calcInsanityOnly = function() {
-                    const sanInput = document.getElementById('san-input');
-                    if (!sanInput) return;
-                    
-                    const mythosValue = parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
-                    const maxSan = 99 - mythosValue;
-                    
-                    const maxSanEl = document.querySelector('.san-max');
-                    if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
-
-                    let currentSan = parseInt(sanInput.value, 10) || 0;
-                    
-                    if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
-                    if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
-                    
-                    // 不定の狂気 ＝ 現在のSAN値の 4/5 (80%) を切り捨て
-                    const insanityVal = Math.floor(currentSan * 4 / 5);
-                    const insanityDisplay = document.getElementById('insanity-display');
-                    if(insanityDisplay) insanityDisplay.textContent = insanityVal;
-                };
-
-                const sanInputEl = document.getElementById('san-input');
-                if(sanInputEl) {
-                    sanInputEl.addEventListener('input', () => {
-                        window.hasManuallySetSan = true;
-                        window.calcInsanityOnly();
-                    });
-                }
-            }
-        }, 1000);
-    });
 </script>
 </body>
 </html>
