@@ -88,7 +88,7 @@
     text-align: center !important;
     padding: 6px 0 !important;
     border-radius: 6px !important;
-    width: 80px !important;
+    width: 100px !important;
     outline: none !important;
 }
 .p-head-cell.p-input-cell input::-webkit-outer-spin-button,
