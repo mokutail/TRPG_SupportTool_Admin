@@ -1,1507 +1,988 @@
-/* 他のCSSの干渉をすべてリセット */
-.ability-table, .table-row, .cell, .derived-status-panel, .status-panel-row, .panel-item {
-    box-sizing: border-box !important;
-    display: flex !important;
-}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="basic_information/basic_information.css">
+    <link rel="stylesheet" href="ability_value/ability_value.css">
+    <link rel="stylesheet" href="skill_value/skill_value.css">
+    <title>キャラクター作成 - CoC 6th</title>
+    <style>
+        /* --- ヘッダーの追従スタイル --- */
+        body { margin: 0; padding-bottom: 50px; background-color: #36393f; color: #dcddde; font-family: 'Segoe UI', sans-serif; }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #36393f;
+            padding: 15px 40px;
+            border-bottom: 1px solid #202225;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .editor-title { margin: 0; color: #fff; font-size: 24px; }
+        
+        .btn-submit {
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            border: none;
+            color: white;
+            background: #43b581;
+            transition: 0.2s;
+        }
+        .btn-submit:hover { background: #3ca374; }
 
-body {
-    background-color: #141419 !important;
-    color: #ffffff !important;
-    font-family: 'Segoe UI', Arial, sans-serif !important;
-    margin: 0 !important;
-    padding: 30px !important;
-}
+        /* ② 左側の固定メニュー */
+        .fixed-left-menu {
+            position: fixed;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+        .fixed-left-menu button {
+            background: #2f3136;
+            color: #fff;
+            border: 1px solid #4f545c;
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: 0.2s;
+            line-height: 1.2;
+        }
+        .fixed-left-menu button:hover {
+            background: #4f545c;
+            border-color: #bb86fc;
+            color: #bb86fc;
+            transform: scale(1.1);
+        }
+        .editor-main { padding: 20px 40px 20px 90px; } /* 左メニュー分の余白を確保 */
 
-.editor-header {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    margin-bottom: 25px !important;
-    border-bottom: 1px solid #2d2d38 !important;
-    padding-bottom: 15px !important;
-    /* ★修正: スクロール追従を解除するため、sticky と top:0 を削除しました */
-    /* position: sticky; */
-    /* top: 0; */
-}
+        /* ④ CSSの !important 競合を上書きして折りたたみを有効化 */
+        .info-content-wrapper[style*="display: none"],
+        .accordion-content[style*="display: none"] {
+            display: none !important;
+        }
 
-.back-link {
-    color: #bb86fc !important;
-    text-decoration: none !important;
-    font-size: 15px !important;
-    margin-bottom: 8px !important;
-}
+        /* ⑤ デザイン統一用コンテナ（基本情報・技能セクションと同じ） */
+        .custom-section { 
+            max-width: 1300px; width: 100%; background-color: #1e2227; 
+            border: 1px solid #323842; border-radius: 6px; padding: 20px; 
+            margin-bottom: 25px; display: flex; flex-direction: column; box-sizing: border-box; 
+        }
 
-.editor-title {
-    font-size: 28px !important;
-    margin: 0 !important;
-    color: #ffffff !important;
-}
+        .dynamic-row { background: #252a31; border: 1px solid #3e4452; border-radius: 6px; padding: 15px; margin-bottom: 10px; position: relative; }
+        .row-controls { display: flex; gap: 5px; margin-bottom: 10px; justify-content: flex-end; }
+        .row-controls button { background: #3e4452; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .row-controls button:hover { background: #5c6370; }
+        .row-controls button.btn-del { background: #f04747; }
+        .row-controls button.btn-del:hover { background: #d84040; }
 
-.char-name {
-    width: 300px !important;
-    padding: 12px !important;
-    background-color: #1c1c24 !important;
-    border: 1px solid #3e444c !important;
-    color: #fff !important;
-    border-radius: 4px !important;
-    margin-bottom: 25px !important;
-    font-size: 16px !important;
-    display: block !important;
-}
+        .grid-inputs { display: grid; gap: 10px; }
+        .grid-inputs label { font-size: 13px; color: #aaa; display: flex; flex-direction: column; gap: 4px; }
+        .grid-inputs input, .grid-inputs textarea { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 8px; border-radius: 4px; font-size: 14px; outline: none; }
+        .grid-inputs input[type="date"] { cursor: pointer; color: #fff; }
+        .grid-inputs input:focus, .grid-inputs textarea:focus { border-color: #bb86fc; }
 
-.ability-table {
-    flex-direction: column !important;
-    width: 100% !important;
-    max-width: 1300px !important;
-    background-color: #272b30 !important;
-    border: 1px solid #3e444c !important;
-    border-radius: 6px !important;
-    overflow: hidden !important;
-    /* ★追加: テーブルが潰れないよう横スクロールを許可 */
-    overflow-x: auto !important;
-}
+        input[type="color"], input[type="checkbox"].theme-check { cursor: pointer; }
+        input[type="color"] { border: none; background: transparent; width: 60px; height: 35px; padding: 0; border-radius: 4px; }
 
-.table-row {
-    flex-direction: row !important;
-    width: 100% !important;
-    align-items: center !important;
-    border-bottom: 1px solid #3e444c !important;
-    /* ★追加: 行が縮みすぎないよう最小幅を確保 */
-    min-width: 900px !important; 
-}
-.table-row:last-child {
-    border-bottom: none !important;
-}
+        .weapon-grid-top { grid-template-columns: 2fr 1fr 1fr; }
+        .weapon-grid-bottom { grid-template-columns: repeat(6, 1fr); }
+        .item-grid-top { grid-template-columns: 2fr 1fr 1fr; }
+        .item-grid-bottom { grid-template-columns: 1fr 3fr; }
+        .scenario-grid { grid-template-columns: 1fr 2fr; }
 
-.cell {
-    flex-grow: 1 !important;
-    flex-shrink: 1 !important;
-    flex-basis: 0% !important;
-    width: 0 !important;
-    text-align: center !important;
-    padding: 14px 2px !important;
-    font-size: 16px !important;
-    justify-content: center !important;
-    align-items: center !important;
-}
+        .btn-add-row { background: transparent; border: 1px solid #4c566a; color: #d8dee9; padding: 10px; border-radius: 4px; cursor: pointer; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;}
+        .btn-add-row:hover { background: #3b4252; color: #fff; }
 
-.row-header .cell[data-popup] {
-    transition: color 0.15s;
-    cursor: pointer !important;
-}
-.row-header .cell[data-popup]:hover {
-    color: #bb86fc !important;
-}
+        .memo-grid-top { grid-template-columns: 1fr auto; align-items: end; }
+        
+        .money-fixed-box { display: flex; gap: 20px; background: #252a31; padding: 15px; border-radius: 6px; border: 1px solid #3e4452; margin-top: 15px; margin-bottom: 10px; }
+        .money-fixed-box label { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: bold; font-size: 14px; }
+        .money-fixed-box input { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 8px 10px; border-radius: 4px; width: 150px; outline: none; }
 
-.header-cell {
-    flex-direction: column !important;
-    gap: 6px !important;
-    padding: 12px 2px !important;
-}
+        /* パスワードモーダル */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: #1e1e24; border: 1px solid #4f545c; border-radius: 8px; padding: 20px; width: 350px; display: flex; flex-direction: column; gap: 15px; }
+        .modal-content h3 { margin: 0; color: #fff; font-size: 16px; border-bottom: 1px solid #4f545c; padding-bottom: 10px; }
+        .modal-content label { color: #aaa; font-size: 13px; display: flex; flex-direction: column; gap: 5px; }
+        .modal-content input { background: #14161a; border: 1px solid #3e4452; color: #fff; padding: 8px; border-radius: 4px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-actions button { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #fff; }
+        .btn-modal-save { background: #43b581; } .btn-modal-save:hover { background: #3ca374; }
+        .btn-modal-cancel { background: #4f545c; } .btn-modal-cancel:hover { background: #686d73; }
 
-.btn-dice {
-    background: transparent !important;
-    border: none !important;
-    cursor: pointer !important;
-    font-size: 22px !important;
-    padding: 0 !important;
-    line-height: 1 !important;
-    opacity: 0.8 !important;
-    transition: transform 0.1s;
-}
-.btn-dice:hover {
-    transform: scale(1.25);
-    opacity: 1 !important;
-}
+        /* 追加要件スタイル */
+        /* ② 成長チェックの完全非表示化 */
+        .check-col, th.check-col, td.check-col { display: none !important; }
+        
+        /* ③ テーマカラーの左寄せ固定 */
+        #theme-area { justify-content: flex-start !important; }
 
-.label-cell {
-    flex-grow: 1.3 !important;
-    flex-shrink: 1 !important;
-    flex-basis: 0% !important;
-    background-color: #3a3f44 !important;
-    color: #ffffff !important;
-    font-weight: bold !important;
-    font-size: 15px !important;
-}
+        /* 能力値・技能値テーブル用のスタイル(崩れないよう補強) */
+        .ability-table-wrapper { width: 100%; overflow-x: auto; }
+        .ability-table { width: 100%; border-collapse: collapse; text-align: center; color: #dcddde; font-size: 13px; margin-bottom:15px; }
+        .ability-table th, .ability-table td { border: 1px solid #3e4452; padding: 8px 4px; }
+        .ability-table th { background-color: #252a31; font-weight: bold; }
+        .ability-table select, .ability-table input { background-color: #14161a; color: #fff; border: 1px solid #4f545c; border-radius: 4px; padding: 6px 4px; width: 50px; text-align: center; }
+        .btn-dice { background: transparent; border: none; cursor: pointer; font-size: 16px; margin-left: 3px; }
+        .btn-dice:hover { transform: scale(1.2); }
+        .current-val { color: #43b581; font-weight: bold; font-size: 15px; }
+        .san-db-row { display: flex; gap: 10px; margin-top: 15px; }
+        .san-db-box { display: flex; background-color: #252a31; border: 1px solid #3e4452; border-radius: 4px; flex: 1; }
+        .san-db-label { background-color: #1e2227; padding: 10px 15px; font-weight: bold; border-right: 1px solid #3e4452; color: #fff; display: flex; align-items: center;}
+        .san-db-value { padding: 10px 15px; display: flex; align-items: center; color: #fff; font-weight: bold; flex: 1; }
+        .san-db-value input { background: transparent; border: none; color: #fff; font-weight: bold; font-size: 16px; width: 60px; text-align: center; border-bottom: 1px solid #4f545c; }
+        
+        .skills-point-header-table { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; background: #252a31; padding: 15px; border-radius: 6px; border: 1px solid #3e4452; }
+        .p-header-row { display: flex; justify-content: space-between; align-items: center; }
+        .skills-list { display: flex; flex-direction: column; gap: 5px; }
+        .skill-row { display: flex; align-items: center; background: #252a31; border: 1px solid #3e4452; border-radius: 4px; padding: 5px 10px; }
+        .skill-row .s-col { flex: 1; text-align: center; }
+        .skill-row .name-col { flex: 2; text-align: left; font-weight: bold; color: #fff; }
+        .skill-row input { background: #14161a; border: 1px solid #4f545c; color: #fff; width: 50px; text-align: center; border-radius: 4px; padding: 4px; }
+        .skills-table-header { display: flex; font-weight: bold; color: #b9bbbe; padding: 5px 10px; border-bottom: 1px solid #3e4452; margin-bottom: 5px; }
+        .skills-table-header .s-col { flex: 1; text-align: center; }
+        .skills-table-header .name-col { flex: 2; text-align: left; }
+    </style>
+</head>
+<body>
+    <header class="editor-header">
+        <h1 class="editor-title">キャラクター作成・編集</h1>
+        <div class="header-actions">
+            </div>
+    </header>
 
-.row-header {
-    background-color: #303539 !important;
-    font-weight: bold !important;
-}
-.row-header .cell:nth-child(even) {
-    background-color: #25292c !important;
-}
+    <div class="fixed-left-menu">
+        <button type="button" onclick="saveCharacter()" title="保存する">💾<br><span style="font-size:10px;">保存</span></button>
+        <button type="button" onclick="goToView()" title="閲覧画面へ">👁<br><span style="font-size:10px;">閲覧</span></button>
+        <button type="button" onclick="goToHome()" title="玄関に戻る">🚪<br><span style="font-size:10px;">玄関</span></button>
+    </div>
 
-.cell select {
-    width: 100% !important;
-    max-width: 52px !important;
-    background-color: #1c1e22 !important;
-    border: 1px solid #4e555b !important;
-    color: #fff !important;
-    text-align: center !important;
-    padding: 6px 0 !important;
-    border-radius: 4px !important;
-}
+    <main class="editor-main">
+        <form id="char-editor">
+            
+            <div id="component-info-value"></div>
+            
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('theme-area', this)">
+                    <h2 class="section-subtitle">テーマ設定</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="theme-area" class="accordion-content open" style="display: flex; flex-direction: row; align-items: center; gap: 20px;">
+                    <label style="color: #b9bbbe; font-size: 14px; font-weight: bold;">イメージカラー:</label>
+                    <input type="color" id="char-color" name="char-color" value="#ffffff" title="キャラクターのテーマカラーを選択">
+                    <label style="color: #b9bbbe; font-size: 14px; display:flex; align-items:center; gap:5px; cursor:pointer;">
+                        <input type="checkbox" name="use-bg-color" id="use-bg-color" class="theme-check"> 背景色として立ち絵に適用する
+                    </label>
+                </div>
+            </div>
 
-.cell input[type="number"] {
-    width: 100% !important;
-    max-width: 52px !important;
-    background-color: transparent !important;
-    border: none !important;
-    color: #fff !important;
-    text-align: center !important;
-    outline: none !important;
-}
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('ability-area', this)">
+                    <h2 class="section-subtitle">能力値一覧</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="ability-area" class="accordion-content open" style="display: block;">
+                    <div class="ability-table-wrapper">
+                        <table class="ability-table">
+                            <thead>
+                                <tr>
+                                    <th>項目</th>
+                                    <th data-popup="3d6 で決定 (2-18)">STR<button type="button" class="btn-dice" onclick="rollIndividual('STR')">🎲</button></th>
+                                    <th data-popup="3d6 で決定 (2-18)">CON<button type="button" class="btn-dice" onclick="rollIndividual('CON')">🎲</button></th>
+                                    <th data-popup="3d6 で決定 (2-18)">POW<button type="button" class="btn-dice" onclick="rollIndividual('POW')">🎲</button></th>
+                                    <th data-popup="3d6 で決定 (2-18)">DEX<button type="button" class="btn-dice" onclick="rollIndividual('DEX')">🎲</button></th>
+                                    <th data-popup="3d6 で決定 (2-18)">APP<button type="button" class="btn-dice" onclick="rollIndividual('APP')">🎲</button></th>
+                                    <th data-popup="2d6+6 で決定 (8-18)">SIZ<button type="button" class="btn-dice" onclick="rollIndividual('SIZ')">🎲</button></th>
+                                    <th data-popup="2d6+6 で決定 (8-18)">INT<button type="button" class="btn-dice" onclick="rollIndividual('INT')">🎲</button></th>
+                                    <th data-popup="3d6+3 で決定 (3-21)">EDU<button type="button" class="btn-dice" onclick="rollIndividual('EDU')">🎲</button></th>
+                                    <th data-popup="算出方法: (CON + SIZ) / 2 ※端数切り上げ">HP</th>
+                                    <th data-popup="算出方法: POW と同じ値">MP</th>
+                                    <th data-popup="算出方法: POW × 5">SAN</th>
+                                    <th data-popup="算出方法: INT × 5">IDE</th>
+                                    <th data-popup="算出方法: POW × 5">幸運</th>
+                                    <th data-popup="算出方法: EDU × 5">知識</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-weight:bold; color:#fff;">能力値</td>
+                                    <td><select name="base-STR" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-CON" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-POW" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-DEX" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-APP" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-SIZ" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-INT" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><select name="base-EDU" class="ability-input" onchange="calcAll()"></select></td>
+                                    <td><span id="base-HP">-</span></td>
+                                    <td><span id="base-MP">-</span></td>
+                                    <td><span id="base-SAN">-</span></td>
+                                    <td><span id="base-IDE">-</span></td>
+                                    <td><span id="base-幸運">-</span></td>
+                                    <td><span id="base-知識">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; color:#b9bbbe;">増加分</td>
+                                    <td><input type="number" name="bonus-STR" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-CON" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-POW" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-DEX" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-APP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-SIZ" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-INT" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-EDU" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-HP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-MP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-SAN" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-IDE" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-幸運" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="bonus-知識" placeholder="0" oninput="calcAll()"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; color:#b9bbbe;">一時的</td>
+                                    <td><input type="number" name="temp-STR" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-CON" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-POW" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-DEX" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-APP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-SIZ" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-INT" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-EDU" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-HP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-MP" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-SAN" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-IDE" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-幸運" placeholder="0" oninput="calcAll()"></td>
+                                    <td><input type="number" name="temp-知識" placeholder="0" oninput="calcAll()"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; color:#fff;">現在値</td>
+                                    <td class="current-val" id="cur-STR">0</td>
+                                    <td class="current-val" id="cur-CON">0</td>
+                                    <td class="current-val" id="cur-POW">0</td>
+                                    <td class="current-val" id="cur-DEX">0</td>
+                                    <td class="current-val" id="cur-APP">0</td>
+                                    <td class="current-val" id="cur-SIZ">0</td>
+                                    <td class="current-val" id="cur-INT">0</td>
+                                    <td class="current-val" id="cur-EDU">0</td>
+                                    <td class="current-val" id="cur-HP">0</td>
+                                    <td class="current-val" id="cur-MP">0</td>
+                                    <td class="current-val" id="cur-SAN">0</td>
+                                    <td class="current-val" id="cur-IDE">0</td>
+                                    <td class="current-val" id="cur-幸運">0</td>
+                                    <td class="current-val" id="cur-知識">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="san-db-row">
+                            <div class="san-db-box" style="flex: 2;">
+                                <div class="san-db-label">SAN値</div>
+                                <div class="san-db-value">
+                                    <input type="number" id="san-input" name="san-input" placeholder="0" min="0" max="99" oninput="handleSanInput()"> 
+                                    <span class="san-max" style="color:#b9bbbe; font-size:14px; margin-left:5px;">/ 99</span>
+                                </div>
+                            </div>
+                            <div class="san-db-box" style="flex: 1;">
+                                <div class="san-db-label">不定</div>
+                                <div class="san-db-value" id="insanity-display">0</div>
+                            </div>
+                        </div>
+                        
+                        <div class="san-db-row" style="margin-top: 10px;">
+                            <div class="san-db-box">
+                                <div class="san-db-label">ダメージボーナス</div>
+                                <div class="san-db-value" id="db-display">なし</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-submit" style="margin-top: 15px;" onclick="if(typeof rollAll === 'function') rollAll()">一斉ランダム</button>
+                </div>
+            </div>
 
-/* ★能力値テーブル内のスピンボタン消去 */
-.cell input::-webkit-outer-spin-button,
-.cell input::-webkit-inner-spin-button {
-    -webkit-appearance: none !important;
-    margin: 0 !important;
-}
-.cell input[type="number"] {
-    appearance: textfield !important;
-}
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('skills-area', this)">
+                    <h2 class="section-subtitle">技能値一覧</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="skills-area" class="accordion-content open" style="display: block;">
+                    
+                    <div class="skills-point-header-table">
+                        <div class="p-header-row" style="font-weight:bold; color:#b9bbbe; margin-bottom:5px;">
+                            <div style="flex:1;"></div><div style="flex:2;">計算方法</div><div style="flex:2;">現在値</div><div style="flex:1;">補正</div>
+                        </div>
+                        <div class="p-header-row">
+                            <div style="flex:1; font-weight:bold; color:#fff;">職業P</div>
+                            <div style="flex:2;">
+                                <select id="job-calc-method" onchange="calcAll()" style="background:#14161a; color:#fff; border:1px solid #4f545c; padding:4px; border-radius:4px;">
+                                    <option value="EDU*20">EDU×20</option>
+                                    <option value="STR*10+EDU*10">STR×10+EDU×10</option>
+                                    <option value="CON*10+EDU*10">CON×10+EDU×10</option>
+                                    <option value="POW*10+EDU*10">POW×10+EDU×10</option>
+                                    <option value="DEX*10+EDU*10">DEX×10+EDU×10</option>
+                                    <option value="APP*10+EDU*10">APP×10+EDU×10</option>
+                                    <option value="SIZ*10+EDU*10">SIZ×10+EDU×10</option>
+                                    <option value="INT*10+EDU*10">INT×10+EDU×10</option>
+                                    <option value="MANUAL">手動入力</option>
+                                </select>
+                            </div>
+                            <div style="flex:2; color:#fff; font-weight:bold;"><span id="job-points-left" style="color:#43b581; font-size:16px;">0</span> <span id="job-points-max" style="color:#b9bbbe;">/ 0</span></div>
+                            <div style="flex:1;"><input type="number" id="job-points-bonus" oninput="calcAll()" style="width:50px; background:#14161a; color:#fff; border:1px solid #4f545c; border-radius:4px; text-align:center;"></div>
+                        </div>
+                        <div class="p-header-row" style="margin-top:10px;">
+                            <div style="flex:1; font-weight:bold; color:#fff;">興味P</div>
+                            <div style="flex:2; color:#b9bbbe;">INT×10</div>
+                            <div style="flex:2; color:#fff; font-weight:bold;"><span id="interest-points-left" style="color:#43b581; font-size:16px;">0</span> <span id="interest-points-max" style="color:#b9bbbe;">/ 0</span></div>
+                            <div style="flex:1;"><input type="number" id="interest-points-bonus" oninput="calcAll()" style="width:50px; background:#14161a; color:#fff; border:1px solid #4f545c; border-radius:4px; text-align:center;"></div>
+                        </div>
+                    </div>
 
-.row-current {
-    background-color: #17191c !important;
-}
-.row-current .cell:not(.label-cell) {
-    color: #00bc8c !important;
-    font-weight: bold !important;
-    font-size: 17px !important;
-}
+                    <div class="skills-table-header">
+                        <div class="s-col name-col">技能名</div><div class="s-col">初期</div><div class="s-col">職P</div><div class="s-col">興P</div><div class="s-col">成長</div><div class="s-col">他</div><div class="s-col" style="color:#5ce1e6;">合計</div>
+                    </div>
 
-.auto-calc {
-    color: #aaa !important;
-    font-size: 15px !important;
-}
+                    <div class="skills-list" id="main-skills-list">
+                        </div>
+                    
+                    <button type="button" class="btn-add-row" onclick="addCustomSkill(this)" style="margin-top:15px; text-align:left; padding-left:10px;">+ 技能を追加</button>
+                </div>
+            </div>
 
-.derived-status-panel {
-    margin-top: 25px !important;
-    flex-direction: column !important;
-    gap: 12px !important;
-    max-width: 1300px !important;
-    width: 100% !important;
-}
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('weapons-area', this)">
+                    <h2 class="section-subtitle">戦闘・武器・防具</h2><span class="accordion-icon">⋗</span>
+                </div>
+                <div id="weapons-area" class="accordion-content" style="display: none;">
+                    <div id="weapons-container"></div>
+                    <button type="button" class="btn-add-row" onclick="addWeaponRow()">+ 武器・防具を追加</button>
+                </div>
+            </div>
 
-.status-panel-row {
-    flex-direction: row !important;
-    gap: 16px !important;
-    width: 100% !important;
-}
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('items-area', this)">
+                    <h2 class="section-subtitle">所持品・所持金</h2><span class="accordion-icon">⋗</span>
+                </div>
+                <div id="items-area" class="accordion-content" style="display: none;">
+                    <div class="money-fixed-box">
+                        <label>現在の所持金 <input type="text" id="char-money" placeholder="例: 100,000円"></label>
+                        <label>借金 <input type="text" id="char-debt" placeholder="例: 0円"></label>
+                    </div>
+                    <div id="items-container"></div>
+                    <button type="button" class="btn-add-row" onclick="addItemRow()">+ 所持品を追加</button>
+                </div>
+            </div>
 
-.panel-item {
-    flex-direction: row !important;
-    align-items: center !important;
-    background-color: #1c1e22 !important;
-    border-radius: 4px !important;
-    border: 1px solid #2d3035 !important;
-}
-.item-san { flex: 2 1 0% !important; }
-.item-insanity, .item-db { flex: 1 1 0% !important; }
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('scenarios-area', this)">
+                    <h2 class="section-subtitle">通過したシナリオ</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="scenarios-area" class="accordion-content open" style="display: flex;">
+                    <div id="scenarios-container"></div>
+                    <button type="button" class="btn-add-row" onclick="addScenarioRow()">+ シナリオ歴を追加</button>
+                </div>
+            </div>
 
-.panel-label {
-    padding: 12px 18px !important;
-    font-weight: bold !important;
-    min-width: 90px !important;
-}
+            <div class="custom-section">
+                <div class="section-subtitle-bar" onclick="toggleAccordion('memos-area', this)">
+                    <h2 class="section-subtitle">詳細メモ（秘匿・バックストーリー等）</h2><span class="accordion-icon">⋁</span>
+                </div>
+                <div id="memos-area" class="accordion-content open" style="display: flex;">
+                    <div id="memos-container"></div>
+                    <button type="button" class="btn-add-row" onclick="addMemoRow()">+ 新しいメモを作成</button>
+                </div>
+            </div>
 
-.panel-value-box {
-    flex-grow: 1 !important;
-    background-color: #2b303b !important;
-    padding: 12px 18px !important;
-    font-weight: bold !important;
-    justify-content: flex-end !important;
-    align-items: center;
-}
+            <div id="js-tooltip" class="custom-tooltip"></div>
+        </form>
+    </main>
 
-/* ★修正：SAN値入力欄のスピンボタンをあらゆるブラウザで完全破壊 */
-.panel-value-box input[type="number"]#san-input {
-    background-color: transparent !important;
-    border: none !important;
-    color: #ffffff !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
-    text-align: right !important;
-    width: 45px !important; /* 入力しやすいよう幅を最適化 */
-    outline: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    appearance: textfield !important; /* Firefox用 */
-    -webkit-appearance: textfield !important; /* Safari, Chrome用の旧互換 */
-}
+    <div id="pwd-modal" class="modal">
+        <div class="modal-content">
+            <h3>パスワード設定</h3>
+            <p style="color:#aaa; font-size:12px; margin:0;">このメモを閲覧画面で保護します。</p>
+            <label>パスワード (空欄で解除)<input type="text" id="modal-pwd-input" placeholder="パスワードを入力"></label>
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closePasswordModal()">キャンセル</button>
+                <button type="button" class="btn-modal-save" onclick="applyPassword()">保存</button>
+            </div>
+        </div>
+    </div>
 
-/* Chrome, Safari, Edge の矢印パーツ自体を完全に消去 */
-.panel-value-box input[type="number"]#san-input::-webkit-outer-spin-button,
-.panel-value-box input[type="number"]#san-input::-webkit-inner-spin-button {
-    -webkit-appearance: none !important;
-    appearance: none !important;
-    margin: 0 !important;
-    display: none !important;
-}
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        window.db = db; window.doc = doc; window.setDoc = setDoc;
+    </script>
 
-.san-max {
-    margin-left: 6px !important;
-    color: #ffffff !important;
-}
-
-.item-db .panel-value-box {
-    justify-content: flex-start !important;
-}
-
-.custom-tooltip {
-    display: none;
-    position: absolute;
-    background-color: #000000 !important;
-    color: #ffffff !important;
-    border: 1px solid #4e555b !important;
-    padding: 6px 12px !important;
-    border-radius: 4px !important;
-    font-size: 13px !important;
-    white-space: nowrap !important;
-    z-index: 99999 !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.6) !important;
-    pointer-events: none !important;
-}
-
-.ability-control-bar { margin-top: 15px; margin-bottom: 25px; display: flex !important; }
-.btn-random-all { background: #007bff !important; border: 1px solid #0069d9 !important; color: white !important; padding: 14px 28px !important; border-radius: 4px !important; cursor: pointer !important; font-weight: bold !important; font-size: 15px !important; }
-.btn-random-all:hover { background: #0069d9 !important; }
-
-.control-footer { margin-top: 30px; display: flex !important; gap: 15px !important; }
-.btn-submit { background: #4e555b !important; border: 1px solid #6c757d !important; color: white !important; padding: 14px 28px !important; border-radius: 4px !important; cursor: pointer !important; font-weight: bold !important; font-size: 15px !important; }
-.btn-submit:hover { background-color: #6c757d !important; }
-
-/* スマホ・タブレット用：能力値テーブルのレイアウト崩れ対策 */
-@media screen and (max-width: 700px) {
-    .ability-table {
-        overflow-x: auto !important; /* 横スクロールを許可 */
-        display: block !important;
-        width: 100vw !important;
-        max-width: 100vw !important;
-    }
-    
-    .table-row {
-        min-width: 700px !important; /* テーブル全体が潰れないように最小幅を確保 */
-    }
-
-    .cell {
-        padding: 8px 4px !important;
-        font-size: 12px !important;
-    }
-
-    /* パネルの折り返し */
-    .status-panel-row {
-        flex-direction: column !important;
-    }
-}
-</style>
+    <script src="basic_information/basic_information.js"></script>
 
 <script>
-function diceRoll(num, size, add = 0) {
-    let total = add;
-    for (let i = 0; i < num; i++) {
-        total += Math.floor(Math.random() * size) + 1;
-    }
-    return total;
-}
+    // ⑥ 未保存の警告機能
+    let isChanged = false;
+    function markAsChanged() { isChanged = true; }
 
-// 能力値セクションのHTML構造をコンポーネント管理
-const ABILITY_VALUE_COMPONENT = `
-    <h2 class="section-subtitle">能力値一覧</h2>
-    
-    <div class="ability-table">
-        <div class="table-row row-header">
-            <div class="cell label-cell">項目</div>
-            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">STR<button type="button" class="btn-dice" onclick="rollIndividual('STR')">🎲</button></div>
-            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">CON<button type="button" class="btn-dice" onclick="rollIndividual('CON')">🎲</button></div>
-            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">POW<button type="button" class="btn-dice" onclick="rollIndividual('POW')">🎲</button></div>
-            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">DEX<button type="button" class="btn-dice" onclick="rollIndividual('DEX')">🎲</button></div>
-            <div class="cell header-cell" data-popup="3d6 で決定 (2-18)">APP<button type="button" class="btn-dice" onclick="rollIndividual('APP')">🎲</button></div>
-            <div class="cell header-cell" data-popup="2d6+6 で決定 (8-18)">SIZ<button type="button" class="btn-dice" onclick="rollIndividual('SIZ')">🎲</button></div>
-            <div class="cell header-cell" data-popup="2d6+6 で決定 (8-18)">INT<button type="button" class="btn-dice" onclick="rollIndividual('INT')">🎲</button></div>
-            <div class="cell header-cell" data-popup="3d6+3 で決定 (3-21)">EDU<button type="button" class="btn-dice" onclick="rollIndividual('EDU')">🎲</button></div>
-            <div class="cell" data-popup="算出方法: (CON + SIZ) / 2 ※端数切り上げ">HP</div>
-            <div class="cell" data-popup="算出方法: POW と同じ値">MP</div>
-            <div class="cell" data-popup="算出方法: POW × 5">SAN</div>
-            <div class="cell" data-popup="算出方法: INT × 5">IDE</div>
-            <div class="cell" data-popup="算出方法: POW × 5">幸運</div>
-            <div class="cell" data-popup="算出方法: EDU × 5">知識</div>
-        </div>
-
-        <div class="table-row row-base">
-            <div class="cell label-cell">能力値</div>
-            <div class="cell"><select name="base-STR" onchange="calcAll()"></select></div>
-            <div class="cell"><select name="base-CON" onchange="calcAll()"></select></div>
-            <div class="cell"><select name="base-POW" onchange="calcAll()"></select></div>
-            <div class="cell"><select name="base-DEX" onchange="calcAll()"></select></div>
-            <div class="cell"><select name="base-APP" onchange="calcAll()"></select></div>
-            <div class="cell"><select name="base-SIZ" onchange="calcAll()"></select></div>
-            <div class="cell"><select name="base-INT" onchange="calcAll()"></select></div>
-            <div class="cell"><select name="base-EDU" onchange="calcAll()"></select></div>
-            <div class="cell"><span id="base-HP" class="auto-calc">-</span></div>
-            <div class="cell"><span id="base-MP" class="auto-calc">-</span></div>
-            <div class="cell"><span id="base-SAN" class="auto-calc">-</span></div>
-            <div class="cell"><span id="base-IDE" class="auto-calc">-</span></div>
-            <div class="cell"><span id="base-幸運" class="auto-calc">-</span></div>
-            <div class="cell"><span id="base-知識" class="auto-calc">-</span></div>
-        </div>
-
-        <div class="table-row row-bonus">
-            <div class="cell label-cell">増加分</div>
-            <div class="cell"><input type="number" name="bonus-STR" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-CON" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-POW" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-DEX" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-APP" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-SIZ" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-INT" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-EDU" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-HP" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-MP" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-SAN" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-IDE" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-幸運" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="bonus-知識" placeholder="0" oninput="calcAll()"></div>
-        </div>
-
-        <div class="table-row row-temp">
-            <div class="cell label-cell">一時的</div>
-            <div class="cell"><input type="number" name="temp-STR" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-CON" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-POW" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-DEX" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-APP" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-SIZ" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-INT" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-EDU" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-HP" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-MP" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-SAN" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-IDE" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-幸運" placeholder="0" oninput="calcAll()"></div>
-            <div class="cell"><input type="number" name="temp-知識" placeholder="0" oninput="calcAll()"></div>
-        </div>
-
-        <div class="table-row row-current">
-            <div class="cell label-cell">現在値</div>
-            <div class="cell" id="cur-STR">0</div>
-            <div class="cell" id="cur-CON">0</div>
-            <div class="cell" id="cur-POW">0</div>
-            <div class="cell" id="cur-DEX">0</div>
-            <div class="cell" id="cur-APP">0</div>
-            <div class="cell" id="cur-SIZ">0</div>
-            <div class="cell" id="cur-INT">0</div>
-            <div class="cell" id="cur-EDU">0</div>
-            <div class="cell" id="cur-HP">0</div>
-            <div class="cell" id="cur-MP">0</div>
-            <div class="cell" id="cur-SAN">0</div>
-            <div class="cell" id="cur-IDE">0</div>
-            <div class="cell" id="cur-幸運">0</div>
-            <div class="cell" id="cur-知識">0</div>
-        </div>
-    </div>
-
-    <div class="derived-status-panel">
-        <div class="status-panel-row">
-            <div class="panel-item item-san">
-                <span class="panel-label">SAN値</span>
-                <div class="panel-value-box">
-                    <input type="number" id="san-input" placeholder="0" min="0" max="99" oninput="handleSanInput()">
-                    <span class="san-max">/ 99</span>
-                </div>
-            </div>
-            <div class="panel-item item-insanity">
-                <span class="panel-label">不定</span>
-                <div class="panel-value-box" id="insanity-display">0</div>
-            </div>
-        </div>
-        <div class="status-panel-row">
-            <div class="panel-item item-db">
-                <span class="panel-label">ダメージボーナス</span>
-                <div class="panel-value-box" id="db-display">なし</div>
-            </div>
-        </div>
-    </div>
-`;
-
-document.getElementById("component-ability-value").innerHTML = ABILITY_VALUE_COMPONENT;
-
-let hasManuallySetSan = false;
-
-function handleSanInput() {
-    hasManuallySetSan = true;
-    calcInsanityOnly();
-}
-
-const selectElements = document.querySelectorAll(".row-base select");
-selectElements.forEach(select => {
-    select.innerHTML = "";
-    const placeholderOpt = document.createElement("option");
-    placeholderOpt.value = ""; placeholderOpt.textContent = ""; placeholderOpt.selected = true;
-    select.appendChild(placeholderOpt);
-    let min = 2; let max = 18;
-    if (select.name === "base-EDU") { min = 3; max = 21; }
-    for (let i = min; i <= max; i++) {
-        const opt = document.createElement("option");
-        opt.value = i; opt.textContent = i; select.appendChild(opt);
-    }
-});
-
-const tooltip = document.getElementById("js-tooltip");
-const cellsWithPopup = document.querySelectorAll(".row-header .cell[data-popup]");
-cellsWithPopup.forEach(cell => {
-    cell.addEventListener("mouseenter", () => {
-        const text = cell.getAttribute("data-popup");
-        if (!text) return;
-        tooltip.textContent = text; tooltip.style.display = "block";
-        const rect = cell.getBoundingClientRect();
-        tooltip.style.top = `${rect.top + window.scrollY - tooltip.offsetHeight - 8}px`;
-        tooltip.style.left = `${rect.left + window.scrollX + (rect.width / 2) - (tooltip.offsetWidth / 2)}px`;
-    });
-    cell.addEventListener("mouseleave", () => { tooltip.style.display = "none"; });
-});
-
-calcAll();
-
-function rollIndividual(stat) {
-    const select = document.querySelector(`select[name="base-${stat}"]`);
-    if (!select) return;
-    let result = 0;
-    if (stat === 'STR' || stat === 'CON' || stat === 'POW' || stat === 'DEX' || stat === 'APP') { result = diceRoll(3, 6); }
-    else if (stat === 'SIZ' || stat === 'INT') { result = diceRoll(2, 6, 6); }
-    else if (stat === 'EDU') { result = diceRoll(3, 6, 3); }
-    select.value = result;
-
-    if (stat === 'POW') {
-        hasManuallySetSan = false;
-    }
-    calcAll();
-}
-
-function rollAll() {
-    hasManuallySetSan = false;
-    ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU'].forEach(stat => rollIndividual(stat));
-}
-
-function calcAll() {
-    const primaryStats = ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU'];
-    const baseValues = {}; const currentValues = {};
-
-    primaryStats.forEach(stat => {
-        const selectEl = document.querySelector(`select[name="base-${stat}"]`);
-        const base = selectEl ? (parseInt(selectEl.value) || 0) : 0;
-        // ★修正：空欄の時も「0」として安全に計算にマージするガード
-        const bonus = parseInt(document.querySelector(`input[name="bonus-${stat}"]`)?.value) || 0;
-        const temp = parseInt(document.querySelector(`input[name="temp-${stat}"]`)?.value) || 0;
-        baseValues[stat] = base;
-        currentValues[stat] = base === 0 ? 0 : (base + bonus + temp);
-        const curEl = document.getElementById(`cur-${stat}`);
-        if (curEl) curEl.textContent = base === 0 ? 0 : currentValues[stat];
+    window.addEventListener('beforeunload', function (e) {
+        if (isChanged) {
+            e.preventDefault();
+            e.returnValue = ''; 
+        }
     });
 
-    const evadeInit = currentValues['DEX'] * 2;
-    const evadeInitDisplay = document.getElementById('init-evade');
-    if (evadeInitDisplay) {
-        evadeInitDisplay.textContent = evadeInit;
-        const row = evadeInitDisplay.closest('.skill-row');
-        if (row) row.setAttribute('data-initial', evadeInit);
+    function goToView() {
+        if (isChanged) {
+            if (!confirm("保存されていません。このまま移動すると変更が破棄されます。本当に移動しますか？")) return;
+        }
+        const editIndex = localStorage.getItem('editingIndex');
+        if (editIndex !== null && editIndex !== "") {
+            localStorage.setItem('viewingIndex', editIndex);
+            window.location.href = '../view.html';
+        } else {
+            alert('キャラクターが保存されていません。一度保存ボタンを押してください。');
+        }
     }
 
-    const nativeInit = currentValues['EDU'] * 5;
-    const nativeInitDisplay = document.getElementById('init-native-lang');
-    if (nativeInitDisplay) {
-        nativeInitDisplay.textContent = nativeInit;
-        const row = nativeInitDisplay.closest('.skill-row');
-        if (row) row.setAttribute('data-initial', nativeInit);
+    function goToHome() {
+        if (isChanged) {
+            if (!confirm("保存されていません。このまま移動すると変更が破棄されます。本当に移動しますか？")) return;
+        }
+        window.location.href = '../index.html';
     }
 
-    const hasHP = baseValues['CON'] > 0 && baseValues['SIZ'] > 0;
-    const hasMP = baseValues['POW'] > 0;
-    const hasIDE = baseValues['INT'] > 0;
-    const hasKnow = baseValues['EDU'] > 0;
-
-    const BoneHP = hasHP ? Math.ceil((baseValues['CON'] + baseValues['SIZ']) / 2) : 0;
-    document.getElementById('base-HP').textContent = hasHP ? BoneHP : "-";
-    const bonusHP = parseInt(document.querySelector(`input[name="bonus-HP"]`)?.value) || 0;
-    const tempHP = parseInt(document.querySelector(`input[name="temp-HP"]`)?.value) || 0;
-    document.getElementById('cur-HP').textContent = hasHP ? (BoneHP + bonusHP + tempHP) : 0;
-
-    const baseMP = hasMP ? baseValues['POW'] : 0;
-    document.getElementById('base-MP').textContent = hasMP ? baseMP : "-";
-    const bonusMP = parseInt(document.querySelector(`input[name="bonus-MP"]`)?.value) || 0;
-    const tempMP = parseInt(document.querySelector(`input[name="temp-MP"]`)?.value) || 0;
-    document.getElementById('cur-MP').textContent = hasMP ? (baseMP + bonusMP + tempMP) : 0;
-
-    const baseSAN = hasMP ? baseValues['POW'] * 5 : 0;
-    document.getElementById('base-SAN').textContent = hasMP ? baseSAN : "-";
-    const bonusSAN = parseInt(document.querySelector(`input[name="bonus-SAN"]`)?.value) || 0;
-    const tempSAN = parseInt(document.querySelector(`input[name="temp-SAN"]`)?.value) || 0;
-    const totalSAN = hasMP ? (baseSAN + bonusSAN + tempSAN) : 0;
-    document.getElementById('cur-SAN').textContent = totalSAN;
-
-    const baseIDE = hasIDE ? baseValues['INT'] * 5 : 0;
-    document.getElementById('base-IDE').textContent = hasIDE ? baseIDE : "-";
-    const bonusIDE = parseInt(document.querySelector(`input[name="bonus-IDE"]`)?.value) || 0;
-    const tempIDE = parseInt(document.querySelector(`input[name="temp-IDE"]`)?.value) || 0;
-    document.getElementById('cur-IDE').textContent = hasIDE ? (baseIDE + bonusIDE + tempIDE) : 0;
-
-    const baseLucky = hasMP ? baseValues['POW'] * 5 : 0;
-    document.getElementById('base-幸運').textContent = hasMP ? baseLucky : "-";
-    const bonusLucky = parseInt(document.querySelector(`input[name="bonus-幸運"]`)?.value) || 0;
-    const tempLucky = parseInt(document.querySelector(`input[name="temp-幸運"]`)?.value) || 0;
-    document.getElementById('cur-幸運').textContent = hasMP ? (baseLucky + bonusLucky + tempLucky) : 0;
-
-    const baseKnow = hasKnow ? baseValues['EDU'] * 5 : 0;
-    document.getElementById('base-知識').textContent = hasKnow ? baseKnow : "-";
-    const bonusKnow = parseInt(document.querySelector(`input[name="bonus-知識"]`)?.value) || 0;
-    const tempKnow = parseInt(document.querySelector(`input[name="temp-知識"]`)?.value) || 0;
-    document.getElementById('cur-知識').textContent = hasKnow ? (baseKnow + bonusKnow + tempKnow) : 0;
-
-    if (baseValues['STR'] === 0 || baseValues['SIZ'] === 0) {
-        document.getElementById('db-display').textContent = "なし";
-    } else {
-        const sumDb = currentValues['STR'] + currentValues['SIZ'];
-        let dbResult = "0";
-        if (sumDb >= 2 && sumDb <= 12) { dbResult = "-1D6"; }
-        else if (sumDb >= 13 && sumDb <= 16) { dbResult = "-1D4"; }
-        else if (sumDb >= 17 && sumDb <= 24) { dbResult = "0"; }
-        else if (sumDb >= 25 && sumDb <= 32) { dbResult = "+1D4"; }
-        else if (sumDb >= 33 && sumDb <= 40) { dbResult = "+1D6"; }
-        else if (sumDb >= 41 && sumDb <= 56) { dbResult = "+2D6"; }
-        document.getElementById('db-display').textContent = dbResult;
+    function toggleAccordion(targetId, headerBar) {
+        const content = document.getElementById(targetId);
+        const icon = headerBar.querySelector(".accordion-icon");
+        if (content.classList.contains("open")) {
+            content.classList.remove("open"); content.style.display = "none"; icon.textContent = "⋗";
+        } else {
+            content.classList.add("open"); content.style.display = "flex"; icon.textContent = "⋁";
+        }
     }
 
-    let jobMax = 0;
-    const jobMethod = document.getElementById('job-calc-method')?.value || "EDU*20";
-    const jobBonus = parseInt(document.getElementById('job-points-bonus')?.value) || 0;
-
-    if (jobMethod === "MANUAL") {
-        jobMax = jobBonus;
-    } else {
-        if (jobMethod === "EDU*20") { jobMax = currentValues['EDU'] * 20; }
-        else if (jobMethod === "STR*10+EDU*10") { jobMax = (currentValues['STR'] * 10) + (currentValues['EDU'] * 10); }
-        else if (jobMethod === "CON*10+EDU*10") { jobMax = (currentValues['CON'] * 10) + (currentValues['EDU'] * 10); }
-        else if (jobMethod === "POW*10+EDU*10") { jobMax = (currentValues['POW'] * 10) + (currentValues['EDU'] * 10); }
-        else if (jobMethod === "DEX*10+EDU*10") { jobMax = (currentValues['DEX'] * 10) + (currentValues['EDU'] * 10); }
-        else if (jobMethod === "APP*10+EDU*10") { jobMax = (currentValues['APP'] * 10) + (currentValues['EDU'] * 10); }
-        else if (jobMethod === "SIZ*10+EDU*10") { jobMax = (currentValues['SIZ'] * 10) + (currentValues['EDU'] * 10); }
-        else if (jobMethod === "INT*10+EDU*10") { jobMax = (currentValues['INT'] * 10) + (currentValues['EDU'] * 10); }
-        jobMax += jobBonus;
+    function moveUp(btn) {
+        const row = btn.closest('.dynamic-row');
+        if (row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+        markAsChanged();
+    }
+    function moveDown(btn) {
+        const row = btn.closest('.dynamic-row');
+        if (row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+        markAsChanged();
+    }
+    function deleteRow(btn) {
+        if(confirm('この項目を削除しますか？')) {
+            btn.closest('.dynamic-row').remove();
+            markAsChanged();
+        }
     }
 
-    const interestBonus = parseInt(document.getElementById('interest-points-bonus')?.value) || 0;
-    const interestMax = (currentValues['INT'] * 10) + interestBonus;
-
-    const jobMaxEl = document.getElementById('job-points-max');
-    const interestMaxEl = document.getElementById('interest-points-max');
-    if (jobMaxEl) jobMaxEl.textContent = `/ ${jobMax}`;
-    if (interestMaxEl) interestMaxEl.textContent = `/ ${interestMax}`;
-
-    const sanInput = document.getElementById('san-input');
-    if (sanInput && !hasManuallySetSan) {
-        if (!hasMP) { sanInput.value = ""; } else { sanInput.value = totalSAN; }
+    function addWeaponRow(data = {}) {
+        const div = document.createElement('div'); div.className = 'dynamic-row weapon-row';
+        div.innerHTML = `
+            <div class="row-controls"><button type="button" onclick="moveUp(this)">▲</button><button type="button" onclick="moveDown(this)">▼</button><button type="button" class="btn-del" onclick="deleteRow(this)">✖ 削除</button></div>
+            <div class="grid-inputs weapon-grid-top">
+                <label>名称<input type="text" class="w-name" value="${data.name||''}"></label>
+                <label>成功率<input type="text" class="w-rate" value="${data.rate||''}"></label>
+                <label>ダメージ<input type="text" class="w-dmg" value="${data.damage||''}"></label>
+            </div>
+            <div class="grid-inputs weapon-grid-bottom" style="margin-top:8px;">
+                <label>射程<input type="text" class="w-range" value="${data.range||''}"></label>
+                <label>攻撃回数<input type="text" class="w-attacks" value="${data.attacks||''}"></label>
+                <label>装弾数<input type="text" class="w-ammo" value="${data.ammo||''}"></label>
+                <label>耐久力<input type="text" class="w-hp" value="${data.hp||''}"></label>
+                <label>故障<input type="text" class="w-malf" value="${data.malf||''}"></label>
+                <label>その他<input type="text" class="w-other" value="${data.other||''}"></label>
+            </div>
+        `;
+        document.getElementById('weapons-container').appendChild(div);
+        markAsChanged();
     }
 
-    if (typeof calcSkills === "function" && document.querySelectorAll(".skill-row").length > 0) {
+    function addItemRow(data = {}) {
+        const div = document.createElement('div'); div.className = 'dynamic-row item-row';
+        div.innerHTML = `
+            <div class="row-controls"><button type="button" onclick="moveUp(this)">▲</button><button type="button" onclick="moveDown(this)">▼</button><button type="button" class="btn-del" onclick="deleteRow(this)">✖ 削除</button></div>
+            <div class="grid-inputs item-grid-top">
+                <label>名称<input type="text" class="i-name" value="${data.name||''}"></label>
+                <label>単価<input type="text" class="i-unit" value="${data.unitPrice||''}"></label>
+                <label>個数<input type="text" class="i-qty" value="${data.quantity||''}"></label>
+            </div>
+            <div class="grid-inputs item-grid-bottom" style="margin-top:8px;">
+                <label>価格 (自動/手動)<input type="text" class="i-total" value="${data.totalPrice||''}"></label>
+                <label>効果・備考など<input type="text" class="i-notes" value="${data.notes||''}"></label>
+            </div>
+        `;
+        document.getElementById('items-container').appendChild(div);
+        markAsChanged();
+    }
+
+    function addScenarioRow(data = {}) {
+        const div = document.createElement('div'); div.className = 'dynamic-row scenario-row';
+        div.innerHTML = `
+            <div class="row-controls"><button type="button" onclick="moveUp(this)">▲</button><button type="button" onclick="moveDown(this)">▼</button><button type="button" class="btn-del" onclick="deleteRow(this)">✖ 削除</button></div>
+            <div class="grid-inputs scenario-grid">
+                <label>完了日<input type="date" class="s-date" value="${data.date||''}"></label>
+                <label>シナリオ名<input type="text" class="s-name" value="${data.name||''}"></label>
+            </div>
+            <div class="grid-inputs" style="margin-top: 8px;">
+                <label>メモ（成長した技能やSAN値の減少など）<textarea class="s-memo" style="height: 60px; resize: vertical;" placeholder="減少したSAN値や手に入れたアーティファクト、成長技能などをメモ">${data.memo||''}</textarea></label>
+            </div>
+        `;
+        document.getElementById('scenarios-container').appendChild(div);
+        markAsChanged();
+    }
+
+    let activePwdInput = null;
+    function openPasswordModal(btn) {
+        activePwdInput = btn.closest('.memo-row').querySelector('.m-pwd');
+        document.getElementById('modal-pwd-input').value = activePwdInput.value;
+        document.getElementById('pwd-modal').style.display = 'flex';
+    }
+    function closePasswordModal() { document.getElementById('pwd-modal').style.display = 'none'; activePwdInput = null; }
+    function applyPassword() {
+        if(activePwdInput) activePwdInput.value = document.getElementById('modal-pwd-input').value;
+        closePasswordModal();
+        activePwdInput.parentElement.querySelector('button').innerText = activePwdInput.value ? '🔒 保護中' : '🔑 パスワード設定';
+        markAsChanged();
+    }
+
+    function addMemoRow(data = {}) {
+        const div = document.createElement('div'); div.className = 'dynamic-row memo-row';
+        const hasPwd = data.password && data.password !== '';
+        div.innerHTML = `
+            <div class="row-controls"><button type="button" onclick="moveUp(this)">▲</button><button type="button" onclick="moveDown(this)">▼</button><button type="button" class="btn-del" onclick="deleteRow(this)">✖ 削除</button></div>
+            <div class="grid-inputs memo-grid-top">
+                <label style="color:#bb86fc; font-weight:bold;">メモタイトル<input type="text" class="m-title" value="${data.title||''}" style="font-size:16px; border-color:#6366f1;"></label>
+                <button type="button" onclick="openPasswordModal(this)" style="height:36px; padding:0 15px; background:#4f545c; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+                    ${hasPwd ? '🔒 保護中' : '🔑 パスワード設定'}
+                </button>
+            </div>
+            <textarea class="m-content" style="width:100%; height:150px; margin-top:10px; resize:vertical;" placeholder="詳細な情報を入力...">${data.content||''}</textarea>
+            <input type="hidden" class="m-pwd" value="${data.password||''}">
+        `;
+        document.getElementById('memos-container').appendChild(div);
+        markAsChanged();
+    }
+
+    // ★ 完全内包された能力値・技能値の計算ロジック ★
+    function diceRoll(num, size, add = 0) {
+        let total = add;
+        for (let i = 0; i < num; i++) total += Math.floor(Math.random() * size) + 1;
+        return total;
+    }
+
+    window.rollIndividual = function(stat) {
+        const select = document.querySelector(`select[name="base-${stat}"]`);
+        if (!select) return;
+        let result = 0;
+        if (['STR', 'CON', 'POW', 'DEX', 'APP'].includes(stat)) result = diceRoll(3, 6);
+        else if (['SIZ', 'INT'].includes(stat)) result = diceRoll(2, 6, 6);
+        else if (stat === 'EDU') result = diceRoll(3, 6, 3);
+        select.value = result;
+
+        if (stat === 'POW') window.hasManuallySetSan = false;
+        calcAll();
+        markAsChanged();
+    };
+
+    window.rollAll = function() {
+        window.hasManuallySetSan = false;
+        ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU'].forEach(stat => rollIndividual(stat));
+    };
+
+    window.hasManuallySetSan = false;
+    // ⑩ SAN値入力欄のイベント
+    window.handleSanInput = function() {
+        window.hasManuallySetSan = true;
+        calcInsanityOnly();
+        markAsChanged();
+    };
+
+    window.calcAll = function() {
+        const primaryStats = ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU'];
+        const baseValues = {}; const currentValues = {};
+
+        primaryStats.forEach(stat => {
+            const selectEl = document.querySelector(`select[name="base-${stat}"]`);
+            const base = selectEl ? (parseInt(selectEl.value) || 0) : 0;
+            const bonus = parseInt(document.querySelector(`input[name="bonus-${stat}"]`)?.value) || 0;
+            const temp = parseInt(document.querySelector(`input[name="temp-${stat}"]`)?.value) || 0;
+            baseValues[stat] = base;
+            currentValues[stat] = base === 0 ? 0 : (base + bonus + temp);
+            const curEl = document.getElementById(`cur-${stat}`);
+            if (curEl) curEl.textContent = base === 0 ? 0 : currentValues[stat];
+        });
+
+        const evadeInitDisplay = document.getElementById('init-回避');
+        if (evadeInitDisplay) {
+            evadeInitDisplay.textContent = currentValues['DEX'] * 2;
+            evadeInitDisplay.closest('.skill-row').setAttribute('data-initial', currentValues['DEX'] * 2);
+        }
+        const nativeInitDisplay = document.getElementById('init-母国語');
+        if (nativeInitDisplay) {
+            nativeInitDisplay.textContent = currentValues['EDU'] * 5;
+            nativeInitDisplay.closest('.skill-row').setAttribute('data-initial', currentValues['EDU'] * 5);
+        }
+
+        const hasHP = baseValues['CON'] > 0 && baseValues['SIZ'] > 0;
+        const hasMP = baseValues['POW'] > 0;
+        
+        document.getElementById('base-HP').textContent = hasHP ? Math.ceil((baseValues['CON'] + baseValues['SIZ']) / 2) : 0;
+        document.getElementById('cur-HP').textContent = hasHP ? (Math.ceil((baseValues['CON'] + baseValues['SIZ']) / 2) + (parseInt(document.querySelector('input[name="bonus-HP"]').value)||0) + (parseInt(document.querySelector('input[name="temp-HP"]').value)||0)) : 0;
+
+        document.getElementById('base-MP').textContent = hasMP ? baseValues['POW'] : 0;
+        document.getElementById('cur-MP').textContent = hasMP ? (baseValues['POW'] + (parseInt(document.querySelector('input[name="bonus-MP"]').value)||0) + (parseInt(document.querySelector('input[name="temp-MP"]').value)||0)) : 0;
+
+        const baseSAN = hasMP ? baseValues['POW'] * 5 : 0;
+        document.getElementById('base-SAN').textContent = baseSAN;
+        const totalSAN = hasMP ? (baseSAN + (parseInt(document.querySelector('input[name="bonus-SAN"]').value)||0) + (parseInt(document.querySelector('input[name="temp-SAN"]').value)||0)) : 0;
+        document.getElementById('cur-SAN').textContent = totalSAN;
+
+        document.getElementById('base-IDE').textContent = baseValues['INT'] * 5;
+        document.getElementById('cur-IDE').textContent = (baseValues['INT'] * 5) + (parseInt(document.querySelector('input[name="bonus-IDE"]').value)||0) + (parseInt(document.querySelector('input[name="temp-IDE"]').value)||0);
+
+        document.getElementById('base-幸運').textContent = baseValues['POW'] * 5;
+        document.getElementById('cur-幸運').textContent = (baseValues['POW'] * 5) + (parseInt(document.querySelector('input[name="bonus-幸運"]').value)||0) + (parseInt(document.querySelector('input[name="temp-幸運"]').value)||0);
+
+        document.getElementById('base-知識').textContent = baseValues['EDU'] * 5;
+        document.getElementById('cur-知識').textContent = (baseValues['EDU'] * 5) + (parseInt(document.querySelector('input[name="bonus-知識"]').value)||0) + (parseInt(document.querySelector('input[name="temp-知識"]').value)||0);
+
+        if (baseValues['STR'] === 0 || baseValues['SIZ'] === 0) {
+            document.getElementById('db-display').textContent = "なし";
+        } else {
+            const sumDb = currentValues['STR'] + currentValues['SIZ'];
+            let dbResult = "0";
+            if (sumDb >= 2 && sumDb <= 12) dbResult = "-1D6";
+            else if (sumDb >= 13 && sumDb <= 16) dbResult = "-1D4";
+            else if (sumDb >= 17 && sumDb <= 24) dbResult = "0";
+            else if (sumDb >= 25 && sumDb <= 32) dbResult = "+1D4";
+            else if (sumDb >= 33 && sumDb <= 40) dbResult = "+1D6";
+            else if (sumDb >= 41 && sumDb <= 56) dbResult = "+2D6";
+            document.getElementById('db-display').textContent = dbResult;
+        }
+
+        let jobMax = 0;
+        const jobMethod = document.getElementById('job-calc-method')?.value || "EDU*20";
+        const jobBonus = parseInt(document.getElementById('job-points-bonus')?.value) || 0;
+        if (jobMethod === "MANUAL") { jobMax = jobBonus; } 
+        else {
+            if (jobMethod === "EDU*20") jobMax = currentValues['EDU'] * 20;
+            else if (jobMethod === "STR*10+EDU*10") jobMax = (currentValues['STR'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "CON*10+EDU*10") jobMax = (currentValues['CON'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "POW*10+EDU*10") jobMax = (currentValues['POW'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "DEX*10+EDU*10") jobMax = (currentValues['DEX'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "APP*10+EDU*10") jobMax = (currentValues['APP'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "SIZ*10+EDU*10") jobMax = (currentValues['SIZ'] * 10) + (currentValues['EDU'] * 10);
+            else if (jobMethod === "INT*10+EDU*10") jobMax = (currentValues['INT'] * 10) + (currentValues['EDU'] * 10);
+            jobMax += jobBonus;
+        }
+        document.getElementById('job-points-max').textContent = `/ ${jobMax}`;
+
+        const interestBonus = parseInt(document.getElementById('interest-points-bonus')?.value) || 0;
+        const interestMax = (currentValues['INT'] * 10) + interestBonus;
+        document.getElementById('interest-points-max').textContent = `/ ${interestMax}`;
+
+        const sanInput = document.getElementById('san-input');
+        if (sanInput && !window.hasManuallySetSan) {
+            sanInput.value = hasMP ? totalSAN : "";
+        }
+
         calcSkills();
-    }
-}
+    };
 
-function calcSkills() {
-    let totalJobUsed = 0; let totalInterestUsed = 0;
-    const skillRows = document.querySelectorAll(".skill-row");
-    if (skillRows.length === 0) return;
+    window.calcSkills = function() {
+        let totalJobUsed = 0; let totalInterestUsed = 0;
+        const skillRows = document.querySelectorAll(".skill-row");
+        if (skillRows.length === 0) return;
 
-    skillRows.forEach(row => {
-        const initVal = parseInt(row.getAttribute("data-initial")) || 0;
-        // ★修正：入力欄が空欄（""）のときも NaN を回避して 0 に置換するガード
-        const jobP = parseInt(row.querySelector('input[name^="sk-job-"]')?.value, 10) || 0;
-        const interestP = parseInt(row.querySelector('input[name^="sk-int-"]')?.value, 10) || 0;
-        const growP = parseInt(row.querySelector('input[name^="sk-gro-"]')?.value, 10) || 0;
-        const otherP = parseInt(row.querySelector('input[name^="sk-oth-"]')?.value, 10) || 0;
-        const mythosP = parseInt(row.querySelector('input[name="skill-mythos"]')?.value, 10) || 0;
+        skillRows.forEach(row => {
+            const initVal = parseInt(row.getAttribute("data-initial")) || 0;
+            const jobP = parseInt(row.querySelector('input[name^="sk-job-"]')?.value, 10) || 0;
+            const interestP = parseInt(row.querySelector('input[name^="sk-int-"]')?.value, 10) || 0;
+            const growP = parseInt(row.querySelector('input[name^="sk-gro-"]')?.value, 10) || 0;
+            const otherP = parseInt(row.querySelector('input[name^="sk-oth-"]')?.value, 10) || 0;
+            
+            const isMythos = row.classList.contains('skill-mythos-row');
+            const mythosP = isMythos ? (parseInt(row.querySelector('input[name="skill-mythos"]')?.value, 10) || 0) : 0;
 
-        let total = initVal + jobP + interestP + growP + otherP + mythosP;
-        if (total > 99) total = 99;
+            let total = initVal + jobP + interestP + growP + otherP;
+            if(isMythos) total = mythosP + otherP;
+            
+            if (total > 99 && !isMythos) total = 99;
+            
+            const totalEl = row.querySelector(".skill-total");
+            if (totalEl) totalEl.textContent = total;
+
+            totalJobUsed += jobP; totalInterestUsed += interestP;
+        });
+
+        const jobMax = parseInt(document.getElementById('job-points-max')?.textContent.replace('/ ', ''), 10) || 0;
+        const interestMax = parseInt(document.getElementById('interest-points-max')?.textContent.replace('/ ', ''), 10) || 0;
+
+        document.getElementById('job-points-left').textContent = jobMax - totalJobUsed;
+        document.getElementById('interest-points-left').textContent = interestMax - totalInterestUsed;
+
+        calcInsanityOnly();
+    };
+
+    // ① 不定の狂気 4/5 (80%) の計算
+    window.calcInsanityOnly = function() {
+        const sanInput = document.getElementById('san-input');
+        if (!sanInput) return;
         
-        const totalEl = row.querySelector(".skill-total");
-        if (totalEl) totalEl.textContent = total;
+        const mythosValue = parseInt(document.querySelector('input[name="skill-mythos"]')?.value, 10) || 0;
+        const maxSan = 99 - mythosValue;
+        const maxSanEl = document.querySelector('.san-max');
+        if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
 
-        totalJobUsed += jobP; totalInterestUsed += interestP;
+        let currentSan = parseInt(sanInput.value, 10) || 0;
+        if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
+        if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
+        
+        document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.8);
+    };
+
+    window.addCustomSkill = function(btn) {
+        const list = document.getElementById('main-skills-list');
+        const uniqueId = Date.now() + Math.random().toString().slice(2, 6);
+        const row = document.createElement('div');
+        row.className = 'skill-row custom-added-skill';
+        row.setAttribute('data-initial', '1');
+        row.innerHTML = `
+            <div class="s-col name-col" style="display:flex; align-items:center;">
+                <input type="text" class="skill-name-inline custom-name-input" value="" placeholder="追加技能名" oninput="updateCustomSkillName(this, '${uniqueId}')" style="width:100px;">
+                <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; margin-left:5px; cursor:pointer;" onclick="this.parentElement.parentElement.remove(); calcSkills(); markAsChanged();">✖</button>
+            </div>
+            <div class="s-col val-col">
+                <input type="number" class="custom-init-input" name="sk-init-custom_${uniqueId}" value="1" min="0" max="99" oninput="updateCustomSkillInit(this); calcSkills();" style="width:40px; background:transparent; border:1px solid #4f545c; color:#bb86fc; text-align:center; border-radius:4px; font-weight:bold;">
+            </div>
+            <div class="s-col input-col"><input type="number" name="sk-job-custom_${uniqueId}" oninput="calcSkills()"></div>
+            <div class="s-col input-col"><input type="number" name="sk-int-custom_${uniqueId}" oninput="calcSkills()"></div>
+            <div class="s-col input-col"><input type="number" name="sk-gro-custom_${uniqueId}" oninput="calcSkills()"></div>
+            <div class="s-col input-col"><input type="number" name="sk-oth-custom_${uniqueId}" oninput="calcSkills()"></div>
+            <div class="s-col total-col"><span class="skill-total">1</span></div>
+        `;
+        list.appendChild(row);
+        markAsChanged();
+    };
+
+    window.updateCustomSkillName = function(inputEl, id) {
+        const name = inputEl.value.trim() || `custom_${id}`;
+        const row = inputEl.closest('.skill-row');
+        row.querySelector('.custom-init-input').name = `sk-init-${name}`;
+        row.querySelector('input[name^="sk-job-"]').name = `sk-job-${name}`;
+        row.querySelector('input[name^="sk-int-"]').name = `sk-int-${name}`;
+        row.querySelector('input[name^="sk-gro-"]').name = `sk-gro-${name}`;
+        row.querySelector('input[name^="sk-oth-"]').name = `sk-oth-${name}`;
+        markAsChanged();
+    };
+    window.updateCustomSkillInit = function(inputEl) {
+        inputEl.closest('.skill-row').setAttribute('data-initial', inputEl.value || 0);
+        markAsChanged();
+    };
+
+    // 初期化とDOM生成
+    document.addEventListener("DOMContentLoaded", () => {
+        const selectElements = document.querySelectorAll(".ability-input");
+        selectElements.forEach(select => {
+            if(select.tagName === "SELECT") {
+                select.innerHTML = "<option value=''></option>";
+                let min = 2, max = 18;
+                if (select.name === "base-EDU") { min = 3; max = 21; }
+                for (let i = min; i <= max; i++) {
+                    const opt = document.createElement("option");
+                    opt.value = i; opt.textContent = i; select.appendChild(opt);
+                }
+            }
+        });
+
+        // ⑦ 技能の基本リストをHTML内に生成
+        const standardSkills = [
+            {n: "回避", i:0}, {n: "キック", i:25}, {n: "組み付き", i:25}, {n: "こぶし", i:50}, {n: "頭突き", i:10}, {n: "投擲", i:25}, {n: "マーシャルアーツ", i:1}, {n: "拳銃", i:20}, {n: "サブマシンガン", i:15}, {n: "ショットガン", i:30}, {n: "マシンガン", i:15}, {n: "ライフル", i:25},
+            {n: "応急手当", i:30}, {n: "鍵開け", i:1}, {n: "隠す", i:15}, {n: "隠れる", i:10}, {n: "聞き耳", i:25}, {n: "忍び歩き", i:10}, {n: "写真術", i:10}, {n: "精神分析", i:1}, {n: "追跡", i:10}, {n: "登攀", i:40}, {n: "図書館", i:25}, {n: "目星", i:25},
+            {n: "運転", i:20}, {n: "機械修理", i:20}, {n: "重機械操作", i:1}, {n: "乗馬", i:5}, {n: "水泳", i:25}, {n: "製作", i:5}, {n: "操縦", i:1}, {n: "跳躍", i:25}, {n: "電気修理", i:10}, {n: "ナビゲート", i:10}, {n: "変装", i:1},
+            {n: "言いくるめ", i:5}, {n: "信用", i:15}, {n: "説得", i:25}, {n: "値切り", i:5}, {n: "母国語", i:0},
+            {n: "医学", i:5}, {n: "オカルト", i:5}, {n: "化学", i:1}, {n: "芸術", i:5}, {n: "経理", i:10}, {n: "考古学", i:1}, {n: "コンピューター", i:1}, {n: "心理学", i:5}, {n: "人類学", i:1}, {n: "生物学", i:1}, {n: "地質学", i:1}, {n: "電子工学", i:1}, {n: "天文学", i:1}, {n: "博物学", i:10}, {n: "物理学", i:1}, {n: "法律", i:5}, {n: "薬学", i:1}, {n: "歴史", i:20}
+        ];
+        
+        const listDiv = document.getElementById("main-skills-list");
+        standardSkills.forEach(s => {
+            const isVar = ["運転","製作","操縦","母国語","芸術"].includes(s.n);
+            const nameHTML = isVar ? `${s.n}（<input type="text" class="skill-name-inline" placeholder="種類">）` : s.n;
+            const initId = (s.n==="回避" || s.n==="母国語") ? `id="init-${s.n}"` : "";
+            
+            listDiv.innerHTML += `
+                <div class="skill-row" data-initial="${s.i}">
+                    <div class="s-col name-col font-input-wrapper">${nameHTML}</div>
+                    <div class="s-col val-col init-val" ${initId}>${s.i}</div>
+                    <div class="s-col input-col"><input type="number" name="sk-job-${s.n}" oninput="calcSkills()"></div>
+                    <div class="s-col input-col"><input type="number" name="sk-int-${s.n}" oninput="calcSkills()"></div>
+                    <div class="s-col input-col"><input type="number" name="sk-gro-${s.n}" oninput="calcSkills()"></div>
+                    <div class="s-col input-col"><input type="number" name="sk-oth-${s.n}" oninput="calcSkills()"></div>
+                    <div class="s-col total-col"><span class="skill-total" id="total-${s.n}">${s.i}</span></div>
+                </div>
+            `;
+        });
+        // クトゥルフ神話
+        listDiv.innerHTML += `
+            <div class="skill-row skill-mythos-row" data-initial="0">
+                <div class="s-col name-col" style="color:#ff7597;">クトゥルフ神話</div>
+                <div class="s-col val-col init-val">0</div>
+                <div class="s-col input-col">—</div>
+                <div class="s-col input-col">—</div>
+                <div class="s-col input-col"><input type="number" name="skill-mythos" max="99" oninput="calcSkills()"></div>
+                <div class="s-col input-col"><input type="number" name="sk-oth-神話" oninput="calcSkills()"></div>
+                <div class="s-col total-col"><span class="skill-total" id="total-mythos" style="color:#ff7597;">0</span></div>
+            </div>
+        `;
+
+        // データの流し込み
+        setTimeout(() => {
+            const editIndex = localStorage.getItem('editingIndex');
+            if (editIndex !== null && editIndex !== "") {
+                const chars = JSON.parse(localStorage.getItem('characters') || '[]');
+                const char = chars[parseInt(editIndex, 10)];
+                if (char) {
+                    window.charMainImages = char.mainImages || []; window.charExprImages = char.exprImages || [];
+                    if(typeof updateMainPreview === 'function') updateMainPreview();
+
+                    const stNames = standardSkills.map(s => s.n);
+                    Object.keys(char).forEach(key => {
+                        if(key.match(/^sk-(job|int|gro|oth)-/)) {
+                            const skillName = key.replace(/^sk-(job|int|gro|oth)-/, '');
+                            if (!stNames.includes(skillName) && skillName !== "神話" && !document.querySelector(`input[name="sk-job-${skillName}"]`)) {
+                                const uniqueId = Date.now() + Math.random().toString().slice(2, 6);
+                                const initVal = char['sk-init-' + skillName] || 1;
+                                const row = document.createElement('div');
+                                row.className = 'skill-row custom-added-skill';
+                                row.setAttribute('data-initial', initVal);
+                                row.innerHTML = `
+                                    <div class="s-col name-col font-input-wrapper" style="display:flex; align-items:center;">
+                                        <input type="text" class="skill-name-inline custom-name-input" value="${skillName}" oninput="updateCustomSkillName(this, '${uniqueId}')" style="width:100px;">
+                                        <button type="button" style="background:#f04747; color:#fff; border:none; padding:2px 8px; border-radius:4px; margin-left:5px; cursor:pointer;" onclick="this.parentElement.parentElement.remove(); calcSkills(); markAsChanged();">✖</button>
+                                    </div>
+                                    <div class="s-col val-col">
+                                        <input type="number" class="custom-init-input" name="sk-init-${skillName}" value="${initVal}" min="0" max="99" oninput="updateCustomSkillInit(this); calcSkills();" style="width:40px; background:transparent; border:1px solid #4f545c; color:#bb86fc; text-align:center; border-radius:4px; font-weight:bold;">
+                                    </div>
+                                    <div class="s-col input-col"><input type="number" name="sk-job-${skillName}" oninput="calcSkills()"></div>
+                                    <div class="s-col input-col"><input type="number" name="sk-int-${skillName}" oninput="calcSkills()"></div>
+                                    <div class="s-col input-col"><input type="number" name="sk-gro-${skillName}" oninput="calcSkills()"></div>
+                                    <div class="s-col input-col"><input type="number" name="sk-oth-${skillName}" oninput="calcSkills()"></div>
+                                    <div class="s-col total-col"><span class="skill-total">1</span></div>
+                                `;
+                                listDiv.insertBefore(row, listDiv.querySelector('.skill-mythos-row'));
+                            }
+                        }
+                    });
+
+                    document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
+                        let key = el.name || el.id;
+                        if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
+                        if (key && char[key] !== undefined) {
+                            if (el.type === 'checkbox') el.checked = char[key]; else el.value = char[key];
+                        }
+                    });
+                    if(char.money) document.getElementById('char-money').value = char.money;
+                    if(char.debt) document.getElementById('char-debt').value = char.debt;
+
+                    calcAll();
+
+                    if(char.weapons) char.weapons.forEach(w => addWeaponRow(w));
+                    if(char.items) char.items.forEach(i => addItemRow(i));
+                    if(char.scenarios) char.scenarios.forEach(s => addScenarioRow(s));
+                    if(char.memos) char.memos.forEach(m => addMemoRow(m));
+                }
+            }
+            
+            if(document.getElementById('weapons-container').children.length === 0) addWeaponRow();
+            if(document.getElementById('items-container').children.length === 0) addItemRow();
+            if(document.getElementById('scenarios-container').children.length === 0) addScenarioRow();
+            if(document.getElementById('memos-container').children.length === 0) addMemoRow({title: "基本設定メモ"});
+
+            setTimeout(() => {
+                isChanged = false;
+                document.getElementById('char-editor').addEventListener('input', markAsChanged);
+                document.getElementById('char-editor').addEventListener('change', markAsChanged);
+            }, 100);
+        }, 300); // basic_information のDOM展開を待つ
     });
 
-    const jobMaxEl = document.getElementById('job-points-max');
-    const interestMaxEl = document.getElementById('interest-points-max');
-    if (!jobMaxEl || !interestMaxEl) return;
+    window.saveCharacter = async function() {
+        const chars = JSON.parse(localStorage.getItem('characters') || '[]');
+        const editIndex = localStorage.getItem('editingIndex');
+        const newData = {};
 
-    const jobMax = parseInt(jobMaxEl.textContent.replace('/ ', ''), 10) || 0;
-    const interestMax = parseInt(interestMaxEl.textContent.replace('/ ', ''), 10) || 0;
+        document.querySelectorAll("#char-editor input:not(.dynamic-row input), #char-editor select").forEach((el, index) => {
+            let key = el.name || el.id;
+            if (!key && el.classList.contains('skill-name-inline')) key = 'inline-skill-' + index;
+            if (key) newData[key] = el.type === 'checkbox' ? el.checked : el.value;
+        });
 
-    document.getElementById('job-points-left').textContent = jobMax - totalJobUsed;
-    document.getElementById('interest-points-left').textContent = interestMax - totalInterestUsed;
+        newData.name = document.getElementById("char-name-new")?.value || "無名の探索者";
+        newData.money = document.getElementById("char-money").value;
+        newData.debt = document.getElementById("char-debt").value;
 
-    calcInsanityOnly();
-}
+        newData.weapons = Array.from(document.querySelectorAll('.weapon-row')).map(row => ({
+            name: row.querySelector('.w-name').value, rate: row.querySelector('.w-rate').value, damage: row.querySelector('.w-dmg').value,
+            range: row.querySelector('.w-range').value, attacks: row.querySelector('.w-attacks').value, ammo: row.querySelector('.w-ammo').value,
+            hp: row.querySelector('.w-hp').value, malf: row.querySelector('.w-malf').value, other: row.querySelector('.w-other').value
+        })).filter(w => w.name.trim() !== "");
 
-function calcInsanityOnly() {
-    const sanInput = document.getElementById('san-input');
-    if (!sanInput) return;
-    if (document.getElementById('base-SAN').textContent === "-") {
-        sanInput.value = ""; document.getElementById('insanity-display').textContent = "0";
-        document.querySelector('.san-max').textContent = "/ 99"; return;
+        newData.items = Array.from(document.querySelectorAll('.item-row')).map(row => ({
+            name: row.querySelector('.i-name').value, unitPrice: row.querySelector('.i-unit').value, quantity: row.querySelector('.i-qty').value,
+            totalPrice: row.querySelector('.i-total').value, notes: row.querySelector('.i-notes').value
+        })).filter(i => i.name.trim() !== "");
+
+        newData.scenarios = Array.from(document.querySelectorAll('.scenario-row')).map(row => ({
+            date: row.querySelector('.s-date').value, 
+            name: row.querySelector('.s-name').value,
+            memo: row.querySelector('.s-memo').value
+        })).filter(s => s.name.trim() !== "");
+
+        newData.memos = Array.from(document.querySelectorAll('.memo-row')).map(row => ({
+            title: row.querySelector('.m-title').value, content: row.querySelector('.m-content').value, password: row.querySelector('.m-pwd').value
+        })).filter(m => m.title.trim() !== "" || m.content.trim() !== "");
+
+        if (editIndex !== null && editIndex !== "") {
+            newData.uid = chars[parseInt(editIndex, 10)].uid;
+            newData.mainImages = chars[parseInt(editIndex, 10)].mainImages || [];
+            newData.exprImages = chars[parseInt(editIndex, 10)].exprImages || [];
+            chars[parseInt(editIndex, 10)] = newData;
+        } else {
+            newData.uid = 'char_' + Date.now().toString(16) + Math.random().toString(16).slice(2);
+            newData.mainImages = []; newData.exprImages = [];
+            chars.push(newData);
+            localStorage.setItem('editingIndex', chars.length - 1);
+        }
+
+        try {
+            if (window.setDoc && window.doc && window.db) {
+                await window.setDoc(window.doc(window.db, "characters", newData.uid), newData);
+            }
+            localStorage.setItem('characters', JSON.stringify(chars));
+            
+            isChanged = false;
+            alert("保存しました！引き続き編集可能です。");
+        } catch (e) {
+            console.error("保存エラー:", e);
+            alert("保存に失敗しました。容量制限または通信エラーの可能性があります。");
+        }
     }
-    const mythosValue = parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
-    const maxSan = 99 - mythosValue;
-    
-    const maxSanEl = document.querySelector('.san-max');
-    if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
-
-    // 空欄時は暫定0として不定を算出
-    let currentSan = parseInt(sanInput.value, 10) || 0;
-    
-    if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
-    if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
-    // ★修正: 不定は現在SAN値の4/5
-    document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.8);
-}
-
-document.getElementById('char-editor').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const charNameInput = document.getElementById('char-name-new');
-    const finalName = charNameInput ? charNameInput.value : "新たな探索者";
-    const charData = { name: finalName, id: Date.now() };
-    let chars = JSON.parse(localStorage.getItem('characters') || '[]');
-    chars.push(charData); localStorage.setItem('characters', JSON.stringify(chars));
-    window.location.href = '../index.html';
-});
-
-// 技能セクションのHTML構造をコンポーネント管理
-const SKILL_VALUE_COMPONENT = `
-    <div class="skills-point-header-table">
-        <div class="p-header-row p-head-title">
-            <div class="p-head-cell"></div>
-            <div class="p-head-cell">計算方法</div>
-            <div class="p-head-cell">現在値</div>
-            <div class="p-head-cell">補正</div>
-        </div>
-        
-        <div class="p-header-row">
-            <div class="p-head-cell p-label">職業P</div>
-            <div class="p-head-cell">
-                <select id="job-calc-method" onchange="calcAll()">
-                    <option value="EDU*20">EDU×20</option>
-                    <option value="STR*10+EDU*10">STR×10+EDU×10</option>
-                    <option value="CON*10+EDU*10">CON×10+EDU×10</option>
-                    <option value="POW*10+EDU*10">POW×10+EDU×10</option>
-                    <option value="DEX*10+EDU*10">DEX×10+EDU×10</option>
-                    <option value="APP*10+EDU*10">APP×10+EDU×10</option>
-                    <option value="SIZ*10+EDU*10">SIZ×10+EDU×10</option>
-                    <option value="INT*10+EDU*10">INT×10+EDU×10</option>
-                    <option value="MANUAL">手動入力</option>
-                </select>
-            </div>
-            <div class="p-head-cell p-value-display">
-                <span class="point-left" id="job-points-left">0</span><span class="point-max" id="job-points-max">/ 0</span>
-            </div>
-            <div class="p-head-cell p-input-cell">
-                <input type="number" id="job-points-bonus" placeholder="" oninput="calcAll()">
-            </div>
-        </div>
-
-        <div class="p-header-row">
-            <div class="p-head-cell p-label">興味P</div>
-            <div class="p-head-cell">
-                <span class="interest-method-text">INT×10</span>
-            </div>
-            <div class="p-head-cell p-value-display">
-                <span class="point-left" id="interest-points-left">0</span><span class="point-max" id="interest-points-max">/ 0</span>
-            </div>
-            <div class="p-head-cell p-input-cell">
-                <input type="number" id="interest-points-bonus" placeholder="" oninput="calcAll()">
-            </div>
-        </div>
-    </div>
-
-    <div class="skills-section">
-        <div class="section-subtitle-bar" onclick="toggleAccordion('combat-skills-area', this)">
-            <h2 class="section-subtitle">戦闘技能</h2>
-            <span class="accordion-icon">⋁</span>
-        </div>
-        
-        <div id="combat-skills-area" class="accordion-content open">
-            <div class="skills-table-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skills-list">
-                <div class="skill-row" data-initial="0">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-回避"></div>
-                    <div class="s-col name-col">回避</div>
-                    <div class="s-col val-col init-val" id="init-evade">0</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-回避" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-回避" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-回避" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-回避" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-回避">0</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-キック"></div>
-                    <div class="s-col name-col">キック</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-キック" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-キック" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-キック" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-キック" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-キック">25</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-組み付き"></div>
-                    <div class="s-col name-col">組み付き</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-組み付き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-組み付き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-組み付き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-組み付き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-組み付き">25</span></div>
-                </div>
-                <div class="skill-row" data-initial="50">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-こぶし"></div>
-                    <div class="s-col name-col">こぶし（パンチ）</div>
-                    <div class="s-col val-col init-val">50</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-こぶし" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-こぶし" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-こぶし" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-こぶし" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-こぶし">50</span></div>
-                </div>
-                <div class="skill-row" data-initial="10">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-頭突き"></div>
-                    <div class="s-col name-col">頭突き</div>
-                    <div class="s-col val-col init-val">10</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-頭突き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-頭突き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-頭突き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-頭突き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-頭突き">10</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-投擲"></div>
-                    <div class="s-col name-col">投擲</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-投擲" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-投擲" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-投擲" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-投擲" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-投擲">25</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-マーシャルアーツ"></div>
-                    <div class="s-col name-col">マーシャルアーツ</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-マーシャルアーツ" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-マーシャルアーツ" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-マーシャルアーツ" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-マーシャルアーツ" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-マーシャルアーツ">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="20">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-拳銃"></div>
-                    <div class="s-col name-col">拳銃</div>
-                    <div class="s-col val-col init-val">20</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-拳銃" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-拳銃" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-拳銃" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-拳銃" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-拳銃">20</span></div>
-                </div>
-                <div class="skill-row" data-initial="15">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-サブマシンガン"></div>
-                    <div class="s-col name-col">サブマシンガン</div>
-                    <div class="s-col val-col init-val">15</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-サブマシンガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-サブマシンガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-サブマシンガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-サブマシンガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-サブマシンガン">15</span></div>
-                </div>
-                <div class="skill-row" data-initial="30">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-ショットガン"></div>
-                    <div class="s-col name-col">ショットガン</div>
-                    <div class="s-col val-col init-val">30</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-ショットガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-ショットガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-ショットガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-ショットガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-ショットガン">30</span></div>
-                </div>
-                <div class="skill-row" data-initial="15">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-マシンガン"></div>
-                    <div class="s-col name-col">マシンガン</div>
-                    <div class="s-col val-col init-val">15</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-マシンガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-マシンガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-マシンガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-マシンガン" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-マシンガン">15</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-ライフル"></div>
-                    <div class="s-col name-col">ライフル</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-ライフル" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-ライフル" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-ライフル" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-ライフル" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-ライフル">25</span></div>
-                </div>
-            </div>
-
-            <div class="skills-table-footer-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skill-table-control" style="text-align: left; padding-left: 10px; margin-top: 10px;">
-                <button type="button" class="btn-add-skill">追加</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="skills-section">
-        <div class="section-subtitle-bar" onclick="toggleAccordion('exploration-skills-area', this)">
-            <h2 class="section-subtitle">探索技能</h2>
-            <span class="accordion-icon">⋁</span>
-        </div>
-        
-        <div id="exploration-skills-area" class="accordion-content open">
-            <div class="skills-table-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skills-list">
-                <div class="skill-row" data-initial="30">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-応急手当"></div>
-                    <div class="s-col name-col">応急手当</div>
-                    <div class="s-col val-col init-val">30</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-応急手当" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-応急手当" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-応急手当" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-応急手当" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-応急手当">30</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-鍵開け"></div>
-                    <div class="s-col name-col">鍵開け</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-鍵開け" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-鍵開け" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-鍵開け" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-鍵開け" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-鍵開け">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="15">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-隠す"></div>
-                    <div class="s-col name-col">隠す</div>
-                    <div class="s-col val-col init-val">15</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-隠す" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-隠す" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-隠す" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-隠す" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-隠す">15</span></div>
-                </div>
-                <div class="skill-row" data-initial="10">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-隠れる"></div>
-                    <div class="s-col name-col">隠れる</div>
-                    <div class="s-col val-col init-val">10</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-隠れる" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-隠れる" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-隠れる" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-隠れる" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-隠れる">10</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-聞き耳"></div>
-                    <div class="s-col name-col">聞き耳</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-聞き耳" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-聞き耳" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-聞き耳" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-聞き耳" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-聞き耳">25</span></div>
-                </div>
-                <div class="skill-row" data-initial="10">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-忍び歩き"></div>
-                    <div class="s-col name-col">忍び歩き</div>
-                    <div class="s-col val-col init-val">10</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-忍び歩き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-忍び歩き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-忍び歩き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-忍び歩き" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-忍び歩き">10</span></div>
-                </div>
-                <div class="skill-row" data-initial="10">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-写真術"></div>
-                    <div class="s-col name-col">写真術</div>
-                    <div class="s-col val-col init-val">10</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-写真術" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-写真術" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-写真術" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-写真術" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-写真術">10</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-精神分析"></div>
-                    <div class="s-col name-col">精神分析</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-精神分析" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-精神分析" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-精神分析" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-精神分析" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-精神分析">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="10">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-追跡"></div>
-                    <div class="s-col name-col">追跡</div>
-                    <div class="s-col val-col init-val">10</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-追跡" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-追跡" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-追跡" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-追跡" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-追跡">10</span></div>
-                </div>
-                <div class="skill-row" data-initial="40">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-登攀"></div>
-                    <div class="s-col name-col">登攀</div>
-                    <div class="s-col val-col init-val">40</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-登攀" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-登攀" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-登攀" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-登攀" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-登攀">40</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-図書館"></div>
-                    <div class="s-col name-col">図書館</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-図書館" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-図書館" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-図書館" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-図書館" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-図書館">25</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-目星"></div>
-                    <div class="s-col name-col">目星</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-目星" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-目星" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-目星" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-目星" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-目星">25</span></div>
-                </div>
-            </div>
-
-            <div class="skills-table-footer-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skill-table-control" style="text-align: left; padding-left: 10px; margin-top: 10px;">
-                <button type="button" class="btn-add-skill">追加</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="skills-section">
-        <div class="section-subtitle-bar" onclick="toggleAccordion('action-skills-area', this)">
-            <h2 class="section-subtitle">行動技能</h2>
-            <span class="accordion-icon">⋁</span>
-        </div>
-        
-        <div id="action-skills-area" class="accordion-content open">
-            <div class="skills-table-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skills-list">
-                <div class="skill-row" data-initial="20">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-運転"></div>
-                    <div class="s-col name-col font-input-wrapper">運転（<input type="text" class="skill-name-inline" placeholder="自動車" value="">）</div>
-                    <div class="s-col val-col init-val">20</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-運転" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-運転" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-運転" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-運転" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-運転">20</span></div>
-                </div>
-                <div class="skill-row" data-initial="20">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-機械修理"></div>
-                    <div class="s-col name-col">機械修理</div>
-                    <div class="s-col val-col init-val">20</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-機械修理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-機械修理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-機械修理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-機械修理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-機械修理">20</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-重機械操作"></div>
-                    <div class="s-col name-col">重機械操作</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-重機械操作" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-重機械操作" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-重機械操作" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-重機械操作" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-重機械操作">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="5">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-乗馬"></div>
-                    <div class="s-col name-col">乗馬</div>
-                    <div class="s-col val-col init-val">5</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-乗馬" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-乗馬" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-乗馬" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-乗馬" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-乗馬">5</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-水泳"></div>
-                    <div class="s-col name-col">水泳</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-水泳" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-水泳" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-水泳" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-水泳" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-水泳">25</span></div>
-                </div>
-                <div class="skill-row" data-initial="5">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-製作"></div>
-                    <div class="s-col name-col font-input-wrapper">製作（<input type="text" class="skill-name-inline" placeholder="料理" value="">）</div>
-                    <div class="s-col val-col init-val">5</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-製作" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-製作" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-製作" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-製作" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-製作">5</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-操縦"></div>
-                    <div class="s-col name-col font-input-wrapper">操縦（<input type="text" class="skill-name-inline" placeholder="飛行機" value="">）</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-操縦" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-操縦" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-操縦" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-操縦" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-操縦">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-跳躍"></div>
-                    <div class="s-col name-col">跳躍</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-跳躍" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-跳躍" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-跳躍" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-跳躍" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-跳躍">25</span></div>
-                </div>
-                <div class="skill-row" data-initial="10">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-電気修理"></div>
-                    <div class="s-col name-col">電気修理</div>
-                    <div class="s-col val-col init-val">10</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-電気修理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-電気修理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-電気修理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-電気修理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-電気修理">10</span></div>
-                </div>
-                <div class="skill-row" data-initial="10">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-ナビゲート"></div>
-                    <div class="s-col name-col">ナビゲート</div>
-                    <div class="s-col val-col init-val">10</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-ナビゲート" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-ナビゲート" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-ナビゲート" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-ナビゲート" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-ナビゲート">10</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-変装"></div>
-                    <div class="s-col name-col">変装</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-変装" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-変装" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-変装" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-変装" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-変装">1</span></div>
-                </div>
-            </div>
-
-            <div class="skills-table-footer-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skill-table-control" style="text-align: left; padding-left: 10px; margin-top: 10px;">
-                <button type="button" class="btn-add-skill">追加</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="skills-section">
-        <div class="section-subtitle-bar" onclick="toggleAccordion('negotiation-skills-area', this)">
-            <h2 class="section-subtitle">交渉技能</h2>
-            <span class="accordion-icon">⋁</span>
-        </div>
-        
-        <div id="negotiation-skills-area" class="accordion-content open">
-            <div class="skills-table-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skills-list">
-                <div class="skill-row" data-initial="5">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-言いくるめ"></div>
-                    <div class="s-col name-col">言いくるめ</div>
-                    <div class="s-col val-col init-val">5</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-言いくるめ" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-言いくるめ" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-言いくるめ" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-言いくるめ" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-言いくるめ">5</span></div>
-                </div>
-                <div class="skill-row" data-initial="15">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-信用"></div>
-                    <div class="s-col name-col">信用</div>
-                    <div class="s-col val-col init-val">15</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-信用" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-信用" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-信用" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-信用" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-信用">15</span></div>
-                </div>
-                <div class="skill-row" data-initial="25">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-説得"></div>
-                    <div class="s-col name-col">説得</div>
-                    <div class="s-col val-col init-val">25</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-説得" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-説得" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-説得" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-説得" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-説得">25</span></div>
-                </div>
-                <div class="skill-row" data-initial="5">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-値切り"></div>
-                    <div class="s-col name-col">値切り</div>
-                    <div class="s-col val-col init-val">5</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-値切り" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-値切り" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-値切り" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-値切り" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-値切り">5</span></div>
-                </div>
-                <div class="skill-row" data-initial="0">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-母国語"></div>
-                    <div class="s-col name-col font-input-wrapper">母国語（<input type="text" class="skill-name-inline" placeholder="日本語" value="">）</div>
-                    <div class="s-col val-col init-val" id="init-native-lang">0</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-母国語" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-母国語" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-母国語" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-母国語" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-母国語">0</span></div>
-                </div>
-            </div>
-
-            <div class="skills-table-footer-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skill-table-control" style="text-align: left; padding-left: 10px; margin-top: 10px;">
-                <button type="button" class="btn-add-skill">追加</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="skills-section">
-        <div class="section-subtitle-bar" onclick="toggleAccordion('knowledge-skills-area', this)">
-            <h2 class="section-subtitle">知識技能</h2>
-            <span class="accordion-icon">⋁</span>
-        </div>
-        
-        <div id="knowledge-skills-area" class="accordion-content open">
-            <div class="skills-table-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skills-list">
-                <div class="skill-row" data-initial="5">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-医学"></div>
-                    <div class="s-col name-col">医学</div>
-                    <div class="s-col val-col init-val">5</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-医学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-医学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-医学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-医学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-医学">5</span></div>
-                </div>
-                <div class="skill-row" data-initial="5">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-オカルト"></div>
-                    <div class="s-col name-col">オカルト</div>
-                    <div class="s-col val-col init-val">5</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-オカルト" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-オカルト" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-オカルト" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-オカルト" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-オカルト">5</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-化学"></div>
-                    <div class="s-col name-col">化学</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-化学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-化学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-化学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-化学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-化学">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="5">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-芸術"></div>
-                    <div class="s-col name-col font-input-wrapper">芸術（<input type="text" class="skill-name-inline" placeholder="絵画" value="">）</div>
-                    <div class="s-col val-col init-val">5</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-芸術" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-芸術" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-芸術" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-芸術" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-芸術">5</span></div>
-                </div>
-                <div class="skill-row" data-initial="10">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-経理"></div>
-                    <div class="s-col name-col">経理</div>
-                    <div class="s-col val-col init-val">10</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-経理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-経理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-経理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-経理" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-経理">10</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-考古学"></div>
-                    <div class="s-col name-col">考古学</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-考古学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-考古学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-考古学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-考古学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-考古学">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-コンピューター"></div>
-                    <div class="s-col name-col">コンピューター</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-コンピューター" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-コンピューター" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-コンピューター" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-コンピューター" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-コンピューター">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="5">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-心理学"></div>
-                    <div class="s-col name-col">心理学</div>
-                    <div class="s-col val-col init-val">5</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-心理学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-心理学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-心理学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-心理学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-心理学">5</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-人類学"></div>
-                    <div class="s-col name-col">人類学</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-人類学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-人類学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-人類学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-人類学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-人類学">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-生物学"></div>
-                    <div class="s-col name-col">生物学</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-生物学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-生物学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-生物学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-生物学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-生物学">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-地質学"></div>
-                    <div class="s-col name-col">地質学</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-地質学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-地質学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-地質学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-地質学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-地質学">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-電子工学"></div>
-                    <div class="s-col name-col">電子工学</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-電子工学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-電子工学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-電子工学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-電子工学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-電子工学">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-天文学"></div>
-                    <div class="s-col name-col">天文学</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-天文学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-天文学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-天文学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-天文学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-天文学">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="10">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-博物学"></div>
-                    <div class="s-col name-col">博物学</div>
-                    <div class="s-col val-col init-val">10</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-博物学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-博物学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-博物学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-博物学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-博物学">10</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-物理学"></div>
-                    <div class="s-col name-col">物理学</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-物理学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-物理学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-物理学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-物理学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-物理学">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="5">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-法律"></div>
-                    <div class="s-col name-col">法律</div>
-                    <div class="s-col val-col init-val">5</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-法律" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-法律" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-法律" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-法律" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-法律">5</span></div>
-                </div>
-                <div class="skill-row" data-initial="1">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-薬学"></div>
-                    <div class="s-col name-col">薬学</div>
-                    <div class="s-col val-col init-val">1</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-薬学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-薬学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-薬学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-薬学" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-薬学">1</span></div>
-                </div>
-                <div class="skill-row" data-initial="20">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-歴史"></div>
-                    <div class="s-col name-col">歴史</div>
-                    <div class="s-col val-col init-val">20</div>
-                    <div class="s-col input-col"><input type="number" name="sk-job-歴史" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-int-歴史" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-gro-歴史" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-歴史" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total" id="total-歴史">20</span></div>
-                </div>
-
-                <div class="skill-row skill-mythos-row" data-initial="0">
-                    <div class="s-col check-col"><input type="checkbox" name="sk-chk-神話"></div>
-                    <div class="s-col name-col mythos-label">クトゥルフ神話</div>
-                    <div class="s-col val-col init-val">0</div>
-                    <div class="s-col input-col">—</div>
-                    <div class="s-col input-col">—</div>
-                    <div class="s-col input-col"><input type="number" name="skill-mythos" placeholder="" min="" max="99" oninput="calcSkills()"></div>
-                    <div class="s-col input-col"><input type="number" name="sk-oth-神話" placeholder="" min="" oninput="calcSkills()"></div>
-                    <div class="s-col total-col"><span class="skill-total mythos-total" id="total-mythos">0</span></div>
-                </div>
-            </div>
-
-            <div class="skills-table-footer-header">
-                <div class="s-col check-col">成長</div>
-                <div class="s-col name-col">技能名</div>
-                <div class="s-col val-col">初期値</div>
-                <div class="s-col input-col">職業P</div>
-                <div class="s-col input-col">興味P</div>
-                <div class="s-col input-col">成長分</div>
-                <div class="s-col input-col">その他</div>
-                <div class="s-col total-col">合計</div>
-            </div>
-
-            <div class="skill-table-control" style="text-align: left; padding-left: 10px; margin-top: 10px;">
-                <button type="button" class="btn-add-skill">追加</button>
-            </div>
-        </div>
-    </div>
-`;
+</script>
+</body>
+</html>
