@@ -124,28 +124,21 @@
         import { db } from './firebase-config.js';
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        // グローバルに使えるように登録
         window.db = db;
         window.doc = doc;
         window.getDoc = getDoc;
-
-        // モジュールロード完了後にデータを取得開始
         window.initializeView();
     </script>
 
     <script>
         let currentImageIndex = 0;
 
-        // ★ Firebase からデータを取得するメイン処理
         window.initializeView = async function() {
             const urlParams = new URLSearchParams(window.location.search);
             const charId = urlParams.get('id');
 
-            // 1. URLにIDがある場合（他人が共有URLから開いた場合）
             if (charId) {
-                // 他人が開いた場合は編集ボタンを隠す
                 document.getElementById('edit-btn').style.display = 'none';
-                
                 try {
                     const docRef = window.doc(window.db, "characters", charId);
                     const docSnap = await window.getDoc(docRef);
@@ -160,7 +153,6 @@
                     document.getElementById('view-content').innerHTML = '<p style="text-align:center; padding-top:50px;">データの通信に失敗しました。</p>';
                 }
             } 
-            // 2. 自分がローカルの「閲覧」ボタンから開いた場合
             else {
                 const index = localStorage.getItem('viewingIndex');
                 const chars = JSON.parse(localStorage.getItem('characters') || '[]');
@@ -183,7 +175,6 @@
             renderView();
         }
 
-        // データ取得補助関数
         function getVal(key) { return window.char[key] || ''; }
         function getNum(key) { return parseInt(window.char[key]) || 0; }
         
@@ -406,7 +397,7 @@
             renderRightSidebar();
         }
 
-       function renderSkills() {
+        function renderSkills() {
             const filter = document.querySelector('input[name="skill-filter"]:checked').value;
             
             document.getElementById('skill-thead').innerHTML = `<tr><th class="skill-name">技能名</th><th>初期</th><th>職業</th><th>興味</th><th>成長</th><th>その他</th><th>合計</th></tr>`;
@@ -471,89 +462,6 @@
                         <td>${gro||''}</td>
                         <td>${oth||''}</td>
                         <td class="skill-total" ${isMythos ? 'style="color:#ff7597;"' : ''}>${init+job+intP+gro+oth}</td>
-                    </tr>`;
-                }
-            });
-            document.getElementById('skill-tbody').innerHTML = rows;
-        }
-            let rows = "";
-            skillSet.forEach(sk => {
-                let baseSk = sk.replace(/（.*?）|\(.*?\)/g, "").trim();
-                let init = getNum('sk-init-' + sk);
-                let displayName = sk;
-                let isMythos = (baseSk === "神話" || baseSk === "クトゥルフ神話");
-                
-                if (isMythos) {
-                    init = 0;
-                    displayName = "クトゥルフ神話";
-                } else if (window.char['sk-init-' + sk] === undefined) {
-                    if (["頭突き","隠れる","忍び歩き","写真術","追跡","電気修理","ナビゲート","経理","博物学"].includes(baseSk)) init = 10;
-                    else if (["乗馬","製作","言いくるめ","値切り","医学","オカルト","芸術","心理学","法律"].includes(baseSk)) init = 5;
-                    else if (["マーシャルアーツ","鍵開け","精神分析","重機械操作","操縦","変装","化学","考古学","コンピューター","人類学","生物学","地質学","電子工学","天文学","物理学","薬学"].includes(baseSk)) init = 1;
-                    else if (["拳銃"].includes(baseSk)) init = 20;
-                    else if (["サブマシンガン", "マシンガン"].includes(baseSk)) init = 15;
-                    else if (["ショットガン"].includes(baseSk)) init = 30;
-                    else if (["ライフル"].includes(baseSk)) init = 25;
-                    else if (["登攀"].includes(baseSk)) init = 40;
-                    else if (["信用"].includes(baseSk)) init = 15;
-                    else if (["回避"].includes(baseSk)) init = getNum('base-DEX') * 2;
-                    else if (["母国語"].includes(baseSk)) init = getNum('base-EDU') * 5;
-                    else if (["キック","組み付き","投擲","聞き耳","図書館","目星","水泳","跳躍","説得"].includes(baseSk)) init = 25;
-                    else if (["こぶし"].includes(baseSk)) init = 50;
-                    else if (["応急手当"].includes(baseSk)) init = 30;
-                    else if (["運転","機械修理","歴史"].includes(baseSk)) init = 20;
-                    else init = 1;
-                }
-
-                let job = getNum(`sk-job-${sk}`);
-                let intP = getNum(`sk-int-${sk}`);
-                let gro = isMythos ? Math.max(getNum(`sk-gro-${sk}`), getNum('skill-mythos')) : getNum(`sk-gro-${sk}`);
-                let oth = getNum(`sk-oth-${sk}`);
-                
-                let show = (filter === 'all') || 
-                           (filter === 'job_int' && (job > 0 || intP > 0)) || 
-                           (filter === 'gro_oth' && (gro > 0 || oth > 0)) || 
-                           (filter === 'job_gro' && (job > 0 || intP > 0 || gro > 0 || oth > 0));
-                
-                // クトゥルフ神話はポイントが0なら絶対に非表示
-                if (isMythos && (gro + oth === 0)) {
-                    show = false;
-                }
-                
-                if (show) {
-                    rows += `<tr>
-                        <td class="skill-name">${displayName}</td>
-                        <td>${init}</td>
-                        <td>${job||''}</td>
-                        <td>${intP||''}</td>
-                        <td>${gro||''}</td>
-                        <td>${oth||''}</td>
-                        <td class="skill-total" ${isMythos ? 'style="color:#ff7597;"' : ''}>${init+job+intP+gro+oth}</td>
-                    </tr>`;
-                }
-            });
-            document.getElementById('skill-tbody').innerHTML = rows;
-        }
-
-                let job = getNum(`sk-job-${sk}`);
-                let intP = getNum(`sk-int-${sk}`);
-                let gro = getNum(`sk-gro-${sk}`);
-                let oth = getNum(`sk-oth-${sk}`);
-                
-                let show = (filter === 'all') || 
-                           (filter === 'job_int' && (job > 0 || intP > 0)) || 
-                           (filter === 'gro_oth' && (gro > 0 || oth > 0)) || 
-                           (filter === 'job_gro' && (job > 0 || intP > 0 || gro > 0 || oth > 0));
-                
-                if (show) {
-                    rows += `<tr>
-                        <td class="skill-name">${sk}</td>
-                        <td>${init}</td>
-                        <td>${job||''}</td>
-                        <td>${intP||''}</td>
-                        <td>${gro||''}</td>
-                        <td>${oth||''}</td>
-                        <td class="skill-total">${init+job+intP+gro+oth}</td>
                     </tr>`;
                 }
             });
