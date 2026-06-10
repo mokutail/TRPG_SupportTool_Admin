@@ -347,18 +347,21 @@ function calcSkills() {
 function calcInsanityOnly() {
     const sanInput = document.getElementById('san-input');
     if (!sanInput) return;
-    
-    // ... 前略 ...
-    
+    if (document.getElementById('base-SAN').textContent === "-") {
+        sanInput.value = ""; document.getElementById('insanity-display').textContent = "0";
+        document.querySelector('.san-max').textContent = "/ 99"; return;
+    }
+
     const mythosValue = parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
     const maxSan = 99 - mythosValue;
-    
-    // 不定狂気の境界値：最大SANの80%
-    const insanityThreshold = Math.floor(maxSan * 0.8);
-    
-    // 表示用：不定狂気の状態になるのは「現在のSAN値が境界値を下回った時」
-    // ここで計算結果を表示するようにします
-    document.getElementById('insanity-display').textContent = insanityThreshold; 
+    const maxSanEl = document.querySelector('.san-max');
+    if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
+
+    // 空欄時は暫定0として不定を算出
+    let currentSan = parseInt(sanInput.value, 10) || 0;
+    if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
+    if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
+    document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.8);
 }
 
 document.getElementById('char-editor').addEventListener('submit', (e) => {
