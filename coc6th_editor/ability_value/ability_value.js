@@ -362,7 +362,7 @@ function calcInsanityOnly() {
     
     if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
     if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
-    document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.2);
+    document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.8);
 }
 
 document.getElementById('char-editor').addEventListener('submit', (e) => {
