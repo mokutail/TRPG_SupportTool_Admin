@@ -295,7 +295,7 @@
             closeExportModal();
         }
 
-        function renderView() {
+       function renderView() {
             let initImgUrl = '', initImgDesc = '';
             let prevBtn = '', nextBtn = '';
             if (window.viewMainImages.length > 0) {
@@ -316,7 +316,6 @@
                 exprHTML += `</div></div>`;
             }
 
-            // ★基本ステータス実数値の呼び出し処理のバグを修正
             const str = getStatTotal('STR');
             const con = getStatTotal('CON');
             const pow = getStatTotal('POW');
@@ -328,7 +327,11 @@
             
             const mythos = getNum('skill-mythos') + getNum('sk-oth-神話');
             const san = getNum('san-input') || (pow * 5);
-            const colorCode = getVal('char-color') || '#202225'; // 色がない場合はデフォルト色
+            const colorCode = getVal('char-color') || '#202225';
+            
+            // ★追加：編集画面でチェックを入れた場合のみ、背景色を適用する
+            const useBgColor = getVal('use-bg-color') === true;
+            const carouselBg = useBgColor ? colorCode : '#202225';
 
             document.getElementById('view-content').innerHTML = `
                 <div class="layout-wrapper">
@@ -348,6 +351,19 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="center-content">
+                        <div class="left-col">
+                            <div class="image-carousel" style="background-color: ${carouselBg};">
+                                ${prevBtn}
+                                <img id="main-preview-img" src="${initImgUrl}" onerror="this.style.display='none'">
+                                ${nextBtn}
+                            </div>
+                            <div class="img-desc" id="main-preview-desc">${initImgDesc}</div>
+                            <div class="tag-area">タグ: ${getVal('char-tag') || 'なし'}</div>
+                            ${exprHTML}
+                        </div>
+                        <div class="right-col">
                     
                     <div class="center-content">
                         <div class="left-col">
