@@ -151,7 +151,6 @@
         <h1 class="editor-title">キャラクター作成・編集</h1>
     </header>
 
-    <!-- ⑤ 保存を閲覧・玄関の上に設置 -->
     <div class="fixed-left-menu">
         <button type="button" onclick="saveCharacter()" title="保存する">💾<br><span style="font-size:10px;">保存</span></button>
         <button type="button" onclick="goToView()" title="閲覧画面へ">👁<br><span style="font-size:10px;">閲覧</span></button>
@@ -173,7 +172,6 @@
                 </div>
             </div>
 
-            <!-- ★ ここに能力値テーブルを入れ込みました ★ -->
             <div class="custom-section">
                 <div class="section-subtitle-bar" onclick="toggleAccordion('ability-area', this)">
                     <h2 class="section-subtitle">能力値一覧</h2><span class="accordion-icon">⋁</span>
@@ -300,7 +298,6 @@
             </div>
             <!-- JSエラー防止用ダミー -->
             <div id="component-ability-value" style="display:none;"></div>
-            <!-- ★ 入れ込みここまで ★ -->
 
             <div id="component-skills-list"></div>
 
@@ -375,7 +372,6 @@
     <script src="ability_value/ability_value.js"></script>
 
 <script>
-    // ② 閲覧画面への遷移
     function goToView() {
         const editIndex = localStorage.getItem('editingIndex');
         if (editIndex !== null && editIndex !== "") {
