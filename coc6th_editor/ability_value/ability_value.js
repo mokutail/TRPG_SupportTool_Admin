@@ -351,17 +351,18 @@ function calcInsanityOnly() {
         sanInput.value = ""; document.getElementById('insanity-display').textContent = "0";
         document.querySelector('.san-max').textContent = "/ 99"; return;
     }
-
     const mythosValue = parseInt(document.getElementById('total-mythos')?.textContent, 10) || 0;
     const maxSan = 99 - mythosValue;
+    
     const maxSanEl = document.querySelector('.san-max');
     if (maxSanEl) maxSanEl.textContent = `/ ${maxSan}`;
 
     // 空欄時は暫定0として不定を算出
     let currentSan = parseInt(sanInput.value, 10) || 0;
+    
     if (currentSan > maxSan) { currentSan = maxSan; sanInput.value = maxSan; }
     if (currentSan < 0) { currentSan = 0; sanInput.value = 0; }
-    document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.8);
+    document.getElementById('insanity-display').textContent = Math.floor(currentSan * 0.2);
 }
 
 document.getElementById('char-editor').addEventListener('submit', (e) => {
